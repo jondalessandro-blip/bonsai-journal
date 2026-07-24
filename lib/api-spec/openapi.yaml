@@ -3,20 +3,27 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Bonsai Journal API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: trees
+    description: Tree collection
+  - name: logs
+    description: Care logs
+  - name: reminders
+    description: Care reminders
+  - name: stats
+    description: Collection statistics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +31,527 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /trees:
+    get:
+      operationId: listTrees
+      tags: [trees]
+      summary: List all trees with optional filters
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: climate
+          in: query
+          schema: { type: string }
+        - name: foliage
+          in: query
+          schema: { type: string }
+        - name: tag
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of trees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tree"
+    post:
+      operationId: createTree
+      tags: [trees]
+      summary: Add a new tree
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TreeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tree"
+
+  /trees/{id}:
+    get:
+      operationId: getTree
+      tags: [trees]
+      summary: Get a single tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Tree detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tree"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateTree
+      tags: [trees]
+      summary: Update a tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TreeUpdate"
+      responses:
+        "200":
+          description: Updated tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tree"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteTree
+      tags: [trees]
+      summary: Delete a tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
+  /trees/{id}/logs:
+    get:
+      operationId: listTreeLogs
+      tags: [logs]
+      summary: Get care logs for a tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of care logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CareLog"
+    post:
+      operationId: createTreeLog
+      tags: [logs]
+      summary: Add a care log entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CareLogInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareLog"
+
+  /trees/{id}/logs/{logId}:
+    delete:
+      operationId: deleteTreeLog
+      tags: [logs]
+      summary: Delete a care log entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: logId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
+  /trees/{id}/reminders:
+    get:
+      operationId: listTreeReminders
+      tags: [reminders]
+      summary: Get reminders for a tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of reminders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CareReminder"
+    post:
+      operationId: createTreeReminder
+      tags: [reminders]
+      summary: Add a reminder for a tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CareReminderInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareReminder"
+
+  /trees/{id}/reminders/{reminderId}:
+    patch:
+      operationId: updateTreeReminder
+      tags: [reminders]
+      summary: Update a reminder (e.g. mark complete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: reminderId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CareReminderUpdate"
+      responses:
+        "200":
+          description: Updated reminder
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareReminder"
+    delete:
+      operationId: deleteTreeReminder
+      tags: [reminders]
+      summary: Delete a reminder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: reminderId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
+  /trees/{id}/timeline:
+    get:
+      operationId: getTreeTimeline
+      tags: [trees]
+      summary: Combined timeline of care logs and reminders for a tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Timeline events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimelineEvent"
+
+  /collection/stats:
+    get:
+      operationId: getCollectionStats
+      tags: [stats]
+      summary: Collection statistics and breakdowns
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionStats"
+
+  /reminders/upcoming:
+    get:
+      operationId: listUpcomingReminders
+      tags: [reminders]
+      summary: All upcoming reminders in the next 30 days across all trees
+      responses:
+        "200":
+          description: Upcoming reminders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UpcomingReminder"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    Tree:
+      type: object
+      required: [id, name, tags, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        species:
+          type: ["string", "null"]
+        acquiredDate:
+          type: ["string", "null"]
+        climate:
+          type: ["string", "null"]
+        foliage:
+          type: ["string", "null"]
+        style:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items: { type: string }
+        notes:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    TreeInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        species:
+          type: string
+        acquiredDate:
+          type: string
+        climate:
+          type: string
+        foliage:
+          type: string
+        style:
+          type: string
+        tags:
+          type: array
+          items: { type: string }
+        notes:
+          type: string
+        photoUrl:
+          type: string
+
+    TreeUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        species:
+          type: string
+        acquiredDate:
+          type: string
+        climate:
+          type: string
+        foliage:
+          type: string
+        style:
+          type: string
+        tags:
+          type: array
+          items: { type: string }
+        notes:
+          type: string
+        photoUrl:
+          type: string
+
+    CareLog:
+      type: object
+      required: [id, treeId, type, date, createdAt]
+      properties:
+        id:
+          type: string
+        treeId:
+          type: string
+        type:
+          type: string
+        date:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    CareLogInput:
+      type: object
+      required: [type, date]
+      properties:
+        type:
+          type: string
+        date:
+          type: string
+        notes:
+          type: string
+
+    CareReminder:
+      type: object
+      required: [id, treeId, type, dueDate, completed, createdAt]
+      properties:
+        id:
+          type: string
+        treeId:
+          type: string
+        type:
+          type: string
+        dueDate:
+          type: string
+        notes:
+          type: ["string", "null"]
+        completed:
+          type: boolean
+        createdAt:
+          type: string
+
+    CareReminderInput:
+      type: object
+      required: [type, dueDate]
+      properties:
+        type:
+          type: string
+        dueDate:
+          type: string
+        notes:
+          type: string
+
+    CareReminderUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+        dueDate:
+          type: string
+        notes:
+          type: string
+        completed:
+          type: boolean
+
+    CollectionStats:
+      type: object
+      required: [totalTrees, byClimate, byFoliage, byTag, recentlyAdded]
+      properties:
+        totalTrees:
+          type: integer
+        byClimate:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelCount"
+        byFoliage:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelCount"
+        byTag:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelCount"
+        recentlyAdded:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tree"
+
+    LabelCount:
+      type: object
+      required: [label, count]
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+
+    UpcomingReminder:
+      type: object
+      required: [id, treeId, treeName, type, dueDate, completed, daysUntilDue]
+      properties:
+        id:
+          type: string
+        treeId:
+          type: string
+        treeName:
+          type: string
+        type:
+          type: string
+        dueDate:
+          type: string
+        notes:
+          type: ["string", "null"]
+        completed:
+          type: boolean
+        daysUntilDue:
+          type: integer
+
+    TimelineEvent:
+      type: object
+      required: [id, kind, date, type]
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          description: "log or reminder"
+        date:
+          type: string
+        type:
+          type: string
+        notes:
+          type: ["string", "null"]
+        completed:
+          type: ["boolean", "null"]
