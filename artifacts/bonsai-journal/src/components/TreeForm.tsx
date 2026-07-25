@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { usePhotoUpload } from "@/hooks/use-photo-upload";
+import { useRef, useState } from "react";
+import { ImagePlus, Loader2, X } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -18,7 +21,7 @@ const formSchema = z.object({
   climate: z.string().optional(),
   foliage: z.string().optional(),
   style: z.string().optional(),
-  photoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  photoUrl: z.string().optional().or(z.literal("")),
   notes: z.string().optional(),
 });
 
@@ -32,7 +35,10 @@ interface TreeFormProps {
 export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
   const [_, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.photoUrl ?? null);
+
+  const { uploadPhoto, isUploading, progress, error: uploadError } = usePhotoUpload();
   const createTree = useCreateTree();
   const updateTree = useUpdateTree();
 
@@ -51,6 +57,31 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
       notes: initialData?.notes || "",
     },
   });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Show a local preview immediately
+    const localUrl = URL.createObjectURL(file);
+    setPreviewUrl(localUrl);
+
+    const result = await uploadPhoto(file);
+    if (result) {
+      form.setValue("photoUrl", result.serveUrl);
+      // Replace local blob URL with the real served URL
+      setPreviewUrl(result.serveUrl);
+    } else {
+      // Upload failed — revert preview
+      setPreviewUrl(initialData?.photoUrl ?? null);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPreviewUrl(null);
+    form.setValue("photoUrl", "");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const onSubmit = (values: FormValues) => {
     const data = {
@@ -194,19 +225,68 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="photoUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Photo URL</FormLabel>
-              <FormControl>
-                <Input placeholder="https://..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        {/* Photo upload */}
+        <div className="space-y-2">
+          <FormLabel>Photo</FormLabel>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          {previewUrl ? (
+            <div className="relative inline-block">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="h-48 w-48 object-cover rounded-lg border shadow-sm"
+              />
+              {isUploading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-black/50 text-white text-xs gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>{progress}%</span>
+                </div>
+              )}
+              {!isUploading && (
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  className="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-white shadow hover:bg-destructive/80 transition-colors"
+                  aria-label="Remove photo"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="flex h-48 w-48 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
+            >
+              {isUploading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                <ImagePlus className="w-6 h-6" />
+              )}
+              <span className="text-xs">{isUploading ? `Uploading ${progress}%` : "Choose photo"}</span>
+            </button>
           )}
-        />
+
+          {uploadError && (
+            <p className="text-sm text-destructive">{uploadError}</p>
+          )}
+
+          {/* Keep the hidden field in the form */}
+          <FormField
+            control={form.control}
+            name="photoUrl"
+            render={({ field }) => <input type="hidden" {...field} />}
+          />
+        </div>
 
         <FormField
           control={form.control}
@@ -229,7 +309,7 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
         <div className="flex justify-end gap-3 pt-4">
           <Button 
             type="submit" 
-            disabled={createTree.isPending || updateTree.isPending}
+            disabled={createTree.isPending || updateTree.isPending || isUploading}
           >
             {isEdit ? "Save Changes" : "Plant Tree"}
           </Button>

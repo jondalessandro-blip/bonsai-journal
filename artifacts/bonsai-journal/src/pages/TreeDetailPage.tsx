@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { TreeForm } from "@/components/TreeForm";
 import { LogForm } from "@/components/LogForm";
 import { ReminderForm } from "@/components/ReminderForm";
+import { Lightbox, PhotoZoomHint } from "@/components/Lightbox";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -19,6 +20,7 @@ export default function TreeDetailPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const { data: tree, isLoading: isTreeLoading } = useGetTree(id!, {
     query: { enabled: !!id, queryKey: ["/api/trees", id] }
@@ -97,7 +99,10 @@ export default function TreeDetailPage() {
         <div className="md:col-span-1 space-y-6">
           <div className="rounded-xl overflow-hidden border bg-card shadow-sm aspect-[3/4] relative">
             {tree.photoUrl ? (
-              <img src={tree.photoUrl} alt={tree.name} className="w-full h-full object-cover" />
+              <div className="relative w-full h-full group" onClick={() => setLightboxOpen(true)}>
+                <img src={tree.photoUrl} alt={tree.name} className="w-full h-full object-cover" />
+                <PhotoZoomHint />
+              </div>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/40 bg-muted">
                 <Leaf className="w-16 h-16 mb-4 opacity-20" />
@@ -105,6 +110,10 @@ export default function TreeDetailPage() {
               </div>
             )}
           </div>
+
+          {lightboxOpen && tree.photoUrl && (
+            <Lightbox src={tree.photoUrl} alt={tree.name} onClose={() => setLightboxOpen(false)} />
+          )}
           
           <div className="bg-card p-5 rounded-xl border shadow-sm space-y-4">
             <div>

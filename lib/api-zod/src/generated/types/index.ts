@@ -20,3 +20,5 @@ export * from './tree';
 export * from './treeInput';
 export * from './treeUpdate';
 export * from './upcomingReminder';
+export * from './uploadUrlRequest';
+export * from './uploadUrlResponse';
