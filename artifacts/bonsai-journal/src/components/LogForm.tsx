@@ -66,6 +66,7 @@ export function LogForm({ treeId, onSuccess }: { treeId: string; onSuccess: () =
                     <SelectItem value="Repotting">Repotting</SelectItem>
                     <SelectItem value="Fertilizing">Fertilizing</SelectItem>
                     <SelectItem value="Wiring">Wiring</SelectItem>
+                    <SelectItem value="Winter Prep">Winter Prep</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
