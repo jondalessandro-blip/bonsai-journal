@@ -11,6 +11,7 @@ import { ReminderForm } from "@/components/ReminderForm";
 import { Lightbox, PhotoZoomHint } from "@/components/Lightbox";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 export default function TreeDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -56,15 +57,6 @@ export default function TreeDetailPage() {
     });
   };
 
-  // Simple markdown renderer for notes
-  const renderNotes = (text: string) => {
-    return { __html: text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br/>')
-    };
-  };
 
   return (
     <div className="space-y-8 pb-20 animate-in fade-in duration-500">
@@ -156,8 +148,8 @@ export default function TreeDetailPage() {
           </div>
 
           {tree.notes && (
-            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none bg-card/50 p-6 rounded-xl border border-primary/10">
-              <p dangerouslySetInnerHTML={renderNotes(tree.notes)} />
+            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none bg-card/50 p-6 rounded-xl border border-primary/10 prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-a:text-primary">
+              <ReactMarkdown>{tree.notes}</ReactMarkdown>
             </div>
           )}
 
