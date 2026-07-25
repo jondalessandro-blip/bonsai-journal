@@ -1,9 +1,9 @@
-import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTreeReminder } from "@workspace/api-client-react";
+import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTreeReminder, useDeleteTreeLog, useDeleteTreeReminder } from "@workspace/api-client-react";
 import { useParams, useLocation, Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle } from "lucide-react";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TreeForm } from "@/components/TreeForm";
 import { LogForm } from "@/components/LogForm";
@@ -22,6 +22,8 @@ export default function TreeDetailPage() {
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [editingLog, setEditingLog] = useState<{ id: string; type: string; date: string; notes?: string | null } | null>(null);
+  const [editingReminder, setEditingReminder] = useState<{ id: string; type: string; dueDate: string; notes?: string | null } | null>(null);
 
   const { data: tree, isLoading: isTreeLoading } = useGetTree(id!, {
     query: { enabled: !!id, queryKey: ["/api/trees", id] }
@@ -33,6 +35,8 @@ export default function TreeDetailPage() {
 
   const deleteTree = useDeleteTree();
   const updateReminder = useUpdateTreeReminder();
+  const deleteLog = useDeleteTreeLog();
+  const deleteReminder = useDeleteTreeReminder();
 
   if (isTreeLoading) return <div className="p-8 animate-pulse text-center">Loading...</div>;
   if (!tree) return <div className="p-8 text-center">Tree not found.</div>;
@@ -53,6 +57,27 @@ export default function TreeDetailPage() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
         queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "reminders"] });
+      }
+    });
+  };
+
+  const handleDeleteLog = (logId: string) => {
+    if (!confirm("Delete this care log entry?")) return;
+    deleteLog.mutate({ id: tree.id, logId }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "logs"] });
+      }
+    });
+  };
+
+  const handleDeleteReminder = (reminderId: string) => {
+    if (!confirm("Delete this planned reminder?")) return;
+    deleteReminder.mutate({ id: tree.id, reminderId }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "reminders"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/reminders/upcoming"] });
       }
     });
   };
@@ -211,9 +236,28 @@ export default function TreeDetailPage() {
                         <span className={`font-medium ${isReminder && !isCompleted ? 'text-primary' : 'text-foreground'}`}>
                           {event.type} {isReminder && !isCompleted && "(Planned)"}
                         </span>
-                        <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
-                          {format(date, 'MMM d, yyyy')}
-                        </time>
+                        <div className="flex items-center gap-1">
+                          <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
+                            {format(date, 'MMM d, yyyy')}
+                          </time>
+                          <button
+                            onClick={() => isReminder
+                              ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
+                              : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
+                            }
+                            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            aria-label="Edit"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => isReminder ? handleDeleteReminder(event.id) : handleDeleteLog(event.id)}
+                            className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            aria-label="Delete"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                       {event.notes && (
                         <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : 'text-muted-foreground'}`}>
@@ -229,6 +273,38 @@ export default function TreeDetailPage() {
         </div>
         
       </div>
+
+      {/* Edit log dialog */}
+      <Dialog open={!!editingLog} onOpenChange={(open) => { if (!open) setEditingLog(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Care Log</DialogTitle>
+          </DialogHeader>
+          {editingLog && (
+            <LogForm
+              treeId={tree.id}
+              initialData={editingLog}
+              onSuccess={() => setEditingLog(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit reminder dialog */}
+      <Dialog open={!!editingReminder} onOpenChange={(open) => { if (!open) setEditingReminder(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Planned Care</DialogTitle>
+          </DialogHeader>
+          {editingReminder && (
+            <ReminderForm
+              treeId={tree.id}
+              initialData={editingReminder}
+              onSuccess={() => setEditingReminder(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

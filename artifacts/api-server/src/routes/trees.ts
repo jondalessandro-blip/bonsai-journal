@@ -179,6 +179,38 @@ router.post("/trees/:id/logs", async (req, res): Promise<void> => {
   res.status(201).json(formatLog(log));
 });
 
+router.patch("/trees/:id/logs/:logId", async (req, res): Promise<void> => {
+  const params = DeleteTreeLogParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = CreateTreeLogBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [log] = await db
+    .update(careLogsTable)
+    .set(parsed.data)
+    .where(
+      and(
+        eq(careLogsTable.id, params.data.logId),
+        eq(careLogsTable.treeId, params.data.id),
+      ),
+    )
+    .returning();
+
+  if (!log) {
+    res.status(404).json({ error: "Log not found" });
+    return;
+  }
+
+  res.json(formatLog(log));
+});
+
 router.delete("/trees/:id/logs/:logId", async (req, res): Promise<void> => {
   const params = DeleteTreeLogParams.safeParse(req.params);
   if (!params.success) {

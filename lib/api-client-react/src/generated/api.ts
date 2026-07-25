@@ -736,6 +736,80 @@ export const useCreateTreeLog = <TError = ErrorType<unknown>,
       return useMutation(getCreateTreeLogMutationOptions(options));
     }
 
+export const getUpdateTreeLogUrl = (id: string,
+    logId: string,) => {
+
+
+
+
+  return `/api/trees/${id}/logs/${logId}`
+}
+
+/**
+ * @summary Update a care log entry
+ */
+export const updateTreeLog = async (id: string,
+    logId: string,
+    careLogInput: CareLogInput, options?: RequestInit): Promise<CareLog> => {
+
+  return customFetch<CareLog>(getUpdateTreeLogUrl(id,logId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(careLogInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateTreeLogMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTreeLog>>, TError,{id: string;logId: string;data: BodyType<CareLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTreeLog>>, TError,{id: string;logId: string;data: BodyType<CareLogInput>}, TContext> => {
+
+const mutationKey = ['updateTreeLog'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTreeLog>>, {id: string;logId: string;data: BodyType<CareLogInput>}> = (props) => {
+          const {id,logId,data} = props ?? {};
+
+          return  updateTreeLog(id,logId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTreeLogMutationResult = NonNullable<Awaited<ReturnType<typeof updateTreeLog>>>
+    export type UpdateTreeLogMutationBody = BodyType<CareLogInput>
+    export type UpdateTreeLogMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a care log entry
+ */
+export const useUpdateTreeLog = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTreeLog>>, TError,{id: string;logId: string;data: BodyType<CareLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTreeLog>>,
+        TError,
+        {id: string;logId: string;data: BodyType<CareLogInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateTreeLogMutationOptions(options));
+    }
+
 export const getDeleteTreeLogUrl = (id: string,
     logId: string,) => {
 

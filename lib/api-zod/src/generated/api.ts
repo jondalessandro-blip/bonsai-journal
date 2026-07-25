@@ -210,6 +210,30 @@ export const CreateTreeLogResponse = zod.object({
 
 
 /**
+ * @summary Update a care log entry
+ */
+export const UpdateTreeLogParams = zod.object({
+  "id": zod.coerce.string(),
+  "logId": zod.coerce.string()
+})
+
+export const UpdateTreeLogBody = zod.object({
+  "type": zod.string(),
+  "date": zod.string(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateTreeLogResponse = zod.object({
+  "id": zod.string(),
+  "treeId": zod.string(),
+  "type": zod.string(),
+  "date": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Delete a care log entry
  */
 export const DeleteTreeLogParams = zod.object({

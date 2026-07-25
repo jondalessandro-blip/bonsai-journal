@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateTreeLog } from "@workspace/api-client-react";
+import { useCreateTreeLog, useUpdateTreeLog } from "@workspace/api-client-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,32 +17,50 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function LogForm({ treeId, onSuccess }: { treeId: string; onSuccess: () => void }) {
+interface LogFormProps {
+  treeId: string;
+  onSuccess: () => void;
+  /** Provide to put the form into edit mode */
+  initialData?: { id: string; type: string; date: string; notes?: string | null };
+}
+
+export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
   const queryClient = useQueryClient();
   const createLog = useCreateTreeLog();
+  const updateLog = useUpdateTreeLog();
+  const isEdit = !!initialData;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "Watering",
-      date: new Date().toISOString().split('T')[0],
-      notes: "",
+      type: initialData?.type ?? "Watering",
+      date: initialData?.date
+        ? initialData.date.split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      notes: initialData?.notes ?? "",
     },
   });
 
-  const onSubmit = (values: FormValues) => {
-    createLog.mutate(
-      { id: treeId, data: values },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId, "logs"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId, "timeline"] });
-          form.reset();
-          onSuccess();
-        },
-      }
-    );
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId, "logs"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId, "timeline"] });
   };
+
+  const onSubmit = (values: FormValues) => {
+    if (isEdit) {
+      updateLog.mutate(
+        { id: treeId, logId: initialData.id, data: values },
+        { onSuccess: () => { invalidate(); onSuccess(); } }
+      );
+    } else {
+      createLog.mutate(
+        { id: treeId, data: values },
+        { onSuccess: () => { invalidate(); form.reset(); onSuccess(); } }
+      );
+    }
+  };
+
+  const isPending = createLog.isPending || updateLog.isPending;
 
   return (
     <Form {...form}>
@@ -102,7 +120,9 @@ export function LogForm({ treeId, onSuccess }: { treeId: string; onSuccess: () =
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={createLog.isPending}>Add Log Entry</Button>
+          <Button type="submit" disabled={isPending}>
+            {isEdit ? "Save Changes" : "Add Log Entry"}
+          </Button>
         </div>
       </form>
     </Form>

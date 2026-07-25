@@ -201,6 +201,32 @@ paths:
                 $ref: "#/components/schemas/CareLog"
 
   /trees/{id}/logs/{logId}:
+    patch:
+      operationId: updateTreeLog
+      tags: [logs]
+      summary: Update a care log entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: logId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CareLogInput"
+      responses:
+        "200":
+          description: Updated log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareLog"
     delete:
       operationId: deleteTreeLog
       tags: [logs]
