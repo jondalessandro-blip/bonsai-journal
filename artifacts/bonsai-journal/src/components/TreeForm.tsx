@@ -128,7 +128,7 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
               <FormItem>
                 <FormLabel>Name / Identifier</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. The Old Elm, Specimen #01" {...field} />
+                  <Input placeholder="e.g. The Old Elm, Specimen #01" autoComplete="off" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
