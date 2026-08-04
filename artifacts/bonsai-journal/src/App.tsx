@@ -9,7 +9,15 @@ import TreeDetailPage from '@/pages/TreeDetailPage';
 import NewTreePage from '@/pages/NewTreePage';
 import StatsPage from '@/pages/StatsPage';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,          // treat data as fresh for 1 min — no refetch on every mount
+      gcTime: 5 * 60_000,         // keep unused cache for 5 min
+      refetchOnWindowFocus: false, // single-user app; mutations already invalidate manually
+    },
+  },
+});
 
 function Router() {
   return (

@@ -53,13 +53,38 @@ router.get("/trees", async (req, res): Promise<void> => {
     conditions.push(sql`${treesTable.tags} @> ARRAY[${tag}]::text[]`);
   }
 
+  // Exclude `notes` (large text) from list — detail endpoint returns full record
   const trees = await db
-    .select()
+    .select({
+      id: treesTable.id,
+      name: treesTable.name,
+      species: treesTable.species,
+      acquiredDate: treesTable.acquiredDate,
+      climate: treesTable.climate,
+      foliage: treesTable.foliage,
+      style: treesTable.style,
+      tags: treesTable.tags,
+      photoUrl: treesTable.photoUrl,
+      createdAt: treesTable.createdAt,
+      updatedAt: treesTable.updatedAt,
+    })
     .from(treesTable)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(treesTable.createdAt);
 
-  res.json(trees.map(formatTree));
+  res.json(trees.map(t => ({
+    id: t.id,
+    name: t.name,
+    species: t.species,
+    acquiredDate: t.acquiredDate,
+    climate: t.climate,
+    foliage: t.foliage,
+    style: t.style,
+    tags: t.tags,
+    photoUrl: t.photoUrl,
+    createdAt: t.createdAt.toISOString(),
+    updatedAt: t.updatedAt.toISOString(),
+  })));
 });
 
 router.post("/trees", async (req, res): Promise<void> => {

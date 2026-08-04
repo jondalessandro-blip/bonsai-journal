@@ -6,16 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
 import { Plus, Search, Leaf } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 
 export default function CollectionPage() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [climate, setClimate] = useState<string>("all");
   const [foliage, setFoliage] = useState<string>("all");
 
+  // Debounce search input — avoids an API call on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const { data: trees, isLoading: isTreesLoading } = useListTrees({
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     climate: climate !== "all" ? climate : undefined,
     foliage: foliage !== "all" ? foliage : undefined
   });

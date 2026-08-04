@@ -17,6 +17,8 @@ export function TreeGridTile({ tree }: { tree: Tree }) {
           <img
             src={tree.photoUrl}
             alt={tree.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
         ) : (
