@@ -77,7 +77,10 @@ export default function CollectionPage() {
               <SelectItem value="all">All Foliage</SelectItem>
               <SelectItem value="Deciduous">Deciduous</SelectItem>
               <SelectItem value="Conifer">Conifer</SelectItem>
-              <SelectItem value="Broadleaf Evergreen">Broadleaf</SelectItem>
+              <SelectItem value="Broadleaf Evergreen">
+                <span className="hidden sm:inline">Broadleaf Evergreen</span>
+                <span className="sm:hidden">Broadleaf Evergr.</span>
+              </SelectItem>
               <SelectItem value="Succulent / Desert">Succulent</SelectItem>
             </SelectContent>
           </Select>
