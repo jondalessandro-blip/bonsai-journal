@@ -3,14 +3,14 @@ import { useParams, useLocation, Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil } from "lucide-react";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TreeForm } from "@/components/TreeForm";
 import { LogForm } from "@/components/LogForm";
 import { ReminderForm } from "@/components/ReminderForm";
 import { Lightbox, PhotoZoomHint } from "@/components/Lightbox";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 
 export default function TreeDetailPage() {
@@ -22,8 +22,47 @@ export default function TreeDetailPage() {
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [notesExpanded, setNotesExpanded] = useState(false);
   const [editingLog, setEditingLog] = useState<{ id: string; type: string; date: string; notes?: string | null } | null>(null);
   const [editingReminder, setEditingReminder] = useState<{ id: string; type: string; dueDate: string; notes?: string | null } | null>(null);
+
+  // Measure left col + right header to constrain notes height on desktop
+  const leftColRef = useRef<HTMLDivElement>(null);
+  const rightHeaderRef = useRef<HTMLDivElement>(null);
+  const [notesMaxHeight, setNotesMaxHeight] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const compute = () => {
+      if (!leftColRef.current || !rightHeaderRef.current) return;
+      if (window.innerWidth >= 768) {
+        const leftH = leftColRef.current.offsetHeight;
+        const headerH = rightHeaderRef.current.offsetHeight;
+        const gap = 32; // matches space-y-8 gap between sections
+        setNotesMaxHeight(Math.max(120, leftH - headerH - gap));
+      } else {
+        setNotesMaxHeight(undefined);
+      }
+    };
+    const ro = new ResizeObserver(compute);
+    if (leftColRef.current) ro.observe(leftColRef.current);
+    if (rightHeaderRef.current) ro.observe(rightHeaderRef.current);
+    window.addEventListener("resize", compute);
+    compute();
+    return () => { ro.disconnect(); window.removeEventListener("resize", compute); };
+  }, []);
+
+  // Lock body scroll when notes are fullscreen
+  useEffect(() => {
+    document.body.style.overflow = notesExpanded ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [notesExpanded]);
+
+  useEffect(() => {
+    if (!notesExpanded) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setNotesExpanded(false); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [notesExpanded]);
 
   const { data: tree, isLoading: isTreeLoading } = useGetTree(id!, {
     query: { enabled: !!id, queryKey: ["/api/trees", id] }
@@ -113,7 +152,7 @@ export default function TreeDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
         {/* Left Col - Photo & Primary Info */}
-        <div className="md:col-span-1 space-y-6">
+        <div ref={leftColRef} className="md:col-span-1 space-y-6">
           <div className="rounded-xl overflow-hidden border bg-card shadow-sm aspect-[3/4] relative">
             {tree.photoUrl ? (
               <div className="relative w-full h-full group" onClick={() => setLightboxOpen(true)}>
@@ -167,14 +206,73 @@ export default function TreeDetailPage() {
 
         {/* Right Col - Content */}
         <div className="md:col-span-2 space-y-8">
-          <div>
+          <div ref={rightHeaderRef}>
             <h1 className="text-4xl font-serif text-foreground mb-1">{tree.name}</h1>
             {tree.species && <p className="text-xl italic text-muted-foreground">{tree.species}</p>}
           </div>
 
           {tree.notes && (
-            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none bg-card/50 p-6 rounded-xl border border-primary/10 prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-a:text-primary">
-              <ReactMarkdown>{tree.notes}</ReactMarkdown>
+            <div className="bg-card/50 rounded-xl border border-primary/10 overflow-hidden">
+              {/* Panel header */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <ScrollText className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-widest">General Notes</span>
+                </div>
+                <button
+                  onClick={() => setNotesExpanded(true)}
+                  className="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-medium px-2 py-1 rounded-md hover:bg-primary/10 transition-colors"
+                  aria-label="Expand notes to full screen"
+                >
+                  <span className="hidden sm:inline">Expand</span>
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Scrollable content */}
+              <div
+                className="overflow-y-auto px-5 pb-5"
+                style={notesMaxHeight !== undefined
+                  ? { maxHeight: `${notesMaxHeight}px` }
+                  : { maxHeight: "80vh" }
+                }
+              >
+                <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-a:text-primary">
+                  <ReactMarkdown>{tree.notes}</ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Notes full-screen overlay */}
+          {notesExpanded && tree.notes && (
+            <div
+              className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col animate-in fade-in duration-200"
+              role="dialog"
+              aria-modal="true"
+              aria-label="General Notes — full view"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b bg-card shrink-0">
+                <div className="flex items-center gap-2.5 text-primary">
+                  <ScrollText className="w-5 h-5" />
+                  <div>
+                    <h2 className="font-serif text-lg leading-tight">General Notes</h2>
+                    <p className="text-xs text-muted-foreground">{tree.name}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setNotesExpanded(false)}
+                  className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  aria-label="Close full-screen notes"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-6 max-w-3xl w-full mx-auto">
+                <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-a:text-primary">
+                  <ReactMarkdown>{tree.notes}</ReactMarkdown>
+                </div>
+              </div>
             </div>
           )}
 
