@@ -1,6 +1,6 @@
 import { useListTrees, useListUpcomingReminders } from "@workspace/api-client-react";
 import { TreeCard } from "@/components/TreeCard";
-import { TreeListItem } from "@/components/TreeListItem";
+import { TreeGridTile } from "@/components/TreeGridTile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -106,14 +106,11 @@ export default function CollectionPage() {
       {isTreesLoading ? (
         <>
           {/* Mobile skeleton */}
-          <div className="sm:hidden divide-y divide-border/50 rounded-xl border bg-card overflow-hidden">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse">
-                <div className="w-14 h-14 rounded-lg bg-muted shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3.5 bg-muted rounded w-2/3" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
-                </div>
+          <div className="sm:hidden grid grid-cols-3 gap-3">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="flex flex-col gap-1.5 animate-pulse">
+                <div className="w-full aspect-square rounded-xl bg-muted" />
+                <div className="h-3 bg-muted rounded w-3/4 mx-auto" />
               </div>
             ))}
           </div>
@@ -126,10 +123,10 @@ export default function CollectionPage() {
         </>
       ) : trees && trees.length > 0 ? (
         <>
-          {/* Mobile list */}
-          <div className="sm:hidden divide-y divide-border/50 rounded-xl border bg-card px-3 overflow-hidden">
+          {/* Mobile grid */}
+          <div className="sm:hidden grid grid-cols-3 gap-3">
             {trees.map(tree => (
-              <TreeListItem key={tree.id} tree={tree} />
+              <TreeGridTile key={tree.id} tree={tree} />
             ))}
           </div>
           {/* Desktop grid */}
