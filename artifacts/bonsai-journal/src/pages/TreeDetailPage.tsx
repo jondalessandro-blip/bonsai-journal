@@ -153,7 +153,7 @@ export default function TreeDetailPage() {
         
         {/* Left Col - Photo & Primary Info */}
         <div ref={leftColRef} className="md:col-span-1 space-y-6">
-          <div className="rounded-xl overflow-hidden border bg-card shadow-sm aspect-[3/4] relative">
+          <div className="rounded-xl overflow-hidden border bg-card shadow-sm h-52 sm:h-60 md:h-56 lg:h-64 relative">
             {tree.photoUrl ? (
               <div className="relative w-full h-full group" onClick={() => setLightboxOpen(true)}>
                 <img src={tree.photoUrl} alt={tree.name} className="w-full h-full object-cover" />
