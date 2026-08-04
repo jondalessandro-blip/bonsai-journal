@@ -23,6 +23,7 @@ export default function TreeDetailPage() {
   const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
+  const [careExpanded, setCareExpanded] = useState(false);
   const [editingLog, setEditingLog] = useState<{ id: string; type: string; date: string; notes?: string | null } | null>(null);
   const [editingReminder, setEditingReminder] = useState<{ id: string; type: string; dueDate: string; notes?: string | null } | null>(null);
 
@@ -51,18 +52,20 @@ export default function TreeDetailPage() {
     return () => { ro.disconnect(); window.removeEventListener("resize", compute); };
   }, []);
 
-  // Lock body scroll when notes are fullscreen
+  // Lock body scroll when any fullscreen panel is open
   useEffect(() => {
-    document.body.style.overflow = notesExpanded ? "hidden" : "";
+    document.body.style.overflow = (notesExpanded || careExpanded) ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [notesExpanded]);
+  }, [notesExpanded, careExpanded]);
 
   useEffect(() => {
-    if (!notesExpanded) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setNotesExpanded(false); };
+    if (!notesExpanded && !careExpanded) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { setNotesExpanded(false); setCareExpanded(false); }
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [notesExpanded]);
+  }, [notesExpanded, careExpanded]);
 
   const { data: tree, isLoading: isTreeLoading } = useGetTree(id!, {
     query: { enabled: !!id, queryKey: ["/api/trees", id] }
@@ -277,97 +280,203 @@ export default function TreeDetailPage() {
           )}
 
           <div className="space-y-6 pt-6 border-t">
+            {/* Care Journal header */}
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-serif">Care Journal</h2>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
                   </DialogTrigger>
                   <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Care Log</DialogTitle>
-                    </DialogHeader>
+                    <DialogHeader><DialogTitle>Add Care Log</DialogTitle></DialogHeader>
                     <LogForm treeId={tree.id} onSuccess={() => setIsLogOpen(false)} />
                   </DialogContent>
                 </Dialog>
-                
                 <Dialog open={isReminderOpen} onOpenChange={setIsReminderOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
                   </DialogTrigger>
                   <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Schedule Care</DialogTitle>
-                    </DialogHeader>
+                    <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
                     <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
                   </DialogContent>
                 </Dialog>
+                <button
+                  onClick={() => setCareExpanded(true)}
+                  className="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-medium px-2 py-1.5 rounded-md hover:bg-primary/10 transition-colors border border-transparent hover:border-primary/20"
+                  aria-label="Expand Care Journal to full screen"
+                >
+                  <span className="hidden sm:inline">Expand</span>
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
 
-            <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-              {timeline?.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground text-sm italic">
-                  The pages are blank. Start logging care.
-                </div>
-              )}
-              {timeline?.map((event) => {
-                const isReminder = event.kind === "reminder";
-                const isCompleted = isReminder && event.completed;
-                const date = parseISO(event.date);
-                
-                return (
-                  <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-card shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 text-primary">
-                      {isReminder ? (
-                        <button onClick={() => handleToggleReminder(event.id, !event.completed)} className="hover:text-primary transition-colors focus:outline-none">
-                          {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 opacity-50 hover:opacity-100" />}
-                        </button>
-                      ) : (
-                        <Leaf className="w-4 h-4 opacity-70" />
-                      )}
-                    </div>
-                    
-                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border bg-card shadow-sm transition-all hover:shadow-md">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`font-medium ${isReminder && !isCompleted ? 'text-primary' : 'text-foreground'}`}>
-                          {event.type} {isReminder && !isCompleted && "(Planned)"}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
-                            {format(date, 'MMM d, yyyy')}
-                          </time>
-                          <button
-                            onClick={() => isReminder
-                              ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
-                              : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
-                            }
-                            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            aria-label="Edit"
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() => isReminder ? handleDeleteReminder(event.id) : handleDeleteLog(event.id)}
-                            className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                            aria-label="Delete"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                      {event.notes && (
-                        <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : 'text-muted-foreground'}`}>
-                          {event.notes}
-                        </p>
-                      )}
-                    </div>
+            {/* Scrollable timeline — ~one viewport tall */}
+            <div className="overflow-y-auto max-h-[80vh]">
+              <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+                {timeline?.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground text-sm italic">
+                    The pages are blank. Start logging care.
                   </div>
-                );
-              })}
+                )}
+                {timeline?.map((event) => {
+                  const isReminder = event.kind === "reminder";
+                  const isCompleted = isReminder && event.completed;
+                  const date = parseISO(event.date);
+                  return (
+                    <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-card shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 text-primary">
+                        {isReminder ? (
+                          <button onClick={() => handleToggleReminder(event.id, !event.completed)} className="hover:text-primary transition-colors focus:outline-none">
+                            {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 opacity-50 hover:opacity-100" />}
+                          </button>
+                        ) : (
+                          <Leaf className="w-4 h-4 opacity-70" />
+                        )}
+                      </div>
+                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border bg-card shadow-sm transition-all hover:shadow-md">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`font-medium ${isReminder && !isCompleted ? 'text-primary' : 'text-foreground'}`}>
+                            {event.type} {isReminder && !isCompleted && "(Planned)"}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
+                              {format(date, 'MMM d, yyyy')}
+                            </time>
+                            <button
+                              onClick={() => isReminder
+                                ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
+                                : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
+                              }
+                              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                              aria-label="Edit"
+                            ><Pencil className="w-3 h-3" /></button>
+                            <button
+                              onClick={() => isReminder ? handleDeleteReminder(event.id) : handleDeleteLog(event.id)}
+                              className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              aria-label="Delete"
+                            ><Trash2 className="w-3 h-3" /></button>
+                          </div>
+                        </div>
+                        {event.notes && (
+                          <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : 'text-muted-foreground'}`}>
+                            {event.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
+
+          {/* Care Journal full-screen overlay */}
+          {careExpanded && (
+            <div
+              className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col animate-in fade-in duration-200"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Care Journal — full view"
+            >
+              {/* Top bar */}
+              <div className="flex items-center justify-between px-5 py-4 border-b bg-card shrink-0">
+                <div className="flex items-center gap-2.5 text-primary">
+                  <Scissors className="w-5 h-5" />
+                  <div>
+                    <h2 className="font-serif text-lg leading-tight">Care Journal</h2>
+                    <p className="text-xs text-muted-foreground">{tree.name} · {timeline?.length ?? 0} entr{timeline?.length === 1 ? 'y' : 'ies'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Add Care Log</DialogTitle></DialogHeader>
+                      <LogForm treeId={tree.id} onSuccess={() => setIsLogOpen(false)} />
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog open={isReminderOpen} onOpenChange={setIsReminderOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
+                      <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
+                    </DialogContent>
+                  </Dialog>
+                  <button
+                    onClick={() => setCareExpanded(false)}
+                    className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                    aria-label="Close full-screen care journal"
+                  ><X className="w-5 h-5" /></button>
+                </div>
+              </div>
+
+              {/* Scrollable full journal */}
+              <div className="flex-1 overflow-y-auto px-4 py-6 max-w-4xl w-full mx-auto">
+                <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+                  {timeline?.length === 0 && (
+                    <div className="text-center py-12 text-muted-foreground text-sm italic">
+                      The pages are blank. Start logging care.
+                    </div>
+                  )}
+                  {timeline?.map((event) => {
+                    const isReminder = event.kind === "reminder";
+                    const isCompleted = isReminder && event.completed;
+                    const date = parseISO(event.date);
+                    return (
+                      <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-card shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 text-primary">
+                          {isReminder ? (
+                            <button onClick={() => handleToggleReminder(event.id, !event.completed)} className="hover:text-primary transition-colors focus:outline-none">
+                              {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 opacity-50 hover:opacity-100" />}
+                            </button>
+                          ) : (
+                            <Leaf className="w-4 h-4 opacity-70" />
+                          )}
+                        </div>
+                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border bg-card shadow-sm transition-all hover:shadow-md">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className={`font-medium ${isReminder && !isCompleted ? 'text-primary' : 'text-foreground'}`}>
+                              {event.type} {isReminder && !isCompleted && "(Planned)"}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
+                                {format(date, 'MMM d, yyyy')}
+                              </time>
+                              <button
+                                onClick={() => isReminder
+                                  ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
+                                  : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
+                                }
+                                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                aria-label="Edit"
+                              ><Pencil className="w-3 h-3" /></button>
+                              <button
+                                onClick={() => isReminder ? handleDeleteReminder(event.id) : handleDeleteLog(event.id)}
+                                className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                aria-label="Delete"
+                              ><Trash2 className="w-3 h-3" /></button>
+                            </div>
+                          </div>
+                          {event.notes && (
+                            <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : 'text-muted-foreground'}`}>
+                              {event.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
       </div>
