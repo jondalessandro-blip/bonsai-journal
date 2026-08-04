@@ -65,7 +65,6 @@ export default function CollectionPage() {
             <SelectContent>
               <SelectItem value="all">All Climates</SelectItem>
               <SelectItem value="Hardy / Outdoor">Hardy / Outdoor</SelectItem>
-              <SelectItem value="Cold Hardy Conifer">Cold Hardy Conifer</SelectItem>
               <SelectItem value="Tropical & Subtropical">Tropical</SelectItem>
             </SelectContent>
           </Select>

@@ -163,7 +163,6 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="Hardy / Outdoor">Hardy / Outdoor</SelectItem>
-                    <SelectItem value="Cold Hardy Conifer">Cold Hardy Conifer</SelectItem>
                     <SelectItem value="Tropical & Subtropical">Tropical & Subtropical</SelectItem>
                   </SelectContent>
                 </Select>
