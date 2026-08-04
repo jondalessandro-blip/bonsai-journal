@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, ilike, sql } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { db, treesTable, careLogsTable, careRemindersTable } from "@workspace/db";
 import {
   ListTreesQueryParams,
@@ -36,7 +36,12 @@ router.get("/trees", async (req, res): Promise<void> => {
 
   const conditions = [];
   if (search) {
-    conditions.push(ilike(treesTable.name, `%${search}%`));
+    conditions.push(
+      or(
+        ilike(treesTable.name, `%${search}%`),
+        ilike(treesTable.species, `%${search}%`)
+      )
+    );
   }
   if (climate) {
     conditions.push(eq(treesTable.climate, climate));
