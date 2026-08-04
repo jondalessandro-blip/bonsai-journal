@@ -1,5 +1,6 @@
 import { useListTrees, useListUpcomingReminders } from "@workspace/api-client-react";
 import { TreeCard } from "@/components/TreeCard";
+import { TreeListItem } from "@/components/TreeListItem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -101,19 +102,43 @@ export default function CollectionPage() {
         </div>
       </div>
 
-      {/* Grid */}
+      {/* Trees — mobile list (< sm) */}
       {isTreesLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {[1,2,3,4].map(i => (
-            <div key={i} className="rounded-xl border bg-card/50 aspect-[3/4] animate-pulse" />
-          ))}
-        </div>
+        <>
+          {/* Mobile skeleton */}
+          <div className="sm:hidden divide-y divide-border/50 rounded-xl border bg-card overflow-hidden">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse">
+                <div className="w-14 h-14 rounded-lg bg-muted shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 bg-muted rounded w-2/3" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop skeleton */}
+          <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="rounded-xl border bg-card/50 aspect-[3/4] animate-pulse" />
+            ))}
+          </div>
+        </>
       ) : trees && trees.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {trees.map((tree) => (
-            <TreeCard key={tree.id} tree={tree} />
-          ))}
-        </div>
+        <>
+          {/* Mobile list */}
+          <div className="sm:hidden divide-y divide-border/50 rounded-xl border bg-card px-3 overflow-hidden">
+            {trees.map(tree => (
+              <TreeListItem key={tree.id} tree={tree} />
+            ))}
+          </div>
+          {/* Desktop grid */}
+          <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {trees.map(tree => (
+              <TreeCard key={tree.id} tree={tree} />
+            ))}
+          </div>
+        </>
       ) : (
         <div className="text-center py-24 bg-card/30 rounded-xl border border-dashed">
           <Leaf className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
