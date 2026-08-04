@@ -4,10 +4,10 @@ import { TreeGridTile } from "@/components/TreeGridTile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle, Leaf } from "lucide-react";
+import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
+import { Plus, Search, Leaf } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
-import { format, parseISO } from "date-fns";
 
 export default function CollectionPage() {
   const [search, setSearch] = useState("");
@@ -25,27 +25,9 @@ export default function CollectionPage() {
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
       
-      {/* Reminders Banner */}
+      {/* Upcoming Care Panel */}
       {reminders && reminders.length > 0 && (
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex items-center gap-3 text-primary">
-            <AlertCircle className="w-5 h-5" />
-            <div>
-              <p className="font-medium text-sm">Upcoming Care Needed</p>
-              <p className="text-xs opacity-80">{reminders.length} task{reminders.length > 1 ? 's' : ''} due soon</p>
-            </div>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {reminders.slice(0, 2).map(r => (
-              <Link key={r.id} href={`/trees/${r.treeId}`} className="text-xs bg-background border border-primary/20 px-3 py-1.5 rounded-md hover:border-primary/50 transition-colors">
-                <span className="font-medium">{r.treeName}</span>: {r.type}
-              </Link>
-            ))}
-            {reminders.length > 2 && (
-              <span className="text-xs px-2 py-1.5 text-muted-foreground flex items-center">+{reminders.length - 2} more</span>
-            )}
-          </div>
-        </div>
+        <UpcomingCarePanel reminders={reminders} />
       )}
 
       {/* Header & Controls */}
