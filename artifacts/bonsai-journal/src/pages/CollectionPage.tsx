@@ -32,6 +32,8 @@ export default function CollectionPage() {
   const [status, setStatus] = useState<string>(urlStatus);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagsOpen, setTagsOpen] = useState(false);
+  // Master tag list — only ever grows so the popover stays complete while a tag filter is active
+  const [knownTags, setKnownTags] = useState<string[]>([]);
 
   // Keep status state in sync with URL (handles browser back/forward)
   useEffect(() => {
@@ -88,21 +90,26 @@ export default function CollectionPage() {
 
   const trees = useMemo(() => data?.pages.flat() ?? [], [data]);
 
-  // Derive available tags for the filter dropdown from loaded pages only
-  const allAvailableTags = useMemo(() => {
-    return [...new Set(trees.flatMap((t) => t.tags))].sort();
+  // Grow the master tag list as new trees load — never shrinks so the popover
+  // stays complete even when a tag filter is active and results are narrowed.
+  useEffect(() => {
+    if (!trees.length) return;
+    setKnownTags((prev) => {
+      const next = [...new Set([...prev, ...trees.flatMap((t) => t.tags)])].sort();
+      return next.length === prev.length ? prev : next;
+    });
   }, [trees]);
 
-  // Prune localStorage and drop stale selected tags whenever loaded data changes
+  // Prune localStorage stale tags (from deleted trees) — but don't touch selectedTags
+  // so the active filter isn't cleared when filtered results don't contain all chosen tags.
   useEffect(() => {
     if (!data) return;
-    const liveTagSet = new Set(trees.flatMap((t) => t.tags));
     try {
+      const liveTagSet = new Set(trees.flatMap((t) => t.tags));
       const stored: string[] = JSON.parse(localStorage.getItem(CUSTOM_TAGS_KEY) || "[]");
       const pruned = stored.filter((t) => liveTagSet.has(t));
       localStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(pruned));
     } catch { /* ignore */ }
-    setSelectedTags((prev) => prev.filter((t) => liveTagSet.has(t)));
   }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // IntersectionObserver — auto-load next page when sentinel scrolls into view
@@ -241,11 +248,11 @@ export default function CollectionPage() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-2" align="start">
-              {allAvailableTags.length === 0 ? (
+              {knownTags.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-4">No tags yet</p>
               ) : (
                 <div className="space-y-0.5 max-h-60 overflow-y-auto">
-                  {allAvailableTags.map((tag) => (
+                  {knownTags.map((tag) => (
                     <button
                       key={tag}
                       onClick={() => toggleTag(tag)}
