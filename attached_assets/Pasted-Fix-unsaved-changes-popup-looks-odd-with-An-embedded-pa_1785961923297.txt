@@ -1,0 +1,45 @@
+Fix unsaved changes popup looks odd with "An embedded page at ea444df3..." and wrong message.
+
+Root cause: Using window.confirm() / window.alert() instead of custom Dialog. That shows browser chrome with Replit URL. Also message text is wrong: "Are you sure you want to delete this tree?" should be unsaved changes message.
+
+Fix:
+
+1. REMOVE all window.confirm, window.alert for unsaved changes and for delete.
+   Search code for window.confirm and replace.
+
+2. Create proper unsaved changes Dialog (use existing shadcn Dialog component):
+
+   <Dialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+     <DialogContent className="max-w-">
+       <DialogHeader>
+         <DialogTitle>Unsaved Changes</DialogTitle>
+         <DialogDescription>
+           You have unsaved changes. If you leave without saving, your changes will be lost.
+         </DialogDescription>
+       </DialogHeader>
+       <DialogFooter className="flex gap-2 justify-end">
+         <Button variant="outline" onClick={()=>setShowUnsavedDialog(false)}>Continue Editing</Button>
+         <Button variant="destructive" onClick={()=>{ setShowUnsavedDialog(false); blocker.proceed() }}>Leave Without Saving</Button>
+       </DialogFooter>
+     </DialogContent>
+   </Dialog>
+
+3. Wire to useBlocker:
+   const blocker = useBlocker(isDirty)
+   useEffect(()=>{
+     if(blocker.state==='blocked') setShowUnsavedDialog(true)
+   },[blocker])
+
+   When user clicks "Leave" -> blocker.proceed()
+   When "Continue" -> blocker.reset() + close dialog
+
+4. For DELETE tree confirmation - also use custom Dialog, not window.confirm:
+   Title: Delete Tree?
+   Desc: Are you sure you want to delete Dwarf Jade? This cannot be undone.
+   Buttons: Cancel / Delete
+
+5. beforeunload handler should stay native (browser requires it) but it will show simple message without URL in production custom domain. Can't avoid native for tab close, but for in-app navigation MUST use custom dialog.
+
+Test: Edit tree -> click My Collection -> should show clean "Unsaved Changes" modal with NO "embedded page at..." text, NO replit URL, correct message. Delete button shows separate Delete modal.
+
+Publish to prod https://url-scanner--jondalessandro.replit.app - prod domain won't show replit URL in native beforeunload, but custom dialog fixes in-app nav.

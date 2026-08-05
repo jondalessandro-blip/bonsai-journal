@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText, Activity } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { TreeForm, type TreeFormHandle } from "@/components/TreeForm";
 import { LogForm } from "@/components/LogForm";
 import { ReminderForm } from "@/components/ReminderForm";
@@ -31,6 +32,11 @@ export default function TreeDetailPage() {
   const [editingLog, setEditingLog] = useState<{ id: string; type: string; date: string; notes?: string | null } | null>(null);
   const [editingReminder, setEditingReminder] = useState<{ id: string; type: string; dueDate: string; notes?: string | null } | null>(null);
   const [careFilter, setCareFilter] = useState<"all" | "completed" | "planned">("all");
+
+  // Confirmation dialogs — replacing native confirm() to avoid browser "embedded page" prompt
+  const [confirmDeleteTree, setConfirmDeleteTree] = useState(false);
+  const [pendingDeleteLogId, setPendingDeleteLogId] = useState<string | null>(null);
+  const [pendingDeleteReminderId, setPendingDeleteReminderId] = useState<string | null>(null);
 
   // Lock body scroll when any fullscreen panel is open
   useEffect(() => {
@@ -73,15 +79,16 @@ export default function TreeDetailPage() {
   if (isTreeLoading) return <div className="p-8 animate-pulse text-center">Loading...</div>;
   if (!tree) return <div className="p-8 text-center">Tree not found.</div>;
 
-  const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this tree? This cannot be undone.")) {
-      deleteTree.mutate({ id: tree.id }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
-          setLocation("/");
-        }
-      });
-    }
+  const handleDelete = () => setConfirmDeleteTree(true);
+
+  const confirmDoDeleteTree = () => {
+    setConfirmDeleteTree(false);
+    deleteTree.mutate({ id: tree.id }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
+        setLocation("/");
+      }
+    });
   };
 
   const handleToggleReminder = (reminderId: string, completed: boolean) => {
@@ -93,8 +100,12 @@ export default function TreeDetailPage() {
     });
   };
 
-  const handleDeleteLog = (logId: string) => {
-    if (!confirm("Delete this care log entry?")) return;
+  const handleDeleteLog = (logId: string) => setPendingDeleteLogId(logId);
+
+  const confirmDoDeleteLog = () => {
+    if (!pendingDeleteLogId) return;
+    const logId = pendingDeleteLogId;
+    setPendingDeleteLogId(null);
     deleteLog.mutate({ id: tree.id, logId }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
@@ -103,8 +114,12 @@ export default function TreeDetailPage() {
     });
   };
 
-  const handleDeleteReminder = (reminderId: string) => {
-    if (!confirm("Delete this planned reminder?")) return;
+  const handleDeleteReminder = (reminderId: string) => setPendingDeleteReminderId(reminderId);
+
+  const confirmDoDeleteReminder = () => {
+    if (!pendingDeleteReminderId) return;
+    const reminderId = pendingDeleteReminderId;
+    setPendingDeleteReminderId(null);
     deleteReminder.mutate({ id: tree.id, reminderId }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
@@ -585,6 +600,59 @@ export default function TreeDetailPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ── Confirmation dialogs (replace native confirm() to avoid browser "embedded page" prompt) ── */}
+
+      <AlertDialog open={confirmDeleteTree} onOpenChange={setConfirmDeleteTree}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Tree?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{tree.name}</strong>? All care logs, reminders, and photos will be permanently removed. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDeleteTree(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDoDeleteTree} disabled={deleteTree.isPending}>
+              {deleteTree.isPending ? "Deleting…" : "Delete"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={pendingDeleteLogId !== null} onOpenChange={(open) => { if (!open) setPendingDeleteLogId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Care Log Entry?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This care log entry will be permanently deleted. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setPendingDeleteLogId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDoDeleteLog} disabled={deleteLog.isPending}>
+              {deleteLog.isPending ? "Deleting…" : "Delete"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={pendingDeleteReminderId !== null} onOpenChange={(open) => { if (!open) setPendingDeleteReminderId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Planned Reminder?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This planned care reminder will be permanently deleted. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setPendingDeleteReminderId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDoDeleteReminder} disabled={deleteReminder.isPending}>
+              {deleteReminder.isPending ? "Deleting…" : "Delete"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
