@@ -362,6 +362,20 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
             <FormField
               control={form.control}
+              name="acquiredDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Acquired Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="foliage"
               render={({ field }) => (
                 <FormItem>
@@ -387,31 +401,14 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               )}
             />
 
+            {/* Style spans the full row so the ⓘ info button never crowds adjacent fields */}
             <FormField
               control={form.control}
               name="style"
               render={({ field }) => (
-                <FormItem className="relative z-10">
+                <FormItem className="md:col-span-2">
                   <FormLabel>Bonsai Style</FormLabel>
                   <BonsaiStylePicker value={field.value} onChange={field.onChange} />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="acquiredDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Acquired Date</FormLabel>
-                  <FormControl>
-                    {/*
-                      Controlled input — value from RHF, onChange updates RHF store.
-                      useWatch picks up the change and isDirty is recomputed immediately.
-                    */}
-                    <Input type="date" {...field} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
