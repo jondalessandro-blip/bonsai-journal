@@ -269,36 +269,34 @@ export default function TreeDetailPage() {
           <div className="space-y-6 pt-6 border-t">
             {/* Care Journal header */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-serif">Care Journal</h2>
-                <div className="flex gap-2 items-center">
-                  <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Add Care Log</DialogTitle></DialogHeader>
-                      <LogForm treeId={tree.id} onSuccess={() => setIsLogOpen(false)} />
-                    </DialogContent>
-                  </Dialog>
-                  <Dialog open={isReminderOpen} onOpenChange={setIsReminderOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
-                      <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
-                    </DialogContent>
-                  </Dialog>
-                  <button
-                    onClick={() => setCareExpanded(true)}
-                    className="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-medium px-2 py-1.5 rounded-md hover:bg-primary/10 transition-colors border border-transparent hover:border-primary/20"
-                    aria-label="Expand Care Journal to full screen"
-                  >
-                    <span className="hidden sm:inline">Expand</span>
-                    <Maximize2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+              <h2 className="text-2xl font-serif">Care Journal</h2>
+              <div className="flex gap-2 items-center">
+                <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Add Care Log</DialogTitle></DialogHeader>
+                    <LogForm treeId={tree.id} onSuccess={() => setIsLogOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={isReminderOpen} onOpenChange={setIsReminderOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
+                    <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+                <button
+                  onClick={() => setCareExpanded(true)}
+                  className="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-medium px-2 py-1.5 rounded-md hover:bg-primary/10 transition-colors border border-transparent hover:border-primary/20"
+                  aria-label="Expand Care Journal to full screen"
+                >
+                  <span className="hidden sm:inline">Expand</span>
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
               </div>
               <div className="flex rounded-md border overflow-hidden text-xs font-medium w-fit">
                 {(["all", "completed", "planned"] as const).map((f) => (
