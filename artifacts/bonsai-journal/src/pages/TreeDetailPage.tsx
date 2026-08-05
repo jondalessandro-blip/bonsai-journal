@@ -165,7 +165,7 @@ export default function TreeDetailPage() {
             <DialogTrigger asChild>
               <Button variant="outline" size="sm"><Edit2 className="w-4 h-4 mr-2" /> Edit</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Edit Tree</DialogTitle>
               </DialogHeader>

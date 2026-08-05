@@ -257,16 +257,18 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* 2-col grid — most fields span both columns (full width).
-              Foliage Type + Bonsai Style share one row side-by-side.
-              Collapses to single column on mobile. */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 4 paired rows — collapses to 1-col on mobile.
+              Row 1: Name | Species
+              Row 2: Health Status | Development Stage
+              Row 3: Climate Need | Acquired Date
+              Row 4: Foliage Type | Bonsai Style (+ ⓘ button) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
 
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
-                <FormItem className="md:col-span-2">
+                <FormItem>
                   <FormLabel>Name / Identifier</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. The Old Elm, Specimen #01" autoComplete="off" {...field} />
@@ -280,7 +282,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="species"
               render={({ field }) => (
-                <FormItem className="md:col-span-2">
+                <FormItem>
                   <FormLabel>Species (Botanical or Common)</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. Acer palmatum" {...field} />
@@ -294,12 +296,8 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="status"
               render={({ field }) => (
-                <FormItem className="md:col-span-2">
+                <FormItem>
                   <FormLabel>Health Status</FormLabel>
-                  {/*
-                    Use `value` (controlled) not `defaultValue` (uncontrolled) so that
-                    form.reset() visually resets the Select and useWatch picks up changes.
-                  */}
                   <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
@@ -321,7 +319,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="stage"
               render={({ field }) => (
-                <FormItem className="md:col-span-2">
+                <FormItem>
                   <FormLabel>Development Stage</FormLabel>
                   <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
@@ -346,7 +344,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="climate"
               render={({ field }) => (
-                <FormItem className="md:col-span-2">
+                <FormItem>
                   <FormLabel>Climate Need</FormLabel>
                   <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
@@ -368,7 +366,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="acquiredDate"
               render={({ field }) => (
-                <FormItem className="md:col-span-2">
+                <FormItem>
                   <FormLabel>Acquired Date</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
@@ -378,7 +376,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               )}
             />
 
-            {/* ── Foliage + Style: the only 2-col row ── */}
+            {/* Row 4: Foliage + Style side-by-side */}
             <FormField
               control={form.control}
               name="foliage"

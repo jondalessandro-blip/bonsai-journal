@@ -210,13 +210,12 @@ export function BonsaiStylePicker({
         onValueChange={(v) => onChange(v === CLEAR_VALUE ? "" : v)}
       >
         <SelectTrigger
-          className="flex-1 min-h-[44px] text-base"
+          className="flex-1"
           aria-label="Bonsai style"
         >
           {selected ? (
-            <span className="truncate text-left">
-              <span className="font-medium">{selected.romanized}</span>
-              <span className="text-muted-foreground ml-1.5">— {selected.english}</span>
+            <span className="truncate">
+              {selected.romanized} — {selected.english}
             </span>
           ) : (
             <SelectValue placeholder={placeholder} />
