@@ -229,33 +229,35 @@ export function BonsaiStylePicker({ value, onChange, placeholder = "Select style
             <div className="flex-1 min-w-0">
               <Command className="overflow-visible">
                 <CommandInput placeholder="Search styles…" className="h-9" />
-                <CommandList className="max-h-[280px] overflow-y-auto">
-                  <CommandEmpty>No style found.</CommandEmpty>
-                  {STYLE_GROUPS.map((group) => (
-                    <CommandGroup key={group.label} heading={group.label}>
-                      {group.styles.map((style) => (
-                        <CommandItem
-                          key={style.value}
-                          value={style.value}
-                          onSelect={() => handleSelect(style.value)}
-                          onMouseEnter={() => setHovered(style)}
-                          className="cursor-pointer"
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4 shrink-0",
-                              value === style.value ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <span>
-                            <span className="font-medium">{style.romanized}</span>
-                            <span className="text-muted-foreground ml-1.5 text-xs">— {style.english}</span>
-                          </span>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  ))}
-                </CommandList>
+                <div className="max-h-[280px] overflow-y-auto">
+                  <CommandList>
+                    <CommandEmpty>No style found.</CommandEmpty>
+                    {STYLE_GROUPS.map((group) => (
+                      <CommandGroup key={group.label} heading={group.label}>
+                        {group.styles.map((style) => (
+                          <CommandItem
+                            key={style.value}
+                            value={style.value}
+                            onSelect={() => handleSelect(style.value)}
+                            onMouseEnter={() => setHovered(style)}
+                            className="cursor-pointer"
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4 shrink-0",
+                                value === style.value ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <span>
+                              <span className="font-medium">{style.romanized}</span>
+                              <span className="text-muted-foreground ml-1.5 text-xs">— {style.english}</span>
+                            </span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    ))}
+                  </CommandList>
+                </div>
               </Command>
             </div>
 
