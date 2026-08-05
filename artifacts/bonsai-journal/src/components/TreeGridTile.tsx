@@ -22,7 +22,13 @@ export const TreeGridTile = memo(function TreeGridTile({ tree }: { tree: Tree })
             decoding="async"
             width={200}
             height={200}
-            className="w-full h-full object-cover"
+            className="w-full h-full"
+            style={{
+              objectFit: "cover",
+              objectPosition: `${tree.coverPosition?.x ?? 50}% ${tree.coverPosition?.y ?? 50}%`,
+              transform: `scale(${tree.coverPosition?.zoom ?? 1})`,
+              transformOrigin: `${tree.coverPosition?.x ?? 50}% ${tree.coverPosition?.y ?? 50}%`,
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

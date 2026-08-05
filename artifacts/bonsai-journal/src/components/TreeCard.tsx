@@ -34,7 +34,13 @@ export const TreeCard = memo(function TreeCard({ tree, searchQuery = "" }: TreeC
             decoding="async"
             width={400}
             height={300}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full"
+            style={{
+              objectFit: "cover",
+              objectPosition: `${tree.coverPosition?.x ?? 50}% ${tree.coverPosition?.y ?? 50}%`,
+              transform: `scale(${tree.coverPosition?.zoom ?? 1})`,
+              transformOrigin: `${tree.coverPosition?.x ?? 50}% ${tree.coverPosition?.y ?? 50}%`,
+            }}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/50">

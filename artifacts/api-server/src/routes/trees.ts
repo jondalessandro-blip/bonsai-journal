@@ -453,7 +453,7 @@ router.post("/trees/:id/photos", async (req, res): Promise<void> => {
   }
 
   const [tree] = await db
-    .select({ id: treesTable.id, photoUrl: treesTable.photoUrl })
+    .select({ id: treesTable.id })
     .from(treesTable)
     .where(eq(treesTable.id, params.data.id));
 
@@ -471,16 +471,6 @@ router.post("/trees/:id/photos", async (req, res): Promise<void> => {
       takenAt: parsed.data.takenAt ?? today,
     })
     .returning();
-
-  // Auto-set the tree's cover photo if it doesn't have one yet.
-  // This keeps the collection card thumbnail in sync without requiring
-  // the client to make a separate PATCH call.
-  if (!tree.photoUrl) {
-    await db
-      .update(treesTable)
-      .set({ photoUrl: parsed.data.photoUrl, updatedAt: new Date() })
-      .where(eq(treesTable.id, params.data.id));
-  }
 
   res.status(201).json(formatPhoto(photo));
 });
