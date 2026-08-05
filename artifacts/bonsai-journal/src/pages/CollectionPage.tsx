@@ -320,10 +320,15 @@ export default function CollectionPage() {
                   ))}
                 </div>
               )}
+              {selectedTags.length > 1 && (
+                <p className="mt-2 pt-2 border-t text-[11px] text-muted-foreground text-center leading-snug">
+                  Showing trees with <strong>all {selectedTags.length} tags</strong>
+                </p>
+              )}
               {selectedTags.length > 0 && (
                 <button
                   onClick={() => setSelectedTags([])}
-                  className="w-full mt-2 pt-2 border-t text-xs text-muted-foreground hover:text-foreground text-center transition-colors"
+                  className={`w-full text-xs text-muted-foreground hover:text-foreground text-center transition-colors ${selectedTags.length > 1 ? "mt-1.5" : "mt-2 pt-2 border-t"}`}
                 >
                   Clear tags filter
                 </button>

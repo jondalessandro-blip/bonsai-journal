@@ -71,8 +71,8 @@ router.get("/trees", async (req, res): Promise<void> => {
     conditions.push(eq(treesTable.status, status));
   }
   if (tagsList.length > 0) {
-    // OR logic: tree must have at least one of the selected tags
-    conditions.push(or(...tagsList.map(t => sql`${t} = ANY(${treesTable.tags})`)));
+    // AND logic: tree must have ALL of the selected tags
+    conditions.push(and(...tagsList.map(t => sql`${t} = ANY(${treesTable.tags})`)));
   }
 
   // Exclude `notes` (large text) from list — detail endpoint returns full record
