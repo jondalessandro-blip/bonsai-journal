@@ -41,6 +41,21 @@ export const TreeGridTile = memo(function TreeGridTile({ tree }: { tree: Tree })
       <p className="mt-1.5 text-[13px] font-serif font-medium text-foreground text-center leading-tight line-clamp-2 px-0.5">
         {tree.name}
       </p>
+
+      {/* Status badge */}
+      {tree.status && (
+        <span className={[
+          "mx-auto mt-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium leading-none",
+          tree.status === "Thriving"             ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"     :
+          tree.status === "Dormant"              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"         :
+          tree.status === "Stressed/In Distress" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"    :
+          tree.status === "Sick"                 ? "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300" :
+          tree.status === "Dead/Beyond Recovery" ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"            :
+                                                   "bg-muted text-muted-foreground"
+        ].join(" ")}>
+          {tree.status}
+        </span>
+      )}
     </button>
   );
 });
