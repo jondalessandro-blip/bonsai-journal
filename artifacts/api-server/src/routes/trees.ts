@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, asc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { db, treesTable, careLogsTable, careRemindersTable, treePhotosTable } from "@workspace/db";
 import {
   ListTreesQueryParams,
@@ -194,7 +194,7 @@ router.get("/trees/:id/logs", async (req, res): Promise<void> => {
     .select()
     .from(careLogsTable)
     .where(eq(careLogsTable.treeId, params.data.id))
-    .orderBy(careLogsTable.date);
+    .orderBy(desc(careLogsTable.date));
 
   res.json(logs.map(formatLog));
 });
