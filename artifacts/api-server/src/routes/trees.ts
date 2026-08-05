@@ -404,7 +404,7 @@ router.get("/trees/:id/timeline", async (req, res): Promise<void> => {
       notes: r.notes,
       completed: r.completed,
     })),
-  ].sort((a, b) => a.date.localeCompare(b.date));
+  ].sort((a, b) => b.date.localeCompare(a.date));
 
   res.json(timeline);
 });
