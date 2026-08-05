@@ -257,12 +257,16 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* 2-col grid — most fields span both columns (full width).
+              Foliage Type + Bonsai Style share one row side-by-side.
+              Collapses to single column on mobile. */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="md:col-span-2">
                   <FormLabel>Name / Identifier</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. The Old Elm, Specimen #01" autoComplete="off" {...field} />
@@ -276,7 +280,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="species"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="md:col-span-2">
                   <FormLabel>Species (Botanical or Common)</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. Acer palmatum" {...field} />
@@ -290,7 +294,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="status"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="md:col-span-2">
                   <FormLabel>Health Status</FormLabel>
                   {/*
                     Use `value` (controlled) not `defaultValue` (uncontrolled) so that
@@ -317,7 +321,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="stage"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="md:col-span-2">
                   <FormLabel>Development Stage</FormLabel>
                   <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
@@ -342,7 +346,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="climate"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="md:col-span-2">
                   <FormLabel>Climate Need</FormLabel>
                   <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
@@ -364,7 +368,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="acquiredDate"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="md:col-span-2">
                   <FormLabel>Acquired Date</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
@@ -374,6 +378,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               )}
             />
 
+            {/* ── Foliage + Style: the only 2-col row ── */}
             <FormField
               control={form.control}
               name="foliage"
@@ -389,10 +394,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                     <SelectContent>
                       <SelectItem value="Deciduous">Deciduous</SelectItem>
                       <SelectItem value="Conifer">Conifer</SelectItem>
-                      <SelectItem value="Broadleaf Evergreen">
-                        <span className="hidden sm:inline">Broadleaf Evergreen</span>
-                        <span className="sm:hidden">Broadleaf Evergr.</span>
-                      </SelectItem>
+                      <SelectItem value="Broadleaf Evergreen">Broadleaf Evergreen</SelectItem>
                       <SelectItem value="Succulent / Desert">Succulent / Desert</SelectItem>
                     </SelectContent>
                   </Select>
@@ -401,18 +403,18 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               )}
             />
 
-            {/* Style spans the full row so the ⓘ info button never crowds adjacent fields */}
             <FormField
               control={form.control}
               name="style"
               render={({ field }) => (
-                <FormItem className="md:col-span-2">
+                <FormItem>
                   <FormLabel>Bonsai Style</FormLabel>
                   <BonsaiStylePicker value={field.value} onChange={field.onChange} />
                   <FormMessage />
                 </FormItem>
               )}
             />
+
           </div>
 
           <div className="space-y-2">
