@@ -20,6 +20,8 @@ import type { TreePhoto } from "@workspace/api-client-react";
 import { usePhotoUpload } from "@/hooks/use-photo-upload";
 import { Lightbox } from "@/components/Lightbox";
 import { Button } from "@/components/ui/button";
+import { useNavigationGuard } from "@/hooks/use-navigation-guard";
+import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 interface Props {
   treeId: string;
@@ -33,6 +35,14 @@ export function ProgressionGallery({ treeId }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDate, setEditingDate] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Navigation guard — fires when user navigates away with an unsaved date edit
+  type GuardState = { resume: () => void };
+  const [guardState, setGuardState] = useState<GuardState | null>(null);
+
+  useNavigationGuard(editingId !== null, (_path, resume) => {
+    setGuardState({ resume });
+  });
 
   const queryKey = ["/api/trees", treeId, "photos"];
 
@@ -91,7 +101,7 @@ export function ProgressionGallery({ treeId }: Props) {
     setEditingDate(photo.takenAt);
   };
 
-  const saveEdit = () => {
+  const saveEdit = (onSaved?: () => void) => {
     if (!editingId || !editingDate) return;
     updatePhoto.mutate(
       { id: treeId, photoId: editingId, data: { takenAt: editingDate } },
@@ -99,6 +109,7 @@ export function ProgressionGallery({ treeId }: Props) {
         onSuccess: () => {
           invalidate();
           setEditingId(null);
+          onSaved?.();
         },
       },
     );
@@ -123,6 +134,22 @@ export function ProgressionGallery({ treeId }: Props) {
 
   return (
     <section className="space-y-4">
+      <UnsavedChangesDialog
+        open={guardState !== null}
+        onSaveAndLeave={() => {
+          const resume = guardState!.resume;
+          setGuardState(null);
+          saveEdit(resume);
+        }}
+        onDiscard={() => {
+          const resume = guardState!.resume;
+          setEditingId(null);
+          setGuardState(null);
+          resume();
+        }}
+        onCancel={() => setGuardState(null)}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-serif">Progression</h2>
