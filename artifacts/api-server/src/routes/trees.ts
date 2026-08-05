@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { and, eq, ilike, or, sql } from "drizzle-orm";
-import { db, treesTable, careLogsTable, careRemindersTable } from "@workspace/db";
+import { and, asc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
+import { db, treesTable, careLogsTable, careRemindersTable, treePhotosTable } from "@workspace/db";
 import {
   ListTreesQueryParams,
   CreateTreeBody,
@@ -19,6 +19,12 @@ import {
   UpdateTreeReminderBody,
   DeleteTreeReminderParams,
   GetTreeTimelineParams,
+  ListTreePhotosParams,
+  CreateTreePhotoParams,
+  CreateTreePhotoBody,
+  UpdateTreePhotoParams,
+  UpdateTreePhotoBody,
+  DeleteTreePhotoParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -398,6 +404,117 @@ router.get("/trees/:id/timeline", async (req, res): Promise<void> => {
   res.json(timeline);
 });
 
+// ---- Progression Photos ----
+
+router.get("/trees/:id/photos", async (req, res): Promise<void> => {
+  const params = ListTreePhotosParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const photos = await db
+    .select()
+    .from(treePhotosTable)
+    .where(eq(treePhotosTable.treeId, params.data.id))
+    .orderBy(asc(treePhotosTable.takenAt), asc(treePhotosTable.createdAt));
+
+  res.json(photos.map(formatPhoto));
+});
+
+router.post("/trees/:id/photos", async (req, res): Promise<void> => {
+  const params = CreateTreePhotoParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = CreateTreePhotoBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [tree] = await db
+    .select({ id: treesTable.id })
+    .from(treesTable)
+    .where(eq(treesTable.id, params.data.id));
+
+  if (!tree) {
+    res.status(404).json({ error: "Tree not found" });
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const [photo] = await db
+    .insert(treePhotosTable)
+    .values({
+      treeId: params.data.id,
+      photoUrl: parsed.data.photoUrl,
+      takenAt: parsed.data.takenAt ?? today,
+    })
+    .returning();
+
+  res.status(201).json(formatPhoto(photo));
+});
+
+router.patch("/trees/:id/photos/:photoId", async (req, res): Promise<void> => {
+  const params = UpdateTreePhotoParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = UpdateTreePhotoBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [photo] = await db
+    .update(treePhotosTable)
+    .set({ takenAt: parsed.data.takenAt })
+    .where(
+      and(
+        eq(treePhotosTable.id, params.data.photoId),
+        eq(treePhotosTable.treeId, params.data.id),
+      ),
+    )
+    .returning();
+
+  if (!photo) {
+    res.status(404).json({ error: "Photo not found" });
+    return;
+  }
+
+  res.json(formatPhoto(photo));
+});
+
+router.delete("/trees/:id/photos/:photoId", async (req, res): Promise<void> => {
+  const params = DeleteTreePhotoParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [photo] = await db
+    .delete(treePhotosTable)
+    .where(
+      and(
+        eq(treePhotosTable.id, params.data.photoId),
+        eq(treePhotosTable.treeId, params.data.id),
+      ),
+    )
+    .returning();
+
+  if (!photo) {
+    res.status(404).json({ error: "Photo not found" });
+    return;
+  }
+
+  res.sendStatus(204);
+});
+
 // ---- Collection stats ----
 
 router.get("/collection/stats", async (_req, res): Promise<void> => {
@@ -477,6 +594,16 @@ router.get("/reminders/upcoming", async (_req, res): Promise<void> => {
 });
 
 // ---- Helpers ----
+
+function formatPhoto(p: typeof treePhotosTable.$inferSelect) {
+  return {
+    id: p.id,
+    treeId: p.treeId,
+    photoUrl: p.photoUrl,
+    takenAt: p.takenAt,
+    createdAt: p.createdAt.toISOString(),
+  };
+}
 
 function formatTree(t: typeof treesTable.$inferSelect) {
   return {

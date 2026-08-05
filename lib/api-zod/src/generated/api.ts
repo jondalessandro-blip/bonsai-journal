@@ -392,3 +392,73 @@ export const ListUpcomingRemindersResponseItem = zod.object({
 export const ListUpcomingRemindersResponse = zod.array(ListUpcomingRemindersResponseItem)
 
 
+/**
+ * @summary Get progression photos for a tree
+ */
+export const ListTreePhotosParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListTreePhotosResponseItem = zod.object({
+  "id": zod.string(),
+  "treeId": zod.string(),
+  "photoUrl": zod.string(),
+  "takenAt": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListTreePhotosResponse = zod.array(ListTreePhotosResponseItem)
+
+
+/**
+ * @summary Add a progression photo to a tree
+ */
+export const CreateTreePhotoParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const CreateTreePhotoBody = zod.object({
+  "photoUrl": zod.string(),
+  "takenAt": zod.string().optional()
+})
+
+export const CreateTreePhotoResponse = zod.object({
+  "id": zod.string(),
+  "treeId": zod.string(),
+  "photoUrl": zod.string(),
+  "takenAt": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a progression photo's date
+ */
+export const UpdateTreePhotoParams = zod.object({
+  "id": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const UpdateTreePhotoBody = zod.object({
+  "takenAt": zod.string()
+})
+
+export const UpdateTreePhotoResponse = zod.object({
+  "id": zod.string(),
+  "treeId": zod.string(),
+  "photoUrl": zod.string(),
+  "takenAt": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a progression photo
+ */
+export const DeleteTreePhotoParams = zod.object({
+  "id": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const DeleteTreePhotoResponse = zod.void()
+
+

@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Tree } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Tree } from "@workspace/api-client-react";
 import { Leaf } from "lucide-react";
 
 /** 3-column grid tile used on mobile screens only. */

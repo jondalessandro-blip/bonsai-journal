@@ -31,6 +31,9 @@ import type {
   TimelineEvent,
   Tree,
   TreeInput,
+  TreePhoto,
+  TreePhotoInput,
+  TreePhotoUpdate,
   TreeUpdate,
   UpcomingReminder,
   UploadUrlRequest,
@@ -1409,4 +1412,300 @@ export function useListUpcomingReminders<TData = Awaited<ReturnType<typeof listU
 
 
 
+
+export const getListTreePhotosUrl = (id: string,) => {
+
+
+
+
+  return `/api/trees/${id}/photos`
+}
+
+/**
+ * @summary Get progression photos for a tree
+ */
+export const listTreePhotos = async (id: string, options?: RequestInit): Promise<TreePhoto[]> => {
+
+  return customFetch<TreePhoto[]>(getListTreePhotosUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTreePhotosQueryKey = (id: string,) => {
+    return [
+    `/api/trees/${id}/photos`
+    ] as const;
+    }
+
+
+export const getListTreePhotosQueryOptions = <TData = Awaited<ReturnType<typeof listTreePhotos>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTreePhotos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTreePhotosQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTreePhotos>>> = ({ signal }) => listTreePhotos(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTreePhotos>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTreePhotosQueryResult = NonNullable<Awaited<ReturnType<typeof listTreePhotos>>>
+export type ListTreePhotosQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get progression photos for a tree
+ */
+
+export function useListTreePhotos<TData = Awaited<ReturnType<typeof listTreePhotos>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTreePhotos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTreePhotosQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateTreePhotoUrl = (id: string,) => {
+
+
+
+
+  return `/api/trees/${id}/photos`
+}
+
+/**
+ * @summary Add a progression photo to a tree
+ */
+export const createTreePhoto = async (id: string,
+    treePhotoInput: TreePhotoInput, options?: RequestInit): Promise<TreePhoto> => {
+
+  return customFetch<TreePhoto>(getCreateTreePhotoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(treePhotoInput)
+  }
+);}
+
+
+
+
+
+export const getCreateTreePhotoMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTreePhoto>>, TError,{id: string;data: BodyType<TreePhotoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTreePhoto>>, TError,{id: string;data: BodyType<TreePhotoInput>}, TContext> => {
+
+const mutationKey = ['createTreePhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTreePhoto>>, {id: string;data: BodyType<TreePhotoInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createTreePhoto(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTreePhotoMutationResult = NonNullable<Awaited<ReturnType<typeof createTreePhoto>>>
+    export type CreateTreePhotoMutationBody = BodyType<TreePhotoInput>
+    export type CreateTreePhotoMutationError = ErrorType<void>
+
+    /**
+ * @summary Add a progression photo to a tree
+ */
+export const useCreateTreePhoto = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTreePhoto>>, TError,{id: string;data: BodyType<TreePhotoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTreePhoto>>,
+        TError,
+        {id: string;data: BodyType<TreePhotoInput>},
+        TContext
+      > => {
+      return useMutation(getCreateTreePhotoMutationOptions(options));
+    }
+
+export const getUpdateTreePhotoUrl = (id: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/trees/${id}/photos/${photoId}`
+}
+
+/**
+ * @summary Update a progression photo's date
+ */
+export const updateTreePhoto = async (id: string,
+    photoId: string,
+    treePhotoUpdate: TreePhotoUpdate, options?: RequestInit): Promise<TreePhoto> => {
+
+  return customFetch<TreePhoto>(getUpdateTreePhotoUrl(id,photoId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(treePhotoUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateTreePhotoMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTreePhoto>>, TError,{id: string;photoId: string;data: BodyType<TreePhotoUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTreePhoto>>, TError,{id: string;photoId: string;data: BodyType<TreePhotoUpdate>}, TContext> => {
+
+const mutationKey = ['updateTreePhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTreePhoto>>, {id: string;photoId: string;data: BodyType<TreePhotoUpdate>}> = (props) => {
+          const {id,photoId,data} = props ?? {};
+
+          return  updateTreePhoto(id,photoId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTreePhotoMutationResult = NonNullable<Awaited<ReturnType<typeof updateTreePhoto>>>
+    export type UpdateTreePhotoMutationBody = BodyType<TreePhotoUpdate>
+    export type UpdateTreePhotoMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a progression photo's date
+ */
+export const useUpdateTreePhoto = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTreePhoto>>, TError,{id: string;photoId: string;data: BodyType<TreePhotoUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTreePhoto>>,
+        TError,
+        {id: string;photoId: string;data: BodyType<TreePhotoUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateTreePhotoMutationOptions(options));
+    }
+
+export const getDeleteTreePhotoUrl = (id: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/trees/${id}/photos/${photoId}`
+}
+
+/**
+ * @summary Delete a progression photo
+ */
+export const deleteTreePhoto = async (id: string,
+    photoId: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteTreePhotoUrl(id,photoId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteTreePhotoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTreePhoto>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTreePhoto>>, TError,{id: string;photoId: string}, TContext> => {
+
+const mutationKey = ['deleteTreePhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTreePhoto>>, {id: string;photoId: string}> = (props) => {
+          const {id,photoId} = props ?? {};
+
+          return  deleteTreePhoto(id,photoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTreePhotoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTreePhoto>>>
+
+    export type DeleteTreePhotoMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a progression photo
+ */
+export const useDeleteTreePhoto = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTreePhoto>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTreePhoto>>,
+        TError,
+        {id: string;photoId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteTreePhotoMutationOptions(options));
+    }
 

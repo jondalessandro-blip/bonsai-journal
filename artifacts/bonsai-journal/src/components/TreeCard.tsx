@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Tree } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Tree } from "@workspace/api-client-react";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Calendar, Droplets, Leaf } from "lucide-react";

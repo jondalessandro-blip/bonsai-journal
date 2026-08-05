@@ -148,6 +148,23 @@ export interface TimelineEvent {
   completed?: boolean | null;
 }
 
+export interface TreePhoto {
+  id: string;
+  treeId: string;
+  photoUrl: string;
+  takenAt: string;
+  createdAt: string;
+}
+
+export interface TreePhotoInput {
+  photoUrl: string;
+  takenAt?: string;
+}
+
+export interface TreePhotoUpdate {
+  takenAt: string;
+}
+
 export type ListTreesParams = {
 search?: string;
 climate?: string;

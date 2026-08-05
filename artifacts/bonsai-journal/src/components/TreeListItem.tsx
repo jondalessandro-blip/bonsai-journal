@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Tree } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Tree } from "@workspace/api-client-react";
 import { Badge } from "./ui/badge";
 import { Leaf, ChevronRight } from "lucide-react";
 import { format, parseISO } from "date-fns";

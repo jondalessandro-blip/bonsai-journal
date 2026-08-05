@@ -378,6 +378,96 @@ paths:
                 items:
                   $ref: "#/components/schemas/UpcomingReminder"
 
+  /trees/{id}/photos:
+    get:
+      operationId: listTreePhotos
+      tags: [trees]
+      summary: Get progression photos for a tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of progression photos ordered by date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TreePhoto"
+    post:
+      operationId: createTreePhoto
+      tags: [trees]
+      summary: Add a progression photo to a tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TreePhotoInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TreePhoto"
+        "404":
+          description: Tree not found
+
+  /trees/{id}/photos/{photoId}:
+    patch:
+      operationId: updateTreePhoto
+      tags: [trees]
+      summary: Update a progression photo's date
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: photoId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TreePhotoUpdate"
+      responses:
+        "200":
+          description: Updated photo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TreePhoto"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteTreePhoto
+      tags: [trees]
+      summary: Delete a progression photo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: photoId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
 components:
   schemas:
     UploadUrlRequest:
@@ -629,3 +719,34 @@ components:
           type: ["string", "null"]
         completed:
           type: ["boolean", "null"]
+
+    TreePhoto:
+      type: object
+      required: [id, treeId, photoUrl, takenAt, createdAt]
+      properties:
+        id:
+          type: string
+        treeId:
+          type: string
+        photoUrl:
+          type: string
+        takenAt:
+          type: string
+        createdAt:
+          type: string
+
+    TreePhotoInput:
+      type: object
+      required: [photoUrl]
+      properties:
+        photoUrl:
+          type: string
+        takenAt:
+          type: string
+
+    TreePhotoUpdate:
+      type: object
+      required: [takenAt]
+      properties:
+        takenAt:
+          type: string

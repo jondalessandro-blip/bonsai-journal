@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { AlertCircle, Maximize2, X, CalendarClock, ArrowRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { UpcomingReminder } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { UpcomingReminder } from "@workspace/api-client-react";
 
 interface Props {
   reminders: UpcomingReminder[];

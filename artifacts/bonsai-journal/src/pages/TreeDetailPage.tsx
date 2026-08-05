@@ -8,9 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { TreeForm } from "@/components/TreeForm";
 import { LogForm } from "@/components/LogForm";
 import { ReminderForm } from "@/components/ReminderForm";
-import { Lightbox, PhotoZoomHint } from "@/components/Lightbox";
+import { ProgressionGallery } from "@/components/ProgressionGallery";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 
 export default function TreeDetailPage() {
@@ -21,36 +21,10 @@ export default function TreeDetailPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
   const [careExpanded, setCareExpanded] = useState(false);
   const [editingLog, setEditingLog] = useState<{ id: string; type: string; date: string; notes?: string | null } | null>(null);
   const [editingReminder, setEditingReminder] = useState<{ id: string; type: string; dueDate: string; notes?: string | null } | null>(null);
-
-  // Measure left col + right header to constrain notes height on desktop
-  const leftColRef = useRef<HTMLDivElement>(null);
-  const rightHeaderRef = useRef<HTMLDivElement>(null);
-  const [notesMaxHeight, setNotesMaxHeight] = useState<number | undefined>(undefined);
-
-  useEffect(() => {
-    const compute = () => {
-      if (!leftColRef.current || !rightHeaderRef.current) return;
-      if (window.innerWidth >= 768) {
-        const leftH = leftColRef.current.offsetHeight;
-        const headerH = rightHeaderRef.current.offsetHeight;
-        const gap = 32; // matches space-y-8 gap between sections
-        setNotesMaxHeight(Math.max(120, leftH - headerH - gap));
-      } else {
-        setNotesMaxHeight(undefined);
-      }
-    };
-    const ro = new ResizeObserver(compute);
-    if (leftColRef.current) ro.observe(leftColRef.current);
-    if (rightHeaderRef.current) ro.observe(rightHeaderRef.current);
-    window.addEventListener("resize", compute);
-    compute();
-    return () => { ro.disconnect(); window.removeEventListener("resize", compute); };
-  }, []);
 
   // Lock body scroll when any fullscreen panel is open
   useEffect(() => {
@@ -124,9 +98,9 @@ export default function TreeDetailPage() {
     });
   };
 
-
   return (
     <div className="space-y-8 pb-20 animate-in fade-in duration-500">
+      {/* Top bar */}
       <div className="flex justify-between items-center">
         <Link href="/">
           <Button variant="ghost" size="sm" className="-ml-4 text-muted-foreground hover:text-foreground">
@@ -152,28 +126,14 @@ export default function TreeDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        {/* Left Col - Photo & Primary Info */}
-        <div ref={leftColRef} className="md:col-span-1 space-y-6">
-          <div className="rounded-xl overflow-hidden border bg-card shadow-sm h-52 sm:h-60 md:h-56 lg:h-64 relative">
-            {tree.photoUrl ? (
-              <div className="relative w-full h-full group" onClick={() => setLightboxOpen(true)}>
-                <img src={tree.photoUrl} alt={tree.name} className="w-full h-full object-cover" />
-                <PhotoZoomHint />
-              </div>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/40 bg-muted">
-                <Leaf className="w-16 h-16 mb-4 opacity-20" />
-                <span className="tracking-widest uppercase text-xs">No Photo</span>
-              </div>
-            )}
-          </div>
+      {/* Progression gallery — full width */}
+      <ProgressionGallery treeId={tree.id} />
 
-          {lightboxOpen && tree.photoUrl && (
-            <Lightbox src={tree.photoUrl} alt={tree.name} onClose={() => setLightboxOpen(false)} />
-          )}
-          
+      {/* Content grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        {/* Left Col — Details */}
+        <div className="md:col-span-1 space-y-6">
           <div className="bg-card p-5 rounded-xl border shadow-sm space-y-4">
             <div>
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">Details</h3>
@@ -202,14 +162,21 @@ export default function TreeDetailPage() {
                     <dd>{tree.style}</dd>
                   </div>
                 )}
+                {tree.tags && tree.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {tree.tags.map(tag => (
+                      <Badge key={tag} variant="secondary" className="text-[10px] font-normal">{tag}</Badge>
+                    ))}
+                  </div>
+                )}
               </dl>
             </div>
           </div>
         </div>
 
-        {/* Right Col - Content */}
+        {/* Right Col — Name, Notes, Care Journal */}
         <div className="md:col-span-2 space-y-8">
-          <div ref={rightHeaderRef}>
+          <div>
             <h1 className="text-4xl font-serif text-foreground mb-1">{tree.name}</h1>
             {tree.species && <p className="text-xl italic text-muted-foreground">{tree.species}</p>}
           </div>
@@ -233,13 +200,7 @@ export default function TreeDetailPage() {
               </div>
 
               {/* Scrollable content */}
-              <div
-                className="overflow-y-auto px-5 pb-5"
-                style={notesMaxHeight !== undefined
-                  ? { maxHeight: `${notesMaxHeight}px` }
-                  : { maxHeight: "80vh" }
-                }
-              >
+              <div className="overflow-y-auto px-5 pb-5" style={{ maxHeight: "60vh" }}>
                 <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-a:text-primary">
                   <ReactMarkdown>{tree.notes}</ReactMarkdown>
                 </div>
@@ -313,7 +274,7 @@ export default function TreeDetailPage() {
               </div>
             </div>
 
-            {/* Scrollable timeline — ~one viewport tall */}
+            {/* Scrollable timeline */}
             <div className="overflow-y-auto max-h-[80vh]">
               <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
                 {timeline?.length === 0 && (
@@ -381,7 +342,6 @@ export default function TreeDetailPage() {
               aria-modal="true"
               aria-label="Care Journal — full view"
             >
-              {/* Top bar */}
               <div className="flex items-center justify-between px-5 py-4 border-b bg-card shrink-0">
                 <div className="flex items-center gap-2.5 text-primary">
                   <Scissors className="w-5 h-5" />
@@ -417,7 +377,6 @@ export default function TreeDetailPage() {
                 </div>
               </div>
 
-              {/* Scrollable full journal */}
               <div className="flex-1 overflow-y-auto px-4 py-6 max-w-4xl w-full mx-auto">
                 <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
                   {timeline?.length === 0 && (
@@ -478,7 +437,6 @@ export default function TreeDetailPage() {
             </div>
           )}
         </div>
-        
       </div>
 
       {/* Edit log dialog */}
@@ -501,7 +459,7 @@ export default function TreeDetailPage() {
       <Dialog open={!!editingReminder} onOpenChange={(open) => { if (!open) setEditingReminder(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Planned Care</DialogTitle>
+            <DialogTitle>Edit Reminder</DialogTitle>
           </DialogHeader>
           {editingReminder && (
             <ReminderForm
