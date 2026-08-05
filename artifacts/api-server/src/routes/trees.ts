@@ -38,7 +38,15 @@ router.get("/trees", async (req, res): Promise<void> => {
     return;
   }
 
-  const { search, climate, foliage, stage, tag } = query.data;
+  const { search, climate, foliage, stage, tag, tags: tagsParam, limit, offset } = query.data;
+
+  // Parse comma-separated tags (sent by the client as String(string[]))
+  const tagsList: string[] = tagsParam
+    ? tagsParam.split(",").map(t => t.trim()).filter(Boolean)
+    : tag ? [tag] : [];
+
+  const pageSize = Math.min(limit ?? 48, 200);
+  const pageOffset = offset ?? 0;
 
   const conditions = [];
   if (search) {
@@ -59,8 +67,9 @@ router.get("/trees", async (req, res): Promise<void> => {
   if (stage) {
     conditions.push(eq(treesTable.stage, stage));
   }
-  if (tag) {
-    conditions.push(sql`${treesTable.tags} @> ARRAY[${tag}]::text[]`);
+  if (tagsList.length > 0) {
+    // OR logic: tree must have at least one of the selected tags
+    conditions.push(or(...tagsList.map(t => sql`${t} = ANY(${treesTable.tags})`)));
   }
 
   // Exclude `notes` (large text) from list — detail endpoint returns full record
@@ -81,7 +90,9 @@ router.get("/trees", async (req, res): Promise<void> => {
     })
     .from(treesTable)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(treesTable.createdAt);
+    .orderBy(treesTable.createdAt)
+    .limit(pageSize)
+    .offset(pageOffset);
 
   res.json(trees.map(t => ({
     id: t.id,

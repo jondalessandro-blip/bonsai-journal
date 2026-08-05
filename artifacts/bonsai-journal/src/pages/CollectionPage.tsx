@@ -1,4 +1,5 @@
-import { useListTrees, useListUpcomingReminders } from "@workspace/api-client-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { listTrees, useListUpcomingReminders } from "@workspace/api-client-react";
 import { TreeCard } from "@/components/TreeCard";
 import { TreeGridTile } from "@/components/TreeGridTile";
 import { Button } from "@/components/ui/button";
@@ -6,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
-import { Plus, Search, Leaf, Tag, Check } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { Plus, Search, Leaf, Tag, Check, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link } from "wouter";
 
+const PAGE_SIZE = 24;
 const CUSTOM_TAGS_KEY = "bonsai_custom_tags";
 
 export default function CollectionPage() {
@@ -21,71 +23,103 @@ export default function CollectionPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagsOpen, setTagsOpen] = useState(false);
 
-  // Debounce search input — avoids an API call on every keystroke
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 350);
     return () => clearTimeout(t);
   }, [search]);
 
-  const { data: rawTrees, isLoading: isTreesLoading } = useListTrees({
+  // Build query params — all filtering is now server-side
+  const queryParams = useMemo(() => ({
     search: debouncedSearch || undefined,
     climate: climate !== "all" ? climate : undefined,
     foliage: foliage !== "all" ? foliage : undefined,
     stage: stage !== "all" ? stage : undefined,
+    tags: selectedTags.length > 0 ? selectedTags : undefined,
+    limit: PAGE_SIZE,
+  }), [debouncedSearch, climate, foliage, stage, selectedTags]);
+
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["/api/trees", queryParams],
+    queryFn: ({ pageParam }) =>
+      listTrees({ ...queryParams, offset: pageParam as number }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === PAGE_SIZE ? allPages.length * PAGE_SIZE : undefined,
+    staleTime: 60_000,
   });
 
-  // Filter dropdown = only tags actually used across all live trees
-  const allAvailableTags = useMemo(() => {
-    return [...new Set((rawTrees ?? []).flatMap((t) => t.tags))].sort();
-  }, [rawTrees]);
+  const trees = useMemo(() => data?.pages.flat() ?? [], [data]);
 
-  // Prune localStorage custom tags to only those still used by some tree,
-  // and drop any selected filter tags that no longer exist in live data
+  // Derive available tags for the filter dropdown from loaded pages only
+  const allAvailableTags = useMemo(() => {
+    return [...new Set(trees.flatMap((t) => t.tags))].sort();
+  }, [trees]);
+
+  // Prune localStorage and drop stale selected tags whenever loaded data changes
   useEffect(() => {
-    if (!rawTrees) return;
-    const liveTagSet = new Set(rawTrees.flatMap((t) => t.tags));
-    // Prune localStorage
+    if (!data) return;
+    const liveTagSet = new Set(trees.flatMap((t) => t.tags));
     try {
       const stored: string[] = JSON.parse(localStorage.getItem(CUSTOM_TAGS_KEY) || "[]");
       const pruned = stored.filter((t) => liveTagSet.has(t));
       localStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(pruned));
     } catch { /* ignore */ }
-    // Drop stale selected filter tags
     setSelectedTags((prev) => prev.filter((t) => liveTagSet.has(t)));
-  }, [rawTrees]);
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Client-side tag filter (multi-select: any match)
-  const trees = useMemo(() => {
-    if (!rawTrees || selectedTags.length === 0) return rawTrees;
-    return rawTrees.filter((t) =>
-      selectedTags.some((st) => t.tags.includes(st))
+  // IntersectionObserver — auto-load next page when sentinel scrolls into view
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "300px" }
     );
-  }, [rawTrees, selectedTags]);
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const { data: reminders } = useListUpcomingReminders();
 
-  const toggleTag = (tag: string) => {
+  const toggleTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
-  };
+  }, []);
 
   const searchQuery = debouncedSearch.toLowerCase();
+  const totalLoaded = trees.length;
 
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
 
-      {/* Upcoming Care Panel */}
       {reminders && reminders.length > 0 && (
         <UpcomingCarePanel reminders={reminders} />
       )}
 
-      {/* Header & Controls */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-3xl font-serif text-foreground">My Collection</h1>
           <p className="text-muted-foreground mt-1">
-            {isTreesLoading ? "Loading..." : `${trees?.length || 0} trees growing`}
+            {isLoading
+              ? "Loading..."
+              : hasNextPage
+              ? `${totalLoaded}+ trees growing`
+              : `${totalLoaded} tree${totalLoaded !== 1 ? "s" : ""} growing`}
           </p>
         </div>
         <Link href="/trees/new">
@@ -96,6 +130,7 @@ export default function CollectionPage() {
         </Link>
       </div>
 
+      {/* Filters */}
       <div className="flex flex-col gap-3 bg-card p-3 rounded-lg border shadow-sm">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -195,10 +230,9 @@ export default function CollectionPage() {
         </div>
       </div>
 
-      {/* Trees — mobile list (< sm) */}
-      {isTreesLoading ? (
+      {/* Tree grids */}
+      {isLoading ? (
         <>
-          {/* Mobile skeleton */}
           <div className="sm:hidden grid grid-cols-3 gap-3">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="flex flex-col gap-1.5 animate-pulse">
@@ -207,22 +241,19 @@ export default function CollectionPage() {
               </div>
             ))}
           </div>
-          {/* Desktop skeleton */}
           <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="rounded-xl border bg-card/50 aspect-[3/4] animate-pulse" />
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <div key={i} className="rounded-xl border bg-card/50 aspect-[4/3] animate-pulse" />
             ))}
           </div>
         </>
-      ) : trees && trees.length > 0 ? (
+      ) : trees.length > 0 ? (
         <>
-          {/* Mobile grid */}
           <div className="sm:hidden grid grid-cols-3 gap-3">
             {trees.map(tree => (
               <TreeGridTile key={tree.id} tree={tree} />
             ))}
           </div>
-          {/* Desktop grid */}
           <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {trees.map(tree => (
               <TreeCard key={tree.id} tree={tree} searchQuery={searchQuery} />
@@ -242,6 +273,12 @@ export default function CollectionPage() {
         </div>
       )}
 
+      {/* Infinite scroll sentinel + loading indicator */}
+      <div ref={sentinelRef} className="flex justify-center py-4">
+        {isFetchingNextPage && (
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        )}
+      </div>
     </div>
   );
 }

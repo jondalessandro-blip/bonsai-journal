@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useLocation } from "wouter";
 import type { Tree } from "@workspace/api-client-react";
 import { Card, CardContent } from "./ui/card";
@@ -10,7 +11,7 @@ interface TreeCardProps {
   searchQuery?: string;
 }
 
-export function TreeCard({ tree, searchQuery = "" }: TreeCardProps) {
+export const TreeCard = memo(function TreeCard({ tree, searchQuery = "" }: TreeCardProps) {
   const [, setLocation] = useLocation();
 
   const visibleTags = tree.tags.slice(0, 2);
@@ -31,6 +32,8 @@ export function TreeCard({ tree, searchQuery = "" }: TreeCardProps) {
             alt={tree.name}
             loading="lazy"
             decoding="async"
+            width={400}
+            height={300}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
@@ -65,7 +68,6 @@ export function TreeCard({ tree, searchQuery = "" }: TreeCardProps) {
           )}
         </div>
 
-        {/* Tag chips */}
         {tree.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {visibleTags.map((tag) => (
@@ -98,4 +100,4 @@ export function TreeCard({ tree, searchQuery = "" }: TreeCardProps) {
       </CardContent>
     </Card>
   );
-}
+});

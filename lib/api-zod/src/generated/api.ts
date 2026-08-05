@@ -44,7 +44,10 @@ export const ListTreesQueryParams = zod.object({
   "climate": zod.coerce.string().optional(),
   "foliage": zod.coerce.string().optional(),
   "stage": zod.coerce.string().optional(),
-  "tag": zod.coerce.string().optional()
+  "tag": zod.coerce.string().optional(),
+  "tags": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().int().optional(),
+  "offset": zod.coerce.number().int().optional()
 })
 
 export const ListTreesResponseItem = zod.object({

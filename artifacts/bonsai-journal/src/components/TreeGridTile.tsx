@@ -1,9 +1,10 @@
+import { memo } from "react";
 import { useLocation } from "wouter";
 import type { Tree } from "@workspace/api-client-react";
 import { Leaf } from "lucide-react";
 
 /** 3-column grid tile used on mobile screens only. */
-export function TreeGridTile({ tree }: { tree: Tree }) {
+export const TreeGridTile = memo(function TreeGridTile({ tree }: { tree: Tree }) {
   const [, setLocation] = useLocation();
 
   return (
@@ -19,6 +20,8 @@ export function TreeGridTile({ tree }: { tree: Tree }) {
             alt={tree.name}
             loading="lazy"
             decoding="async"
+            width={200}
+            height={200}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -34,4 +37,4 @@ export function TreeGridTile({ tree }: { tree: Tree }) {
       </p>
     </button>
   );
-}
+});
