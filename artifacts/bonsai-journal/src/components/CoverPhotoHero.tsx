@@ -110,15 +110,17 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
     if (!isEditing || !isDragging.current || !dragAnchor.current) return;
     const container = containerRef.current;
     if (!container) return;
+    // Capture ref values before entering the async state updater
+    const anchor = dragAnchor.current;
     const { width } = container.getBoundingClientRect();
-    const dx = e.clientX - dragAnchor.current.clientX;
-    const dy = e.clientY - dragAnchor.current.clientY;
-    // sensitivity: full container width drag = 100 / zoom percent change
+    const dx = e.clientX - anchor.clientX;
+    const dy = e.clientY - anchor.clientY;
+    // Full container-width drag = 100 units of change at zoom=1
     const sens = 100 / Math.max(width, 1) / Math.max(draft.zoom, 1);
     setDraft(d => ({
       ...d,
-      x: clamp(dragAnchor.current!.posX - dx * sens * 100, 0, 100),
-      y: clamp(dragAnchor.current!.posY - dy * sens * 100, 0, 100),
+      x: clamp(anchor.posX - dx * sens, 0, 100),
+      y: clamp(anchor.posY - dy * sens, 0, 100),
     }));
   }, [isEditing, draft.zoom]);
 
