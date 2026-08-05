@@ -14,6 +14,7 @@ import {
   useCreateTreePhoto,
   useUpdateTreePhoto,
   useDeleteTreePhoto,
+  useUpdateTree,
 } from "@workspace/api-client-react";
 import type { TreePhoto } from "@workspace/api-client-react";
 import { usePhotoUpload } from "@/hooks/use-photo-upload";
@@ -42,9 +43,15 @@ export function ProgressionGallery({ treeId }: Props) {
   const createPhoto = useCreateTreePhoto();
   const updatePhoto = useUpdateTreePhoto();
   const deletePhoto = useDeleteTreePhoto();
+  const updateTree = useUpdateTree();
   const { uploadPhoto, isUploading, progress } = usePhotoUpload();
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey });
+  // Invalidate the photo list (so CoverPhotoHero picks up the new image)
+  // AND the trees list (so collection cards refresh their thumbnail).
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,6 +60,8 @@ export function ProgressionGallery({ treeId }: Props) {
     const result = await uploadPhoto(file);
     if (result) {
       const today = new Date().toISOString().slice(0, 10);
+
+      // Save to progression gallery history
       createPhoto.mutate(
         {
           id: treeId,
@@ -64,6 +73,16 @@ export function ProgressionGallery({ treeId }: Props) {
         },
         { onSuccess: invalidate },
       );
+
+      // Auto-promote to cover: new upload immediately becomes the top-of-record
+      // hero AND the collection gallery thumbnail — no manual "Save Position" needed.
+      updateTree.mutate({
+        id: treeId,
+        data: {
+          photoUrl: result.serveUrl,
+          ...(result.thumbUrl ? { coverThumb: result.thumbUrl } : {}),
+        },
+      });
     }
   };
 
