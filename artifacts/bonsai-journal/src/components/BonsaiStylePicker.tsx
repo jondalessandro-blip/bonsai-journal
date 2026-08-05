@@ -184,101 +184,86 @@ interface BonsaiStylePickerProps {
   placeholder?: string;
 }
 
+/**
+ * Small ⓘ icon that lives in the label row (not next to the input).
+ * Renders nothing when no style is selected so the label row height is constant.
+ */
+export function BonsaiStyleInfoButton({ value }: { value?: string }) {
+  const [open, setOpen] = React.useState(false);
+  const style = findStyle(value);
+  if (!style) return null;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="text-muted-foreground hover:text-foreground transition-colors leading-none"
+          aria-label="View style description"
+        >
+          <Info className="h-3.5 w-3.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72" align="start">
+        <DescriptionPanel style={style} />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function BonsaiStylePicker({
   value,
   onChange,
   placeholder = "Select style (optional)",
 }: BonsaiStylePickerProps) {
-  const [infoOpen, setInfoOpen] = React.useState(false);
   const selected = findStyle(value);
 
   // Radix Select requires `undefined` (not "") to show the placeholder
   const selectValue = value || undefined;
 
+  // Renders just the Select — identical structure to any other SelectTrigger in
+  // the form so it aligns perfectly with adjacent fields like Foliage Type.
   return (
-    <div className="flex items-center gap-2">
-      {/*
-        Radix Select handles touch correctly:
-        — uses pointer events internally (no blur-race condition)
-        — renders content in a portal with correct viewport positioning
-        — WAI-ARIA compliant, keyboard + touch navigable
-        16px (text-base) on trigger and items prevents iOS Safari auto-zoom.
-        44px min-height meets Apple's minimum tap-target guideline.
-      */}
-      <Select
-        value={selectValue}
-        onValueChange={(v) => onChange(v === CLEAR_VALUE ? "" : v)}
+    <Select
+      value={selectValue}
+      onValueChange={(v) => onChange(v === CLEAR_VALUE ? "" : v)}
+    >
+      <SelectTrigger aria-label="Bonsai style">
+        {selected ? (
+          <span className="truncate">
+            {selected.romanized} — {selected.english}
+          </span>
+        ) : (
+          <SelectValue placeholder={placeholder} />
+        )}
+      </SelectTrigger>
+
+      <SelectContent
+        className="max-h-[min(60vh,400px)]"
+        style={{ maxWidth: "min(100vw - 32px, 480px)" }}
       >
-        <SelectTrigger
-          className="flex-1"
-          aria-label="Bonsai style"
-        >
-          {selected ? (
-            <span className="truncate">
-              {selected.romanized} — {selected.english}
-            </span>
-          ) : (
-            <SelectValue placeholder={placeholder} />
-          )}
-        </SelectTrigger>
+        {/* Clear option */}
+        <SelectItem value={CLEAR_VALUE} className="text-muted-foreground italic">
+          — None —
+        </SelectItem>
 
-        <SelectContent
-          // position="popper" (default) keeps the list anchored below the trigger
-          // and scrolls within the viewport on both mobile and desktop.
-          className="max-h-[min(60vh,400px)]"
-          // Prevent the content from being wider than the viewport on narrow screens
-          style={{ maxWidth: "min(100vw - 32px, 480px)" }}
-        >
-          {/* Clear option */}
-          <SelectItem
-            value={CLEAR_VALUE}
-            className="min-h-[44px] text-base text-muted-foreground italic py-2"
-          >
-            — None —
-          </SelectItem>
-
-          {STYLE_GROUPS.map((group) => (
-            <SelectGroup key={group.label}>
-              <SelectLabel className="text-xs px-2 py-1.5 text-muted-foreground/70">
-                {group.label}
-              </SelectLabel>
-              {group.styles.map((style) => (
-                <SelectItem
-                  key={style.value}
-                  value={style.value}
-                  // min-h-[44px] ensures every item meets the 44 px tap-target minimum
-                  // text-base (16px) prevents iOS Safari from zooming on focus
-                  className="min-h-[44px] text-base py-2.5 cursor-pointer"
-                >
-                  <span className="font-medium">{style.romanized}</span>
-                  <span className="text-muted-foreground ml-1.5 text-sm">— {style.english}</span>
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Info popover — shows description for the currently selected style */}
-      {selected && (
-        <Popover open={infoOpen} onOpenChange={setInfoOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              type="button"
-              // 44×44 minimum tap target
-              className="h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label="View style description"
-            >
-              <Info className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72" align="end">
-            <DescriptionPanel style={selected} />
-          </PopoverContent>
-        </Popover>
-      )}
-    </div>
+        {STYLE_GROUPS.map((group) => (
+          <SelectGroup key={group.label}>
+            <SelectLabel className="text-xs px-2 py-1.5 text-muted-foreground/70">
+              {group.label}
+            </SelectLabel>
+            {group.styles.map((style) => (
+              <SelectItem
+                key={style.value}
+                value={style.value}
+                className="cursor-pointer"
+              >
+                <span className="font-medium">{style.romanized}</span>
+                <span className="text-muted-foreground ml-1.5 text-sm">— {style.english}</span>
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

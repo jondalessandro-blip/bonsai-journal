@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BonsaiStylePicker } from "@/components/BonsaiStylePicker";
+import { BonsaiStylePicker, BonsaiStyleInfoButton } from "@/components/BonsaiStylePicker";
 import { TagInput } from "@/components/TagInput";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -406,7 +406,11 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               name="style"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bonsai Style</FormLabel>
+                  {/* Info icon sits in the label row — zero effect on input height */}
+                  <div className="flex items-center gap-1.5">
+                    <FormLabel>Bonsai Style</FormLabel>
+                    <BonsaiStyleInfoButton value={field.value} />
+                  </div>
                   <BonsaiStylePicker value={field.value} onChange={field.onChange} />
                   <FormMessage />
                 </FormItem>
