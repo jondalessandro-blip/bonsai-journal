@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
-import { Plus, Search, Leaf, Tag, Check, Loader2 } from "lucide-react";
+import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX } from "lucide-react";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 
@@ -54,6 +54,26 @@ export default function CollectionPage() {
   }, [searchString, setLocation]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // True whenever any filter or search is active
+  const hasActiveFilters =
+    search !== "" ||
+    climate !== "all" ||
+    foliage !== "all" ||
+    stage !== "all" ||
+    status !== "all" ||
+    selectedTags.length > 0;
+
+  // Reset every filter and the URL status param in one action
+  const clearAllFilters = useCallback(() => {
+    setSearch("");
+    setClimate("all");
+    setFoliage("all");
+    setStage("all");
+    setSelectedTags([]);
+    setLocation("/", { replace: false }); // drops ?status=… — effect syncs status state
+  }, [setLocation]);
 
   // Debounce search
   useEffect(() => {
@@ -171,11 +191,31 @@ export default function CollectionPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             placeholder="Search by name, species, or tag..."
-            className="pl-9 bg-background border-none shadow-none focus-visible:ring-1"
+            className={`pl-9 bg-background border-none shadow-none focus-visible:ring-1${search ? " pr-9" : ""}`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setSearch("");
+                searchInputRef.current?.blur();
+              }
+            }}
           />
+          {search && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => {
+                setSearch("");
+                searchInputRef.current?.focus();
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
         <div className="h-px bg-border/50" />
         <div className="flex gap-2 w-full flex-wrap">
@@ -226,6 +266,20 @@ export default function CollectionPage() {
               <SelectItem value="Dead/Beyond Recovery">Dead</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Clear all filters — visible only when at least one filter is active */}
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              className="h-9 px-3 text-muted-foreground hover:text-foreground gap-1.5 shrink-0 ml-auto"
+            >
+              <FilterX className="w-3.5 h-3.5" />
+              Clear filters
+            </Button>
+          )}
 
           {/* Tags multi-select */}
           <Popover open={tagsOpen} onOpenChange={setTagsOpen}>
