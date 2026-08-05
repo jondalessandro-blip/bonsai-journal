@@ -135,6 +135,7 @@ export interface CollectionStats {
   totalTrees: number;
   byClimate: LabelCount[];
   byFoliage: LabelCount[];
+  byStatus: LabelCount[];
   byTag: LabelCount[];
   recentlyAdded: Tree[];
 }

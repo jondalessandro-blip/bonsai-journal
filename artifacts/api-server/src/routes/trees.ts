@@ -554,7 +554,7 @@ router.get("/collection/stats", async (_req, res): Promise<void> => {
       .limit(3),
   ]);
 
-  const countBy = (key: "climate" | "foliage") => {
+  const countBy = (key: "climate" | "foliage" | "status") => {
     const map = new Map<string, number>();
     for (const t of trees) {
       const val = t[key];
@@ -574,6 +574,7 @@ router.get("/collection/stats", async (_req, res): Promise<void> => {
     totalTrees: trees.length,
     byClimate: countBy("climate"),
     byFoliage: countBy("foliage"),
+    byStatus: countBy("status"),
     byTag: Array.from(tagCounts.entries()).map(([label, count]) => ({ label, count })),
     recentlyAdded: recentlyAdded.map(formatTree),
   });

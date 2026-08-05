@@ -2,7 +2,31 @@ import { useGetCollectionStats } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TreeCard } from "@/components/TreeCard";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { TreePine, Droplets, Leaf } from "lucide-react";
+import { TreePine, Droplets, Leaf, Activity } from "lucide-react";
+
+const STATUS_ORDER = [
+  "Thriving",
+  "Dormant",
+  "Stressed/In Distress",
+  "Sick",
+  "Dead/Beyond Recovery",
+];
+
+const STATUS_COLORS: Record<string, string> = {
+  "Thriving":             "#16a34a", // green-600
+  "Dormant":              "#2563eb", // blue-600
+  "Stressed/In Distress": "#d97706", // amber-600
+  "Sick":                 "#ea580c", // orange-600
+  "Dead/Beyond Recovery": "#dc2626", // red-600
+};
+
+const STATUS_BG: Record<string, string> = {
+  "Thriving":             "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+  "Dormant":              "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  "Stressed/In Distress": "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+  "Sick":                 "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
+  "Dead/Beyond Recovery": "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+};
 
 export default function StatsPage() {
   const { data: stats, isLoading } = useGetCollectionStats();
@@ -114,6 +138,39 @@ export default function StatsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {stats.byStatus && stats.byStatus.length > 0 && (() => {
+        const ordered = STATUS_ORDER
+          .map(s => stats.byStatus.find(b => b.label === s))
+          .filter((b): b is { label: string; count: number } => !!b);
+        // Append any unknown statuses not in STATUS_ORDER
+        const known = new Set(STATUS_ORDER);
+        const extras = stats.byStatus.filter(b => !known.has(b.label));
+        const allItems = [...ordered, ...extras];
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Health Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {allItems.map(({ label, count }) => (
+                  <div
+                    key={label}
+                    className={`flex flex-col items-center gap-1 rounded-xl p-4 text-center ${STATUS_BG[label] ?? "bg-muted text-muted-foreground"}`}
+                  >
+                    <span className="text-3xl font-serif font-semibold">{count}</span>
+                    <span className="text-xs font-medium leading-tight">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {stats.recentlyAdded && stats.recentlyAdded.length > 0 && (
         <div className="pt-8">
