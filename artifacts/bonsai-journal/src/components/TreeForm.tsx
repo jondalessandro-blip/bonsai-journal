@@ -201,9 +201,13 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
             pendingActionRef.current = null;
 
             if (pendingResumeRef.current) {
-              // "Save & Leave" from navigation guard — resume the blocked navigation
-              pendingResumeRef.current();
+              // "Save & Leave" from navigation guard — resume the blocked navigation.
+              // Defer by one tick so React re-renders with isDirty=false before resume()
+              // dispatches popstate. Without the defer, whenRef.current is still true in
+              // useNavigationGuard and the guard fires again → double prompt + double create.
+              const resume = pendingResumeRef.current;
               pendingResumeRef.current = null;
+              setTimeout(resume, 0);
             } else if (action === "plantAnother") {
               onPlantAnother?.();
             } else if (action === "duplicate") {
@@ -224,7 +228,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
   // ── Navigation guard dialog handlers (new-tree page) ──────────────────────
   const handleGuardSaveAndLeave = () => {
-    if (!guardState) return;
+    if (!guardState || createTree.isPending || updateTree.isPending) return;
     pendingResumeRef.current = guardState.resume;
     setGuardState(null);
     form.handleSubmit(onSubmit)();
