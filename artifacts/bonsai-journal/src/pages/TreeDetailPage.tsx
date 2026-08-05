@@ -51,12 +51,15 @@ export default function TreeDetailPage() {
     query: { enabled: !!id, queryKey: ["/api/trees", id, "timeline"] }
   });
 
-  const filteredTimeline = timeline?.filter((event) => {
-    if (careFilter === "all") return true;
-    if (careFilter === "planned") return event.kind === "reminder" && !event.completed;
-    // "completed" = care logs + completed reminders
-    return event.kind === "log" || (event.kind === "reminder" && event.completed);
-  });
+  const filteredTimeline = (() => {
+    const filtered = (timeline ?? []).filter((event) => {
+      if (careFilter === "all") return true;
+      if (careFilter === "planned") return event.kind === "reminder" && !event.completed;
+      return event.kind === "log" || (event.kind === "reminder" && event.completed);
+    });
+    // Completed events shown newest-first; all/planned keep oldest-first
+    return careFilter === "completed" ? [...filtered].reverse() : filtered;
+  })();
 
   const deleteTree = useDeleteTree();
   const updateReminder = useUpdateTreeReminder();
