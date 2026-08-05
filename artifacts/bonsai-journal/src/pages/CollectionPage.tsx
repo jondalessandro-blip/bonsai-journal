@@ -9,8 +9,8 @@ import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
 import { Plus, Search, Leaf, Tag, Check } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "wouter";
-import { DEFAULT_TAGS } from "@/data/defaultTags";
-import { useCustomTags } from "@/hooks/useCustomTags";
+
+const CUSTOM_TAGS_KEY = "bonsai_custom_tags";
 
 export default function CollectionPage() {
   const [search, setSearch] = useState("");
@@ -20,8 +20,6 @@ export default function CollectionPage() {
   const [stage, setStage] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagsOpen, setTagsOpen] = useState(false);
-
-  const { customTags } = useCustomTags();
 
   // Debounce search input — avoids an API call on every keystroke
   useEffect(() => {
@@ -36,6 +34,26 @@ export default function CollectionPage() {
     stage: stage !== "all" ? stage : undefined,
   });
 
+  // Filter dropdown = only tags actually used across all live trees
+  const allAvailableTags = useMemo(() => {
+    return [...new Set((rawTrees ?? []).flatMap((t) => t.tags))].sort();
+  }, [rawTrees]);
+
+  // Prune localStorage custom tags to only those still used by some tree,
+  // and drop any selected filter tags that no longer exist in live data
+  useEffect(() => {
+    if (!rawTrees) return;
+    const liveTagSet = new Set(rawTrees.flatMap((t) => t.tags));
+    // Prune localStorage
+    try {
+      const stored: string[] = JSON.parse(localStorage.getItem(CUSTOM_TAGS_KEY) || "[]");
+      const pruned = stored.filter((t) => liveTagSet.has(t));
+      localStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(pruned));
+    } catch { /* ignore */ }
+    // Drop stale selected filter tags
+    setSelectedTags((prev) => prev.filter((t) => liveTagSet.has(t)));
+  }, [rawTrees]);
+
   // Client-side tag filter (multi-select: any match)
   const trees = useMemo(() => {
     if (!rawTrees || selectedTags.length === 0) return rawTrees;
@@ -43,18 +61,6 @@ export default function CollectionPage() {
       selectedTags.some((st) => t.tags.includes(st))
     );
   }, [rawTrees, selectedTags]);
-
-  // All available tags for the filter dropdown: default + custom + any on existing trees
-  const allAvailableTags = useMemo(() => {
-    const treeTags = (rawTrees ?? []).flatMap((t) => t.tags);
-    return [
-      ...new Set([
-        ...DEFAULT_TAGS,
-        ...customTags,
-        ...treeTags,
-      ]),
-    ].sort();
-  }, [rawTrees, customTags]);
 
   const { data: reminders } = useListUpcomingReminders();
 
