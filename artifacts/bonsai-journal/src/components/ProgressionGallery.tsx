@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import {
@@ -39,6 +39,19 @@ export function ProgressionGallery({ treeId }: Props) {
   // Navigation guard — fires when user navigates away with an unsaved date edit
   type GuardState = { resume: () => void };
   const [guardState, setGuardState] = useState<GuardState | null>(null);
+
+  // Resume callback deferred until after the render where editingId → null.
+  // This ensures whenRef.current is false before resume() triggers pushState,
+  // preventing the guard from re-intercepting its own navigation.
+  const pendingResumeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (editingId === null && pendingResumeRef.current) {
+      const resume = pendingResumeRef.current;
+      pendingResumeRef.current = null;
+      resume();
+    }
+  }, [editingId]);
 
   useNavigationGuard(editingId !== null, (_path, resume) => {
     setGuardState({ resume });
@@ -101,15 +114,17 @@ export function ProgressionGallery({ treeId }: Props) {
     setEditingDate(photo.takenAt);
   };
 
-  const saveEdit = (onSaved?: () => void) => {
+  const saveEdit = (resumeAfterSave?: () => void) => {
     if (!editingId || !editingDate) return;
+    // Store resume before mutating — useEffect fires it after editingId → null,
+    // by which point whenRef.current is false and the guard won't re-intercept.
+    if (resumeAfterSave) pendingResumeRef.current = resumeAfterSave;
     updatePhoto.mutate(
       { id: treeId, photoId: editingId, data: { takenAt: editingDate } },
       {
         onSuccess: () => {
           invalidate();
-          setEditingId(null);
-          onSaved?.();
+          setEditingId(null); // triggers the useEffect above on next render
         },
       },
     );
