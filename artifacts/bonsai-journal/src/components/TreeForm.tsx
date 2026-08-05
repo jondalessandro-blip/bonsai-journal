@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BonsaiStylePicker } from "@/components/BonsaiStylePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 
@@ -205,9 +206,10 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Bonsai Style</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. Informal Upright, Cascade" {...field} />
-                </FormControl>
+                <BonsaiStylePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                />
                 <FormMessage />
               </FormItem>
             )}

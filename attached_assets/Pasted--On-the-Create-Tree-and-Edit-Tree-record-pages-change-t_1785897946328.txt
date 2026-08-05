@@ -1,0 +1,29 @@
+- [ ] On the Create Tree and Edit Tree record pages, change the Bonsai Style field to a searchable dropdown picker.
+* Display each option using its romanized Japanese style name and Japanese characters—for example, Chokkan (直幹)—plus its English style name.
+* While the user browses, highlights, hovers over, or taps an option, show that style’s full description before it is selected.
+    * On desktop, show the description in a preview panel beside the dropdown.
+    * On mobile, show the description in a preview area below the dropdown.
+* Keep an information icon beside the field so users can reopen the description for the selected style after selection.
+* Keep the field optional and allow existing records to retain their current Bonsai Style value.
+* Ensure the dropdown, preview panel, and information pop-up work well on both desktop and mobile.
+Use these options and descriptions:
+The Five Basic Styles — Trunk Inclination
+* Chokkan (直幹) — Formal Upright: A perfectly straight, vertical trunk that tapers cleanly from the thick base to the top.
+* Moyogi (模様木) — Informal Upright: A vertical tree featuring a curved trunk shaped like a soft “S,” with branches growing from the outer curves.
+* Shakan (斜幹) — Slanting: A straight or slightly curved trunk that leans at an angle of approximately 60 to 80 degrees.
+* Kengai (懸崖) — Cascade: A dramatic style where the apex grows below the bottom rim of the pot, mimicking a tree hanging from a cliff.
+* Han-Kengai (半懸崖) — Semi-Cascade: Similar to Cascade, but the trunk grows horizontally or downward without dropping below the bottom of the pot.
+Multiple-Trunk Styles
+* Sokan (双幹) — Twin Trunk: Two distinct trunks growing from a single root system, usually with one dominant, larger trunk.
+* Sankan (三幹) — Triple Trunk: Three trunks growing from a single root system.
+* Gokan (五幹) — Five Trunk: Five trunks growing from a single root system.
+* Kabudachi (株立ち) — Clump: Three or more—always an odd number—trunks growing from one shared root base.
+* Yose-ue (寄せ植え) — Forest: Multiple individual trees planted together in one shallow pot to create a miniature woodland.
+Advanced and Scenic Styles
+* Bunjingi (文人木) — Literati: A tall, thin, twisting trunk with minimal foliage at the very top, intended to evoke abstract calligraphy.
+* Fukinagashi (吹流し) — Windswept: The trunk and branches bend distinctly in one direction, as if shaped by constant strong winds.
+* Hokidachi (箒立ち) — Broom: A straight trunk whose branches fan out from a single point, forming a rounded crown.
+* Sekijoju (石上樹) — Root-over-Rock: Roots wrap tightly around a rock before descending into the potting soil.
+* Ishizuki (石付き) — Growing-in-a-Rock: The tree is planted inside a hollow or crevice in a rock, with its roots contained within the stone.
+* Ikadabuki (筏吹き) — Raft: A style made by laying a trunk horizontally on the soil so existing branches grow upward like individual trees.
+* Sharimiki (舎利幹) — Driftwood: A tree with large sections of dead, stripped, bleached wood along its trunk, suggesting intense natural struggle.
