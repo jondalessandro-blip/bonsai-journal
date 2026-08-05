@@ -518,6 +518,8 @@ components:
           type: ["string", "null"]
         style:
           type: ["string", "null"]
+        stage:
+          type: ["string", "null"]
         tags:
           type: array
           items: { type: string }
@@ -556,6 +558,8 @@ components:
           type: string
         style:
           type: string
+        stage:
+          type: string
         tags:
           type: array
           items: { type: string }
@@ -579,6 +583,8 @@ components:
         foliage:
           type: string
         style:
+          type: string
+        stage:
           type: string
         tags:
           type: array

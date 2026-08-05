@@ -11,6 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 
+const BONSAI_STAGES = [
+  "Establishment",
+  "Trunk Development",
+  "Primary Branch Development",
+  "Ramification & Refinement",
+] as const;
+
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   species: z.string().optional(),
@@ -18,6 +25,7 @@ const formSchema = z.object({
   climate: z.string().optional(),
   foliage: z.string().optional(),
   style: z.string().optional(),
+  stage: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -46,14 +54,20 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
       climate: initialData?.climate || "",
       foliage: initialData?.foliage || "",
       style: initialData?.style || "",
+      stage: initialData?.stage || "",
       notes: initialData?.notes || "",
     },
   });
 
   const onSubmit = (values: FormValues) => {
+    // Strip empty strings so they arrive as undefined (no-op on existing value)
+    const clean = Object.fromEntries(
+      Object.entries(values).filter(([, v]) => v !== "")
+    ) as FormValues;
+
     if (isEdit) {
       updateTree.mutate(
-        { id: initialData.id, data: values },
+        { id: initialData.id, data: clean },
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/trees", initialData.id] });
@@ -64,7 +78,7 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
       );
     } else {
       createTree.mutate(
-        { data: values },
+        { data: clean },
         {
           onSuccess: (tree) => {
             queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
@@ -106,6 +120,31 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
                 <FormControl>
                   <Input placeholder="e.g. Acer palmatum" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="stage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Development Stage</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select stage (optional)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {BONSAI_STAGES.map((s, i) => (
+                      <SelectItem key={s} value={s}>
+                        {i + 1}. {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -159,7 +198,7 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="style"
@@ -196,10 +235,10 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
             <FormItem>
               <FormLabel>General Notes (Markdown supported)</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="History, specific care needs, origin story..." 
+                <Textarea
+                  placeholder="History, specific care needs, origin story..."
                   className="min-h-[120px]"
-                  {...field} 
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -208,8 +247,8 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
         />
 
         <div className="flex justify-end gap-3 pt-4">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={createTree.isPending || updateTree.isPending}
           >
             {isEdit ? "Save Changes" : "Plant Tree"}

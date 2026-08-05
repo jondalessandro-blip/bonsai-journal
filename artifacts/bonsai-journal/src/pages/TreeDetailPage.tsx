@@ -142,6 +142,12 @@ export default function TreeDetailPage() {
             <div>
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">Details</h3>
               <dl className="space-y-2 text-sm">
+                {tree.stage && (
+                  <div className="flex justify-between py-1 border-b border-border/50">
+                    <dt className="text-muted-foreground">Stage</dt>
+                    <dd className="text-right max-w-[60%]">{tree.stage}</dd>
+                  </div>
+                )}
                 {tree.acquiredDate && (
                   <div className="flex justify-between py-1 border-b border-border/50">
                     <dt className="text-muted-foreground">Acquired</dt>

@@ -43,6 +43,7 @@ export const ListTreesQueryParams = zod.object({
   "search": zod.coerce.string().optional(),
   "climate": zod.coerce.string().optional(),
   "foliage": zod.coerce.string().optional(),
+  "stage": zod.coerce.string().optional(),
   "tag": zod.coerce.string().optional()
 })
 
@@ -54,6 +55,7 @@ export const ListTreesResponseItem = zod.object({
   "climate": zod.string().nullish(),
   "foliage": zod.string().nullish(),
   "style": zod.string().nullish(),
+  "stage": zod.string().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
@@ -76,6 +78,7 @@ export const CreateTreeBody = zod.object({
   "climate": zod.string().optional(),
   "foliage": zod.string().optional(),
   "style": zod.string().optional(),
+  "stage": zod.string().optional(),
   "tags": zod.array(zod.string()).optional(),
   "notes": zod.string().optional(),
   "photoUrl": zod.string().optional()
@@ -89,6 +92,7 @@ export const CreateTreeResponse = zod.object({
   "climate": zod.string().nullish(),
   "foliage": zod.string().nullish(),
   "style": zod.string().nullish(),
+  "stage": zod.string().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
@@ -112,6 +116,7 @@ export const GetTreeResponse = zod.object({
   "climate": zod.string().nullish(),
   "foliage": zod.string().nullish(),
   "style": zod.string().nullish(),
+  "stage": zod.string().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
@@ -143,6 +148,7 @@ export const UpdateTreeBody = zod.object({
   "climate": zod.string().optional(),
   "foliage": zod.string().optional(),
   "style": zod.string().optional(),
+  "stage": zod.string().optional(),
   "tags": zod.array(zod.string()).optional(),
   "notes": zod.string().optional(),
   "photoUrl": zod.string().optional(),
@@ -157,6 +163,7 @@ export const UpdateTreeResponse = zod.object({
   "climate": zod.string().nullish(),
   "foliage": zod.string().nullish(),
   "style": zod.string().nullish(),
+  "stage": zod.string().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),

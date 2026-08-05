@@ -38,7 +38,7 @@ router.get("/trees", async (req, res): Promise<void> => {
     return;
   }
 
-  const { search, climate, foliage, tag } = query.data;
+  const { search, climate, foliage, stage, tag } = query.data;
 
   const conditions = [];
   if (search) {
@@ -55,6 +55,9 @@ router.get("/trees", async (req, res): Promise<void> => {
   if (foliage) {
     conditions.push(eq(treesTable.foliage, foliage));
   }
+  if (stage) {
+    conditions.push(eq(treesTable.stage, stage));
+  }
   if (tag) {
     conditions.push(sql`${treesTable.tags} @> ARRAY[${tag}]::text[]`);
   }
@@ -69,6 +72,7 @@ router.get("/trees", async (req, res): Promise<void> => {
       climate: treesTable.climate,
       foliage: treesTable.foliage,
       style: treesTable.style,
+      stage: treesTable.stage,
       tags: treesTable.tags,
       photoUrl: treesTable.photoUrl,
       createdAt: treesTable.createdAt,
@@ -86,6 +90,7 @@ router.get("/trees", async (req, res): Promise<void> => {
     climate: t.climate,
     foliage: t.foliage,
     style: t.style,
+    stage: t.stage,
     tags: t.tags,
     photoUrl: t.photoUrl,
     createdAt: t.createdAt.toISOString(),
@@ -617,6 +622,7 @@ function formatTree(t: typeof treesTable.$inferSelect) {
     tags: t.tags,
     notes: t.notes,
     photoUrl: t.photoUrl,
+    stage: t.stage,
     coverPosition: t.coverPosition ?? null,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),

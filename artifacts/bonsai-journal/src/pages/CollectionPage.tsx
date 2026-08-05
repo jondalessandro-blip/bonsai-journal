@@ -14,6 +14,7 @@ export default function CollectionPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [climate, setClimate] = useState<string>("all");
   const [foliage, setFoliage] = useState<string>("all");
+  const [stage, setStage] = useState<string>("all");
 
   // Debounce search input — avoids an API call on every keystroke
   useEffect(() => {
@@ -24,7 +25,8 @@ export default function CollectionPage() {
   const { data: trees, isLoading: isTreesLoading } = useListTrees({
     search: debouncedSearch || undefined,
     climate: climate !== "all" ? climate : undefined,
-    foliage: foliage !== "all" ? foliage : undefined
+    foliage: foliage !== "all" ? foliage : undefined,
+    stage: stage !== "all" ? stage : undefined,
   });
 
   const { data: reminders } = useListUpcomingReminders();
@@ -88,6 +90,18 @@ export default function CollectionPage() {
                 <span className="sm:hidden">Broadleaf Evergr.</span>
               </SelectItem>
               <SelectItem value="Succulent / Desert">Succulent</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={stage} onValueChange={setStage}>
+            <SelectTrigger className="w-full sm:w-[160px] bg-background border-none shadow-none focus:ring-1">
+              <SelectValue placeholder="Stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stages</SelectItem>
+              <SelectItem value="Establishment">1. Establishment</SelectItem>
+              <SelectItem value="Trunk Development">2. Trunk Dev.</SelectItem>
+              <SelectItem value="Primary Branch Development">3. Branch Dev.</SelectItem>
+              <SelectItem value="Ramification & Refinement">4. Refinement</SelectItem>
             </SelectContent>
           </Select>
         </div>

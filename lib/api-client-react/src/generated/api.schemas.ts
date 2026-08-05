@@ -36,6 +36,8 @@ export interface Tree {
   foliage?: string | null;
   /** @nullable */
   style?: string | null;
+  /** @nullable */
+  stage?: string | null;
   tags: string[];
   /** @nullable */
   notes?: string | null;
@@ -71,6 +73,7 @@ export interface TreeUpdate {
   tags?: string[];
   notes?: string;
   photoUrl?: string;
+  stage?: string;
   coverPosition?: { x: number; y: number; zoom: number };
 }
 
@@ -172,6 +175,7 @@ export type ListTreesParams = {
 search?: string;
 climate?: string;
 foliage?: string;
+stage?: string;
 tag?: string;
 };
 
