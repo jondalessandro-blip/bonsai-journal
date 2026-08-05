@@ -45,7 +45,8 @@ router.get("/trees", async (req, res): Promise<void> => {
     conditions.push(
       or(
         ilike(treesTable.name, `%${search}%`),
-        ilike(treesTable.species, `%${search}%`)
+        ilike(treesTable.species, `%${search}%`),
+        sql`EXISTS (SELECT 1 FROM unnest(${treesTable.tags}) AS _t WHERE _t ILIKE ${'%' + search + '%'})`
       )
     );
   }

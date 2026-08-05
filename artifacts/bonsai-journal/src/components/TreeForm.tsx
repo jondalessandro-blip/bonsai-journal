@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import type { Tree } from "@workspace/api-client-react";
 import { useCreateTree, useUpdateTree } from "@workspace/api-client-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -9,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BonsaiStylePicker } from "@/components/BonsaiStylePicker";
+import { TagInput } from "@/components/TagInput";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 
@@ -40,6 +42,7 @@ interface TreeFormProps {
 export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
   const [_, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const [tags, setTags] = useState<string[]>(initialData?.tags ?? []);
 
   const createTree = useCreateTree();
   const updateTree = useUpdateTree();
@@ -62,9 +65,10 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
 
   const onSubmit = (values: FormValues) => {
     // Strip empty strings so they arrive as undefined (no-op on existing value)
-    const clean = Object.fromEntries(
-      Object.entries(values).filter(([, v]) => v !== "")
-    ) as FormValues;
+    const clean = {
+      ...Object.fromEntries(Object.entries(values).filter(([, v]) => v !== "")),
+      tags,
+    } as FormValues & { tags: string[] };
 
     if (isEdit) {
       updateTree.mutate(
@@ -228,6 +232,12 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
               </FormItem>
             )}
           />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Tags</label>
+          <TagInput value={tags} onChange={setTags} />
+          <p className="text-xs text-muted-foreground">Click a suggestion or type your own and press Enter</p>
         </div>
 
         <FormField
