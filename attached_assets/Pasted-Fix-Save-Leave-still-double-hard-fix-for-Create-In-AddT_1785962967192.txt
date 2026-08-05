@@ -1,0 +1,69 @@
+Fix Save&Leave still double - hard fix for Create.
+
+In AddTree/Create component, replace ENTIRE unsaved logic with this debugged version:
+
+const isSavingRef = useRef(false)
+const [showUnsaved, setShowUnsaved] = useState(false)
+const pendingNavRef = useRef<any>(null)
+
+const blocker = useBlocker(
+  ({ currentLocation, nextLocation }) => isDirty &&!isSavingRef.current && currentLocation.pathname!== nextLocation.pathname
+)
+
+useEffect(()=>{
+  if (blocker.state === 'blocked') {
+    pendingNavRef.current = blocker
+    if (!showUnsaved &&!isSavingRef.current) {
+      setShowUnsaved(true)
+    }
+  }
+}, [blocker])
+
+// Discard - WORKS ALREADY
+const handleDiscard = () => {
+  setShowUnsaved(false)
+  setIsDirty(false) // IMPORTANT: clear dirty BEFORE proceed
+  setTimeout(()=> pendingNavRef.current?.proceed(), 50)
+}
+
+// Save & Leave - FIX DOUBLE
+const handleSaveAndLeave = async () => {
+  if (isSavingRef.current) return
+  isSavingRef.current = true
+
+  try {
+    // 1. Save without navigation
+    const newTree = await saveTreeToDB(formData) // call your API/supabase insert directly, NOT handleSave that navigates
+
+    // 2. IMMEDIATELY mark clean so blocker won't re-trigger
+    setIsDirty(false)
+    isSavingRef.current = false // release lock before proceed but after clean
+    setShowUnsaved(false)
+
+    // 3. Cancel blocker, don't proceed - manually navigate
+    pendingNavRef.current?.reset() // reset, don't proceed
+    setTimeout(()=>{
+      navigate('/collection', { replace: true }) // manual nav after clean
+    }, 100)
+
+  } catch(err){
+    isSavingRef.current = false
+    toast.error('Save failed')
+  }
+}
+
+// My Collection button - must NOT have its own dirty check
+const goToCollection = () => {
+  navigate('/collection') // let blocker handle it
+}
+
+Key changes:
+- DO NOT use blocker.proceed() after save, use blocker.reset() + manual navigate
+- setIsDirty(false) BEFORE any navigation
+- Save calls DB directly, not via function that navigates
+- isSavingRef blocks blocker predicate: (...) => isDirty &&!isSavingRef.current
+- Disable Save&Leave button: disabled={isSavingRef.current}
+
+This stops duplicate because we never proceed while dirty - we make it clean then navigate.
+
+Publish.

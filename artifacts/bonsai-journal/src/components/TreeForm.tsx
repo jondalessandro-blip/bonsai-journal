@@ -158,9 +158,16 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   // Navigation guard state — only active for new-tree (full-page) form
   type GuardState = { path: string; resume: () => void };
   const [guardState, setGuardState] = useState<GuardState | null>(null);
-  const pendingResumeRef = useRef<(() => void) | null>(null);
 
-  useNavigationGuard(!isEdit && isDirty, (path, resume) => {
+  // isSaving as STATE (not a ref) so it triggers a render that updates
+  // whenRef.current = false BEFORE the async mutation's onSuccess fires.
+  // This lets setLocation() bypass the guard without calling resume() at all,
+  // eliminating the popstate-race that caused double-prompt + double-create.
+  const [isSaving, setIsSaving] = useState(false);
+  // Destination path stored when "Save & Leave" is clicked
+  const pendingNavPathRef = useRef<string | null>(null);
+
+  useNavigationGuard(!isEdit && isDirty && !isSaving, (path, resume) => {
     setGuardState({ path, resume });
   });
 
@@ -200,14 +207,15 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
             const action = pendingActionRef.current;
             pendingActionRef.current = null;
 
-            if (pendingResumeRef.current) {
-              // "Save & Leave" from navigation guard — resume the blocked navigation.
-              // Defer by one tick so React re-renders with isDirty=false before resume()
-              // dispatches popstate. Without the defer, whenRef.current is still true in
-              // useNavigationGuard and the guard fires again → double prompt + double create.
-              const resume = pendingResumeRef.current;
-              pendingResumeRef.current = null;
-              setTimeout(resume, 0);
+            if (pendingNavPathRef.current) {
+              // "Save & Leave" from navigation guard.
+              // isSaving=true was already rendered before this onSuccess fired, so
+              // whenRef.current is false. setLocation() bypasses the guard cleanly —
+              // no resume()/popstate needed, no double-prompt, no double-create.
+              const dest = pendingNavPathRef.current;
+              pendingNavPathRef.current = null;
+              setIsSaving(false);
+              setLocation(dest);
             } else if (action === "plantAnother") {
               onPlantAnother?.();
             } else if (action === "duplicate") {
@@ -229,8 +237,9 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   // ── Navigation guard dialog handlers (new-tree page) ──────────────────────
   const handleGuardSaveAndLeave = () => {
     if (!guardState || createTree.isPending || updateTree.isPending) return;
-    pendingResumeRef.current = guardState.resume;
-    setGuardState(null);
+    pendingNavPathRef.current = guardState.path; // store destination for manual nav
+    setIsSaving(true);   // disables guard → renders before mutation resolves
+    setGuardState(null); // close dialog
     form.handleSubmit(onSubmit)();
   };
 
