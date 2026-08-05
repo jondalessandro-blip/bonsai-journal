@@ -11,6 +11,8 @@ import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX } from "lucide-reac
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 
+import { DEFAULT_TAGS } from "@/data/defaultTags";
+
 const PAGE_SIZE = 24;
 const CUSTOM_TAGS_KEY = "bonsai_custom_tags";
 
@@ -32,8 +34,9 @@ export default function CollectionPage() {
   const [status, setStatus] = useState<string>(urlStatus);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagsOpen, setTagsOpen] = useState(false);
-  // Master tag list — only ever grows so the popover stays complete while a tag filter is active
-  const [knownTags, setKnownTags] = useState<string[]>([]);
+  // Master tag list — seeded with DEFAULT_TAGS so they appear in the filter even before
+  // any tree uses them; only ever grows so the popover stays complete while a filter is active
+  const [knownTags, setKnownTags] = useState<string[]>([...DEFAULT_TAGS].sort());
 
   // Keep status state in sync with URL (handles browser back/forward)
   useEffect(() => {
