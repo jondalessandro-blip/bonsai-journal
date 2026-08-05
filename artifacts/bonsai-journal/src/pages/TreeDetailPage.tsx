@@ -268,46 +268,48 @@ export default function TreeDetailPage() {
 
           <div className="space-y-6 pt-6 border-t">
             {/* Care Journal header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-              <h2 className="text-2xl font-serif">Care Journal</h2>
-              <div className="flex flex-wrap gap-2 items-center">
-                <div className="flex rounded-md border overflow-hidden text-xs font-medium">
-                  {(["all", "completed", "planned"] as const).map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => setCareFilter(f)}
-                      className={`px-3 py-1.5 capitalize transition-colors ${careFilter === f ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
-                    >
-                      {f}
-                    </button>
-                  ))}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-serif">Care Journal</h2>
+                <div className="flex gap-2 items-center">
+                  <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Add Care Log</DialogTitle></DialogHeader>
+                      <LogForm treeId={tree.id} onSuccess={() => setIsLogOpen(false)} />
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog open={isReminderOpen} onOpenChange={setIsReminderOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
+                      <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
+                    </DialogContent>
+                  </Dialog>
+                  <button
+                    onClick={() => setCareExpanded(true)}
+                    className="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-medium px-2 py-1.5 rounded-md hover:bg-primary/10 transition-colors border border-transparent hover:border-primary/20"
+                    aria-label="Expand Care Journal to full screen"
+                  >
+                    <span className="hidden sm:inline">Expand</span>
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Add Care Log</DialogTitle></DialogHeader>
-                    <LogForm treeId={tree.id} onSuccess={() => setIsLogOpen(false)} />
-                  </DialogContent>
-                </Dialog>
-                <Dialog open={isReminderOpen} onOpenChange={setIsReminderOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
-                    <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
-                  </DialogContent>
-                </Dialog>
-                <button
-                  onClick={() => setCareExpanded(true)}
-                  className="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-medium px-2 py-1.5 rounded-md hover:bg-primary/10 transition-colors border border-transparent hover:border-primary/20"
-                  aria-label="Expand Care Journal to full screen"
-                >
-                  <span className="hidden sm:inline">Expand</span>
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </button>
+              </div>
+              <div className="flex rounded-md border overflow-hidden text-xs font-medium w-fit">
+                {(["all", "completed", "planned"] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setCareFilter(f)}
+                    className={`px-3 py-1.5 capitalize transition-colors ${careFilter === f ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                  >
+                    {f}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -387,7 +389,32 @@ export default function TreeDetailPage() {
                     <p className="text-xs text-muted-foreground">{tree.name} · {filteredTimeline?.length ?? 0} entr{filteredTimeline?.length === 1 ? 'y' : 'ies'}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-center gap-2">
+                    <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader><DialogTitle>Add Care Log</DialogTitle></DialogHeader>
+                        <LogForm treeId={tree.id} onSuccess={() => setIsLogOpen(false)} />
+                      </DialogContent>
+                    </Dialog>
+                    <Dialog open={isReminderOpen} onOpenChange={setIsReminderOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
+                        <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
+                      </DialogContent>
+                    </Dialog>
+                    <button
+                      onClick={() => setCareExpanded(false)}
+                      className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                      aria-label="Close full-screen care journal"
+                    ><X className="w-5 h-5" /></button>
+                  </div>
                   <div className="flex rounded-md border overflow-hidden text-xs font-medium">
                     {(["all", "completed", "planned"] as const).map((f) => (
                       <button
@@ -399,29 +426,6 @@ export default function TreeDetailPage() {
                       </button>
                     ))}
                   </div>
-                  <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Add Care Log</DialogTitle></DialogHeader>
-                      <LogForm treeId={tree.id} onSuccess={() => setIsLogOpen(false)} />
-                    </DialogContent>
-                  </Dialog>
-                  <Dialog open={isReminderOpen} onOpenChange={setIsReminderOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
-                      <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
-                    </DialogContent>
-                  </Dialog>
-                  <button
-                    onClick={() => setCareExpanded(false)}
-                    className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                    aria-label="Close full-screen care journal"
-                  ><X className="w-5 h-5" /></button>
                 </div>
               </div>
 
