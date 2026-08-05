@@ -139,6 +139,16 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
     res.status(response.status);
     response.headers.forEach((value, key) => res.setHeader(key, value));
 
+    // Object paths are content-addressed UUIDs — safe to cache forever.
+    // The browser will never serve stale data because a changed photo
+    // gets a new UUID path.
+    if (response.status === 200) {
+      res.setHeader(
+        'Cache-Control',
+        'public, max-age=31536000, immutable',
+      );
+    }
+
     if (response.body) {
       const nodeStream = Readable.fromWeb(
         response.body as ReadableStream<Uint8Array>,
