@@ -124,7 +124,21 @@ export default function TreeDetailPage() {
             Back to Collection
           </Button>
         </Link>
-        <div className="flex gap-2">
+      </div>
+
+      {/* Cover photo hero — repositionable banner */}
+      <CoverPhotoHero
+        treeId={tree.id}
+        serverCoverPosition={tree.coverPosition}
+      />
+
+      {/* Name / species + actions — full-width row below the cover photo */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-serif text-foreground mb-1">{tree.name}</h1>
+          {tree.species && <p className="text-lg md:text-xl italic text-muted-foreground">{tree.species}</p>}
+        </div>
+        <div className="flex gap-2 shrink-0 pt-1">
           <UnsavedChangesDialog
             open={showEditGuard}
             onSaveAndLeave={() => {
@@ -170,18 +184,6 @@ export default function TreeDetailPage() {
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
-      </div>
-
-      {/* Cover photo hero — repositionable banner */}
-      <CoverPhotoHero
-        treeId={tree.id}
-        serverCoverPosition={tree.coverPosition}
-      />
-
-      {/* Name/species — mobile only, shown above the details box */}
-      <div className="md:hidden mb-2">
-        <h1 className="text-3xl font-serif text-foreground mb-1">{tree.name}</h1>
-        {tree.species && <p className="text-lg italic text-muted-foreground">{tree.species}</p>}
       </div>
 
       {/* Content grid */}
@@ -255,11 +257,6 @@ export default function TreeDetailPage() {
 
         {/* Right Col — Name, Notes, Care Journal */}
         <div className="md:col-span-2 space-y-8">
-          <div className="hidden md:block">
-            <h1 className="text-4xl font-serif text-foreground mb-1">{tree.name}</h1>
-            {tree.species && <p className="text-xl italic text-muted-foreground">{tree.species}</p>}
-          </div>
-
           {tree.notes && (
             <div className="bg-card/50 rounded-xl border border-primary/10 overflow-hidden">
               {/* Panel header */}
