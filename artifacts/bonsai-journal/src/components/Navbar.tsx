@@ -44,7 +44,6 @@ export function Navbar() {
             </WouterLink>
           </div>
         </div>
-        <span className="hidden md:block text-sm text-muted-foreground italic">A quiet record of every tree</span>
       </div>
     </nav>
   );
