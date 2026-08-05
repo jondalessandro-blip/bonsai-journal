@@ -229,7 +229,7 @@ export function BonsaiStylePicker({ value, onChange, placeholder = "Select style
             <div className="flex-1 min-w-0">
               <Command className="overflow-visible">
                 <CommandInput placeholder="Search styles…" className="h-9" />
-                <div className="max-h-[280px] overflow-y-auto">
+                <div className="max-h-[280px] overflow-y-auto" onWheel={(e) => e.stopPropagation()}>
                   <CommandList>
                     <CommandEmpty>No style found.</CommandEmpty>
                     {STYLE_GROUPS.map((group) => (
