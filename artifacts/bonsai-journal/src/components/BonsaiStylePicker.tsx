@@ -1,8 +1,15 @@
 import * as React from "react";
-import { Check, ChevronsUpDown, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /* ─── Data ─────────────────────────────────────────────────────────────────── */
@@ -153,7 +160,7 @@ function DescriptionPanel({ style }: { style: BonsaiStyle | undefined }) {
   if (!style) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground/50 text-xs text-center px-3">
-        Hover over a style to see its description
+        Select a style to see its description
       </div>
     );
   }
@@ -166,6 +173,9 @@ function DescriptionPanel({ style }: { style: BonsaiStyle | undefined }) {
   );
 }
 
+/* ─── Sentinel value used to clear the selection ────────────────────────────── */
+const CLEAR_VALUE = "__clear__";
+
 /* ─── Main component ─────────────────────────────────────────────────────────── */
 
 interface BonsaiStylePickerProps {
@@ -174,109 +184,83 @@ interface BonsaiStylePickerProps {
   placeholder?: string;
 }
 
-export function BonsaiStylePicker({ value, onChange, placeholder = "Select style (optional)" }: BonsaiStylePickerProps) {
-  const [open, setOpen] = React.useState(false);
-  const [hovered, setHovered] = React.useState<BonsaiStyle | undefined>(undefined);
+export function BonsaiStylePicker({
+  value,
+  onChange,
+  placeholder = "Select style (optional)",
+}: BonsaiStylePickerProps) {
   const [infoOpen, setInfoOpen] = React.useState(false);
-
   const selected = findStyle(value);
 
-  // When dropdown opens, pre-seed the preview with the currently selected style
-  React.useEffect(() => {
-    if (open) setHovered(selected);
-    else setHovered(undefined);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  const handleSelect = (styleValue: string) => {
-    onChange(styleValue === value ? "" : styleValue);
-    setOpen(false);
-  };
+  // Radix Select requires `undefined` (not "") to show the placeholder
+  const selectValue = value || undefined;
 
   return (
     <div className="flex items-center gap-2">
-      {/* ── Combobox ── */}
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="flex-1 justify-between font-normal text-left"
-          >
-            {selected ? (
-              <span>
-                <span className="font-medium">{selected.romanized}</span>
-                <span className="text-muted-foreground ml-1.5">— {selected.english}</span>
-              </span>
-            ) : value ? (
-              <span className="text-muted-foreground">{value}</span>
-            ) : (
-              <span className="text-muted-foreground">{placeholder}</span>
-            )}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-
-        {/* Wide popover — two columns on md+, single column on mobile */}
-        <PopoverContent
-          className="p-0 w-[var(--radix-popover-trigger-width)] md:w-[640px]"
-          align="start"
-          sideOffset={4}
+      {/*
+        Radix Select handles touch correctly:
+        — uses pointer events internally (no blur-race condition)
+        — renders content in a portal with correct viewport positioning
+        — WAI-ARIA compliant, keyboard + touch navigable
+        16px (text-base) on trigger and items prevents iOS Safari auto-zoom.
+        44px min-height meets Apple's minimum tap-target guideline.
+      */}
+      <Select
+        value={selectValue}
+        onValueChange={(v) => onChange(v === CLEAR_VALUE ? "" : v)}
+      >
+        <SelectTrigger
+          className="flex-1 min-h-[44px] text-base"
+          aria-label="Bonsai style"
         >
-          <div className="flex">
-            {/* ── Left: searchable list ── */}
-            <div className="flex-1 min-w-0">
-              <Command className="overflow-visible">
-                <CommandInput placeholder="Search styles…" className="h-9" />
-                <div className="max-h-[280px] overflow-y-auto" onWheel={(e) => e.stopPropagation()}>
-                  <CommandList>
-                    <CommandEmpty>No style found.</CommandEmpty>
-                    {STYLE_GROUPS.map((group) => (
-                      <CommandGroup key={group.label} heading={group.label}>
-                        {group.styles.map((style) => (
-                          <CommandItem
-                            key={style.value}
-                            value={style.value}
-                            onSelect={() => handleSelect(style.value)}
-                            onMouseEnter={() => setHovered(style)}
-                            className="cursor-pointer"
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4 shrink-0",
-                                value === style.value ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            <span>
-                              <span className="font-medium">{style.romanized}</span>
-                              <span className="text-muted-foreground ml-1.5 text-xs">— {style.english}</span>
-                            </span>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    ))}
-                  </CommandList>
-                </div>
-              </Command>
-            </div>
-
-            {/* ── Right: description panel — desktop only ── */}
-            <div className="hidden md:block w-56 shrink-0 border-l p-4 min-h-[200px] bg-muted/30">
-              <DescriptionPanel style={hovered} />
-            </div>
-          </div>
-
-          {/* ── Bottom: description — mobile only ── */}
-          {hovered && (
-            <div className="md:hidden border-t px-4 py-3 bg-muted/30">
-              <DescriptionPanel style={hovered} />
-            </div>
+          {selected ? (
+            <span className="truncate text-left">
+              <span className="font-medium">{selected.romanized}</span>
+              <span className="text-muted-foreground ml-1.5">— {selected.english}</span>
+            </span>
+          ) : (
+            <SelectValue placeholder={placeholder} />
           )}
-        </PopoverContent>
-      </Popover>
+        </SelectTrigger>
 
-      {/* ── Info icon for selected style ── */}
+        <SelectContent
+          // position="popper" (default) keeps the list anchored below the trigger
+          // and scrolls within the viewport on both mobile and desktop.
+          className="max-h-[min(60vh,400px)]"
+          // Prevent the content from being wider than the viewport on narrow screens
+          style={{ maxWidth: "min(100vw - 32px, 480px)" }}
+        >
+          {/* Clear option */}
+          <SelectItem
+            value={CLEAR_VALUE}
+            className="min-h-[44px] text-base text-muted-foreground italic py-2"
+          >
+            — None —
+          </SelectItem>
+
+          {STYLE_GROUPS.map((group) => (
+            <SelectGroup key={group.label}>
+              <SelectLabel className="text-xs px-2 py-1.5 text-muted-foreground/70">
+                {group.label}
+              </SelectLabel>
+              {group.styles.map((style) => (
+                <SelectItem
+                  key={style.value}
+                  value={style.value}
+                  // min-h-[44px] ensures every item meets the 44 px tap-target minimum
+                  // text-base (16px) prevents iOS Safari from zooming on focus
+                  className="min-h-[44px] text-base py-2.5 cursor-pointer"
+                >
+                  <span className="font-medium">{style.romanized}</span>
+                  <span className="text-muted-foreground ml-1.5 text-sm">— {style.english}</span>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Info popover — shows description for the currently selected style */}
       {selected && (
         <Popover open={infoOpen} onOpenChange={setInfoOpen}>
           <PopoverTrigger asChild>
@@ -284,7 +268,8 @@ export function BonsaiStylePicker({ value, onChange, placeholder = "Select style
               variant="ghost"
               size="icon"
               type="button"
-              className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+              // 44×44 minimum tap target
+              className="h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground"
               aria-label="View style description"
             >
               <Info className="h-4 w-4" />
