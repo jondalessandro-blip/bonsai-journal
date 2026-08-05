@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { TreeForm } from "@/components/TreeForm";
+import { TreeForm, type TreeFormHandle } from "@/components/TreeForm";
 import { LogForm } from "@/components/LogForm";
 import { ReminderForm } from "@/components/ReminderForm";
 import { ProgressionGallery } from "@/components/ProgressionGallery";
 import { CoverPhotoHero } from "@/components/CoverPhotoHero";
+import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 
 export default function TreeDetailPage() {
@@ -20,6 +21,9 @@ export default function TreeDetailPage() {
   const queryClient = useQueryClient();
   
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isEditFormDirty, setIsEditFormDirty] = useState(false);
+  const [showEditGuard, setShowEditGuard] = useState(false);
+  const editFormRef = useRef<TreeFormHandle>(null);
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
@@ -121,7 +125,29 @@ export default function TreeDetailPage() {
           </Button>
         </Link>
         <div className="flex gap-2">
-          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <UnsavedChangesDialog
+            open={showEditGuard}
+            onSaveAndLeave={() => {
+              setShowEditGuard(false);
+              editFormRef.current?.submit();
+            }}
+            onDiscard={() => {
+              setShowEditGuard(false);
+              setIsEditFormDirty(false);
+              setIsEditOpen(false);
+            }}
+            onCancel={() => setShowEditGuard(false)}
+          />
+          <Dialog
+            open={isEditOpen}
+            onOpenChange={(open) => {
+              if (!open && isEditFormDirty) {
+                setShowEditGuard(true);
+              } else {
+                setIsEditOpen(open);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button variant="outline" size="sm"><Edit2 className="w-4 h-4 mr-2" /> Edit</Button>
             </DialogTrigger>
@@ -129,7 +155,15 @@ export default function TreeDetailPage() {
               <DialogHeader>
                 <DialogTitle>Edit Tree</DialogTitle>
               </DialogHeader>
-              <TreeForm initialData={tree} onSuccess={() => setIsEditOpen(false)} />
+              <TreeForm
+                ref={editFormRef}
+                initialData={tree}
+                onDirtyChange={setIsEditFormDirty}
+                onSuccess={() => {
+                  setIsEditFormDirty(false);
+                  setIsEditOpen(false);
+                }}
+              />
             </DialogContent>
           </Dialog>
           <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive border-transparent" onClick={handleDelete}>
