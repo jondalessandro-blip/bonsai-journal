@@ -90,8 +90,8 @@ export default function CollectionPage() {
         </Link>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 bg-card p-3 rounded-lg border shadow-sm">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3 bg-card p-3 rounded-lg border shadow-sm">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search by name, species, or tag..."
@@ -100,8 +100,8 @@ export default function CollectionPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="h-px sm:h-auto sm:w-px bg-border/50" />
-        <div className="flex gap-2 w-full sm:w-auto flex-wrap">
+        <div className="h-px bg-border/50" />
+        <div className="flex gap-2 w-full flex-wrap">
           <Select value={climate} onValueChange={setClimate}>
             <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1">
               <SelectValue placeholder="Climate" />
