@@ -144,6 +144,12 @@ export default function TreeDetailPage() {
         serverCoverPosition={tree.coverPosition}
       />
 
+      {/* Name/species — mobile only, shown above the details box */}
+      <div className="md:hidden mb-2">
+        <h1 className="text-3xl font-serif text-foreground mb-1">{tree.name}</h1>
+        {tree.species && <p className="text-lg italic text-muted-foreground">{tree.species}</p>}
+      </div>
+
       {/* Content grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
@@ -197,7 +203,7 @@ export default function TreeDetailPage() {
 
         {/* Right Col — Name, Notes, Care Journal */}
         <div className="md:col-span-2 space-y-8">
-          <div>
+          <div className="hidden md:block">
             <h1 className="text-4xl font-serif text-foreground mb-1">{tree.name}</h1>
             {tree.species && <p className="text-xl italic text-muted-foreground">{tree.species}</p>}
           </div>
