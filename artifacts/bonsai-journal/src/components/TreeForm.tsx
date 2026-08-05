@@ -124,6 +124,8 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
             queryClient.invalidateQueries({ queryKey: ["/api/trees", initialData.id] });
             queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
+            // Refresh timeline so any auto-generated status-change log entry appears
+            queryClient.invalidateQueries({ queryKey: ["/api/trees", initialData.id, "timeline"] });
             onSuccess?.();
           },
         }

@@ -168,11 +168,44 @@ router.patch("/trees/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [tree] = await db
-    .update(treesTable)
-    .set(parsed.data)
-    .where(eq(treesTable.id, params.data.id))
-    .returning();
+  // Perform the read, update, and optional status-change log insertion in a
+  // single transaction with a row-level lock so concurrent PATCHes to the
+  // same tree are serialized and the log entry is always consistent with the
+  // update (both succeed or both roll back).
+  let tree: typeof treesTable.$inferSelect | undefined;
+
+  await db.transaction(async (tx) => {
+    // Lock the row so concurrent updates queue rather than racing on status
+    const [existing] = await tx
+      .select({ status: treesTable.status })
+      .from(treesTable)
+      .where(eq(treesTable.id, params.data.id))
+      .for("update");
+
+    if (!existing) return; // handled below
+
+    const [updated] = await tx
+      .update(treesTable)
+      .set(parsed.data)
+      .where(eq(treesTable.id, params.data.id))
+      .returning();
+
+    if (!updated) return; // should not happen after a successful lock
+    tree = updated;
+
+    const newStatus = parsed.data.status;
+    if (newStatus !== undefined && newStatus !== existing.status) {
+      const today = new Date().toISOString().slice(0, 10);
+      const oldLabel = existing.status ?? "Unknown";
+      const newLabel = newStatus ?? "Unknown";
+      await tx.insert(careLogsTable).values({
+        treeId: updated.id,
+        type: "Status Change",
+        date: today,
+        notes: `${oldLabel} → ${newLabel}`,
+      });
+    }
+  });
 
   if (!tree) {
     res.status(404).json({ error: "Tree not found" });

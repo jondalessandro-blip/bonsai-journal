@@ -3,7 +3,7 @@ import { useParams, useLocation, Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText } from "lucide-react";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText, Activity } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TreeForm, type TreeFormHandle } from "@/components/TreeForm";
 import { LogForm } from "@/components/LogForm";
@@ -377,35 +377,40 @@ export default function TreeDetailPage() {
                 {filteredTimeline?.map((event) => {
                   const isReminder = event.kind === "reminder";
                   const isCompleted = isReminder && event.completed;
+                  const isStatusChange = event.kind === "log" && event.type === "Status Change";
                   const date = parseISO(event.date);
                   return (
                     <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-card shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 text-primary">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-card shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 ${isStatusChange ? "text-amber-500" : "text-primary"}`}>
                         {isReminder ? (
                           <button onClick={() => handleToggleReminder(event.id, !event.completed)} className="hover:text-primary transition-colors focus:outline-none">
                             {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 opacity-50 hover:opacity-100" />}
                           </button>
+                        ) : isStatusChange ? (
+                          <Activity className="w-4 h-4" />
                         ) : (
                           <Leaf className="w-4 h-4 opacity-70" />
                         )}
                       </div>
-                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border bg-card shadow-sm transition-all hover:shadow-md">
+                      <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border bg-card shadow-sm transition-all hover:shadow-md ${isStatusChange ? "border-amber-200 dark:border-amber-800/50 bg-amber-50/30 dark:bg-amber-900/10" : ""}`}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className={`font-medium ${isReminder && !isCompleted ? 'text-primary' : 'text-foreground'}`}>
-                            {event.type} {isReminder && !isCompleted && "(Planned)"}
+                          <span className={`font-medium ${isReminder && !isCompleted ? 'text-primary' : isStatusChange ? 'text-amber-700 dark:text-amber-400' : 'text-foreground'}`}>
+                            {isStatusChange ? "Health Status Changed" : event.type} {isReminder && !isCompleted && "(Planned)"}
                           </span>
                           <div className="flex items-center gap-1">
                             <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
                               {format(date, 'MMM d, yyyy')}
                             </time>
-                            <button
-                              onClick={() => isReminder
-                                ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
-                                : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
-                              }
-                              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                              aria-label="Edit"
-                            ><Pencil className="w-3 h-3" /></button>
+                            {!isStatusChange && (
+                              <button
+                                onClick={() => isReminder
+                                  ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
+                                  : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
+                                }
+                                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                aria-label="Edit"
+                              ><Pencil className="w-3 h-3" /></button>
+                            )}
                             <button
                               onClick={() => isReminder ? handleDeleteReminder(event.id) : handleDeleteLog(event.id)}
                               className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -414,7 +419,7 @@ export default function TreeDetailPage() {
                           </div>
                         </div>
                         {event.notes && (
-                          <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : 'text-muted-foreground'}`}>
+                          <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : isStatusChange ? 'text-amber-700/80 dark:text-amber-400/80 font-medium' : 'text-muted-foreground'}`}>
                             {event.notes}
                           </p>
                         )}
@@ -492,35 +497,40 @@ export default function TreeDetailPage() {
                   {filteredTimeline?.map((event) => {
                     const isReminder = event.kind === "reminder";
                     const isCompleted = isReminder && event.completed;
+                    const isStatusChange = event.kind === "log" && event.type === "Status Change";
                     const date = parseISO(event.date);
                     return (
                       <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-card shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 text-primary">
+                        <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-card shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 ${isStatusChange ? "text-amber-500" : "text-primary"}`}>
                           {isReminder ? (
                             <button onClick={() => handleToggleReminder(event.id, !event.completed)} className="hover:text-primary transition-colors focus:outline-none">
                               {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 opacity-50 hover:opacity-100" />}
                             </button>
+                          ) : isStatusChange ? (
+                            <Activity className="w-4 h-4" />
                           ) : (
                             <Leaf className="w-4 h-4 opacity-70" />
                           )}
                         </div>
-                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border bg-card shadow-sm transition-all hover:shadow-md">
+                        <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border bg-card shadow-sm transition-all hover:shadow-md ${isStatusChange ? "border-amber-200 dark:border-amber-800/50 bg-amber-50/30 dark:bg-amber-900/10" : ""}`}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className={`font-medium ${isReminder && !isCompleted ? 'text-primary' : 'text-foreground'}`}>
-                              {event.type} {isReminder && !isCompleted && "(Planned)"}
+                            <span className={`font-medium ${isReminder && !isCompleted ? 'text-primary' : isStatusChange ? 'text-amber-700 dark:text-amber-400' : 'text-foreground'}`}>
+                              {isStatusChange ? "Health Status Changed" : event.type} {isReminder && !isCompleted && "(Planned)"}
                             </span>
                             <div className="flex items-center gap-1">
                               <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
                                 {format(date, 'MMM d, yyyy')}
                               </time>
-                              <button
-                                onClick={() => isReminder
-                                  ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
-                                  : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
-                                }
-                                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                aria-label="Edit"
-                              ><Pencil className="w-3 h-3" /></button>
+                              {!isStatusChange && (
+                                <button
+                                  onClick={() => isReminder
+                                    ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
+                                    : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
+                                  }
+                                  className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                  aria-label="Edit"
+                                ><Pencil className="w-3 h-3" /></button>
+                              )}
                               <button
                                 onClick={() => isReminder ? handleDeleteReminder(event.id) : handleDeleteLog(event.id)}
                                 className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -529,7 +539,7 @@ export default function TreeDetailPage() {
                             </div>
                           </div>
                           {event.notes && (
-                            <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : 'text-muted-foreground'}`}>
+                            <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : isStatusChange ? 'text-amber-700/80 dark:text-amber-400/80 font-medium' : 'text-muted-foreground'}`}>
                               {event.notes}
                             </p>
                           )}
