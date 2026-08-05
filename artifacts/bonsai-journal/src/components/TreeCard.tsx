@@ -56,17 +56,24 @@ export const TreeCard = memo(function TreeCard({ tree, searchQuery = "" }: TreeC
               {tree.name}
             </h3>
             {tree.status && (
-              <span className={[
-                "shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium leading-none mt-0.5",
-                tree.status === "Thriving"             ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"  :
-                tree.status === "Dormant"              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"     :
-                tree.status === "Stressed/In Distress" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" :
-                tree.status === "Sick"                 ? "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300" :
-                tree.status === "Dead/Beyond Recovery" ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"         :
-                                                         "bg-muted text-muted-foreground"
-              ].join(" ")}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLocation(`/?status=${encodeURIComponent(tree.status!)}`);
+                }}
+                className={[
+                  "shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium leading-none mt-0.5 cursor-pointer hover:opacity-75 transition-opacity",
+                  tree.status === "Thriving"             ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"  :
+                  tree.status === "Dormant"              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"     :
+                  tree.status === "Stressed/In Distress" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" :
+                  tree.status === "Sick"                 ? "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300" :
+                  tree.status === "Dead/Beyond Recovery" ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"         :
+                                                           "bg-muted text-muted-foreground"
+                ].join(" ")}
+              >
                 {tree.status}
-              </span>
+              </button>
             )}
           </div>
           {tree.species && (

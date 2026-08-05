@@ -9,20 +9,47 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
 import { Plus, Search, Leaf, Tag, Check, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Link } from "wouter";
+import { Link, useSearch, useLocation } from "wouter";
 
 const PAGE_SIZE = 24;
 const CUSTOM_TAGS_KEY = "bonsai_custom_tags";
 
 export default function CollectionPage() {
+  const searchString = useSearch();
+  const [, setLocation] = useLocation();
+
+  // Derive initial status from URL on first render
+  const urlStatus = useMemo(() => {
+    const params = new URLSearchParams(searchString);
+    return params.get("status") ?? "all";
+  }, [searchString]);
+
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [climate, setClimate] = useState<string>("all");
   const [foliage, setFoliage] = useState<string>("all");
   const [stage, setStage] = useState<string>("all");
-  const [status, setStatus] = useState<string>("all");
+  const [status, setStatus] = useState<string>(urlStatus);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagsOpen, setTagsOpen] = useState(false);
+
+  // Keep status state in sync with URL (handles browser back/forward)
+  useEffect(() => {
+    setStatus(urlStatus);
+  }, [urlStatus]);
+
+  // Update URL when status filter changes
+  const handleStatusChange = useCallback((value: string) => {
+    setStatus(value);
+    const params = new URLSearchParams(searchString);
+    if (value === "all") {
+      params.delete("status");
+    } else {
+      params.set("status", value);
+    }
+    const qs = params.toString();
+    setLocation(qs ? `/?${qs}` : "/", { replace: false });
+  }, [searchString, setLocation]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -179,7 +206,7 @@ export default function CollectionPage() {
               <SelectItem value="Ramification & Refinement">4. Refinement</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={status} onValueChange={setStatus}>
+          <Select value={status} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
