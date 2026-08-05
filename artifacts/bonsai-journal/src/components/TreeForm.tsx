@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import type { Tree } from "@workspace/api-client-react";
@@ -74,42 +74,72 @@ interface TreeFormProps {
   onDuplicate?: (savedTree: Tree) => void;
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Build a stable snapshot of all form fields + tags for dirty comparison. */
+type Baseline = FormValues & { tags: string[] };
+
+function buildDefaultValues(
+  initialData: Tree | undefined,
+  prefillData: TreePrefillData | undefined
+): FormValues {
+  return {
+    name:         initialData?.name                                              ?? "",
+    species:      initialData?.species      ?? prefillData?.species              ?? "",
+    acquiredDate: initialData?.acquiredDate ? initialData.acquiredDate.split("T")[0] : "",
+    climate:      initialData?.climate      ?? prefillData?.climate              ?? "",
+    foliage:      initialData?.foliage      ?? prefillData?.foliage              ?? "",
+    style:        initialData?.style        ?? prefillData?.style                ?? "",
+    stage:        initialData?.stage        ?? prefillData?.stage                ?? "",
+    status:       initialData?.status       ?? prefillData?.status               ?? "",
+    notes:        initialData?.notes        ?? prefillData?.notes                ?? "",
+  };
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeForm(
   { initialData, prefillData, onSuccess, onDirtyChange, onPlantAnother, onDuplicate },
   ref
 ) {
   const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
-  const isEdit = !!initialData;
+  const queryClient    = useQueryClient();
+  const isEdit         = !!initialData;
 
-  // Tags are managed outside react-hook-form; track baseline for dirty detection
+  const defaultValues = buildDefaultValues(initialData, prefillData);
+
+  // Tags are managed outside react-hook-form
   const [tags, setTags] = useState<string[]>(
     initialData?.tags ?? prefillData?.tags ?? []
   );
-  const initialTagsRef = useRef<string[]>(
-    initialData?.tags ?? prefillData?.tags ?? []
-  );
 
-  const defaultValues: FormValues = {
-    name: initialData?.name ?? "",
-    species: initialData?.species ?? prefillData?.species ?? "",
-    acquiredDate: initialData?.acquiredDate ? initialData.acquiredDate.split("T")[0] : "",
-    climate: initialData?.climate ?? prefillData?.climate ?? "",
-    foliage: initialData?.foliage ?? prefillData?.foliage ?? "",
-    style: initialData?.style ?? prefillData?.style ?? "",
-    stage: initialData?.stage ?? prefillData?.stage ?? "",
-    status: initialData?.status ?? prefillData?.status ?? "",
-    notes: initialData?.notes ?? prefillData?.notes ?? "",
-  };
+  // ── Baseline — the "saved" state we compare against for dirty detection ──
+  // Updated after every successful save so incremental edits are detected.
+  const baselineRef = useRef<Baseline>({
+    ...defaultValues,
+    tags: initialData?.tags ?? prefillData?.tags ?? [],
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
 
-  // Combined dirty: form fields OR tags changed
-  const isTagsDirty = JSON.stringify(tags) !== JSON.stringify(initialTagsRef.current);
-  const isDirty = form.formState.isDirty || isTagsDirty;
+  // ── Dirty detection via deep comparison (not form.formState.isDirty) ───────
+  // useWatch subscribes to all field changes and re-renders only when a value
+  // actually changes, which is more reliable than the isDirty proxy for
+  // Radix Select (defaultValue/uncontrolled) and date inputs.
+  const watched = useWatch({ control: form.control });
+
+  const isDirty = (() => {
+    const formKeys = Object.keys(defaultValues) as (keyof FormValues)[];
+    const formChanged = formKeys.some(
+      (k) => (watched as FormValues)[k] !== baselineRef.current[k]
+    );
+    const tagsChanged =
+      JSON.stringify(tags) !== JSON.stringify(baselineRef.current.tags);
+    return formChanged || tagsChanged;
+  })();
 
   // Notify parent of dirty state changes
   useEffect(() => {
@@ -134,6 +164,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
     setGuardState({ path, resume });
   });
 
+  // ── Submit handler ────────────────────────────────────────────────────────
   const onSubmit = (values: FormValues) => {
     const clean = {
       ...Object.fromEntries(Object.entries(values).filter(([, v]) => v !== "")),
@@ -145,13 +176,12 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
         { id: initialData.id, data: clean },
         {
           onSuccess: () => {
-            // Reset dirty state to reflect saved values
+            // Advance the baseline so the form is clean relative to saved state
+            baselineRef.current = { ...values, tags: [...tags] };
             form.reset(values);
-            initialTagsRef.current = [...tags];
 
             queryClient.invalidateQueries({ queryKey: ["/api/trees", initialData.id] });
             queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
-            // Refresh timeline so any auto-generated status-change log entry appears
             queryClient.invalidateQueries({ queryKey: ["/api/trees", initialData.id, "timeline"] });
             onSuccess?.();
           },
@@ -162,17 +192,16 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
         { data: clean },
         {
           onSuccess: (tree) => {
+            baselineRef.current = { ...values, tags: [...tags] };
             form.reset(values);
-            initialTagsRef.current = [...tags];
 
             queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
 
             const action = pendingActionRef.current;
             pendingActionRef.current = null;
 
-            // If "Save & Leave" was triggered from the navigation guard, resume
-            // the originally-intended navigation instead of going to the new tree.
             if (pendingResumeRef.current) {
+              // "Save & Leave" from navigation guard — resume the blocked navigation
               pendingResumeRef.current();
               pendingResumeRef.current = null;
             } else if (action === "plantAnother") {
@@ -193,7 +222,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   const createTree = useCreateTree();
   const updateTree = useUpdateTree();
 
-  // Guard dialog handlers (new-tree navigation case)
+  // ── Navigation guard dialog handlers (new-tree page) ──────────────────────
   const handleGuardSaveAndLeave = () => {
     if (!guardState) return;
     pendingResumeRef.current = guardState.resume;
@@ -204,8 +233,10 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   const handleGuardDiscard = () => {
     if (!guardState) return;
     const { resume } = guardState;
-    form.reset(defaultValues);
-    setTags(initialTagsRef.current);
+    // Reset to baseline (the last saved state), not necessarily the very first defaultValues
+    const { tags: baseTags, ...baseFormVals } = baselineRef.current;
+    form.reset(baseFormVals as FormValues);
+    setTags([...baseTags]);
     setGuardState(null);
     resume();
   };
@@ -214,6 +245,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
   const isBusy = createTree.isPending || updateTree.isPending;
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
       <UnsavedChangesDialog
@@ -260,7 +292,11 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Health Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  {/*
+                    Use `value` (controlled) not `defaultValue` (uncontrolled) so that
+                    form.reset() visually resets the Select and useWatch picks up changes.
+                  */}
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select status (optional)" />
@@ -283,7 +319,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Development Stage</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select stage (optional)" />
@@ -308,7 +344,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Climate Need</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select climate" />
@@ -330,7 +366,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Foliage Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select foliage type" />
@@ -370,6 +406,10 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                 <FormItem>
                   <FormLabel>Acquired Date</FormLabel>
                   <FormControl>
+                    {/*
+                      Controlled input — value from RHF, onChange updates RHF store.
+                      useWatch picks up the change and isDirty is recomputed immediately.
+                    */}
                     <Input type="date" {...field} />
                   </FormControl>
                   <FormMessage />
