@@ -1,8 +1,10 @@
 import { useGetCollectionStats } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TreeCard } from "@/components/TreeCard";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { TreePine, Droplets, Leaf, Activity } from "lucide-react";
+import { TreePine, Droplets, Leaf, Activity, Plus } from "lucide-react";
+import { Link } from "wouter";
 
 const STATUS_ORDER = [
   "Thriving",
@@ -48,9 +50,17 @@ export default function StatsPage() {
 
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-serif text-foreground">Collection Stats</h1>
-        <p className="text-muted-foreground mt-1">A high-level view of your garden.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-serif text-foreground">Collection Stats</h1>
+          <p className="text-muted-foreground mt-1">A high-level view of your garden.</p>
+        </div>
+        <Link href="/trees/new">
+          <Button className="shrink-0">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Tree
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

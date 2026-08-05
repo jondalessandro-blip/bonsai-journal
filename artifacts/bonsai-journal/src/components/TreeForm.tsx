@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useNavigationGuard } from "@/hooks/use-navigation-guard";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
+import { Copy, Sprout } from "lucide-react";
 
 const BONSAI_STAGES = [
   "Establishment",
@@ -45,18 +46,36 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+/** Fields that can be pre-populated when duplicating a tree (excludes identity/time-specific values). */
+export type TreePrefillData = {
+  species?: string;
+  climate?: string;
+  foliage?: string;
+  style?: string;
+  stage?: string;
+  status?: string;
+  notes?: string;
+  tags?: string[];
+};
+
 export interface TreeFormHandle {
   submit: () => void;
 }
 
 interface TreeFormProps {
   initialData?: Tree;
+  /** Pre-populated field values for a new tree (does not trigger edit mode). */
+  prefillData?: TreePrefillData;
   onSuccess?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
+  /** Called after a successful save when the user chose "Plant Another Tree". */
+  onPlantAnother?: () => void;
+  /** Called after a successful save when the user chose "Add Duplicate Tree". */
+  onDuplicate?: (savedTree: Tree) => void;
 }
 
 export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeForm(
-  { initialData, onSuccess, onDirtyChange },
+  { initialData, prefillData, onSuccess, onDirtyChange, onPlantAnother, onDuplicate },
   ref
 ) {
   const [, setLocation] = useLocation();
@@ -64,19 +83,23 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   const isEdit = !!initialData;
 
   // Tags are managed outside react-hook-form; track baseline for dirty detection
-  const [tags, setTags] = useState<string[]>(initialData?.tags ?? []);
-  const initialTagsRef = useRef<string[]>(initialData?.tags ?? []);
+  const [tags, setTags] = useState<string[]>(
+    initialData?.tags ?? prefillData?.tags ?? []
+  );
+  const initialTagsRef = useRef<string[]>(
+    initialData?.tags ?? prefillData?.tags ?? []
+  );
 
   const defaultValues: FormValues = {
     name: initialData?.name ?? "",
-    species: initialData?.species ?? "",
+    species: initialData?.species ?? prefillData?.species ?? "",
     acquiredDate: initialData?.acquiredDate ? initialData.acquiredDate.split("T")[0] : "",
-    climate: initialData?.climate ?? "",
-    foliage: initialData?.foliage ?? "",
-    style: initialData?.style ?? "",
-    stage: initialData?.stage ?? "",
-    status: initialData?.status ?? "",
-    notes: initialData?.notes ?? "",
+    climate: initialData?.climate ?? prefillData?.climate ?? "",
+    foliage: initialData?.foliage ?? prefillData?.foliage ?? "",
+    style: initialData?.style ?? prefillData?.style ?? "",
+    stage: initialData?.stage ?? prefillData?.stage ?? "",
+    status: initialData?.status ?? prefillData?.status ?? "",
+    notes: initialData?.notes ?? prefillData?.notes ?? "",
   };
 
   const form = useForm<FormValues>({
@@ -97,6 +120,10 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   useImperativeHandle(ref, () => ({
     submit: () => form.handleSubmit(onSubmit)(),
   }));
+
+  // Track which extra action was requested alongside the submit
+  type PostSaveAction = "plantAnother" | "duplicate" | null;
+  const pendingActionRef = useRef<PostSaveAction>(null);
 
   // Navigation guard state — only active for new-tree (full-page) form
   type GuardState = { path: string; resume: () => void };
@@ -140,11 +167,18 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
             queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
 
+            const action = pendingActionRef.current;
+            pendingActionRef.current = null;
+
             // If "Save & Leave" was triggered from the navigation guard, resume
             // the originally-intended navigation instead of going to the new tree.
             if (pendingResumeRef.current) {
               pendingResumeRef.current();
               pendingResumeRef.current = null;
+            } else if (action === "plantAnother") {
+              onPlantAnother?.();
+            } else if (action === "duplicate") {
+              onDuplicate?.(tree);
             } else if (onSuccess) {
               onSuccess();
             } else {
@@ -177,6 +211,8 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   };
 
   const handleGuardCancel = () => setGuardState(null);
+
+  const isBusy = createTree.isPending || updateTree.isPending;
 
   return (
     <>
@@ -366,10 +402,42 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
             )}
           />
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
+            {/* Secondary actions — new-tree mode only */}
+            {!isEdit && (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isBusy}
+                  onClick={() => {
+                    pendingActionRef.current = "plantAnother";
+                    form.handleSubmit(onSubmit)();
+                  }}
+                >
+                  <Sprout className="w-4 h-4 mr-2" />
+                  Plant Another Tree
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isBusy}
+                  onClick={() => {
+                    pendingActionRef.current = "duplicate";
+                    form.handleSubmit(onSubmit)();
+                  }}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Add Duplicate Tree
+                </Button>
+              </div>
+            )}
+
+            {/* Primary save */}
             <Button
               type="submit"
-              disabled={createTree.isPending || updateTree.isPending}
+              disabled={isBusy}
+              className={isEdit ? "" : "ml-auto"}
             >
               {isEdit ? "Save Changes" : "Plant Tree"}
             </Button>
