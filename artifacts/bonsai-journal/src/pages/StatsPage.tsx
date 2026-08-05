@@ -131,14 +131,22 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.byFoliage} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis hide />
-                <Tooltip 
+              <BarChart data={stats.byFoliage} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
+                <XAxis type="number" hide />
+                <YAxis
+                  type="category"
+                  dataKey="label"
+                  width={140}
+                  interval={0}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <Tooltip
                   cursor={{ fill: 'hsl(var(--muted))' }}
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
                 />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={32}>
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
                   {stats.byFoliage.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={primaryColor} fillOpacity={0.8 - (index * 0.15)} />
                   ))}
