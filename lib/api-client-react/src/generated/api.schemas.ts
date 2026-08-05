@@ -41,6 +41,8 @@ export interface Tree {
   notes?: string | null;
   /** @nullable */
   photoUrl?: string | null;
+  /** @nullable */
+  coverPosition?: { x: number; y: number; zoom: number } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,6 +71,7 @@ export interface TreeUpdate {
   tags?: string[];
   notes?: string;
   photoUrl?: string;
+  coverPosition?: { x: number; y: number; zoom: number };
 }
 
 export interface CareLog {

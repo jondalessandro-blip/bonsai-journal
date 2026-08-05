@@ -9,6 +9,7 @@ import { TreeForm } from "@/components/TreeForm";
 import { LogForm } from "@/components/LogForm";
 import { ReminderForm } from "@/components/ReminderForm";
 import { ProgressionGallery } from "@/components/ProgressionGallery";
+import { CoverPhotoHero } from "@/components/CoverPhotoHero";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
@@ -126,8 +127,11 @@ export default function TreeDetailPage() {
         </div>
       </div>
 
-      {/* Progression gallery — full width */}
-      <ProgressionGallery treeId={tree.id} />
+      {/* Cover photo hero — repositionable banner */}
+      <CoverPhotoHero
+        treeId={tree.id}
+        serverCoverPosition={tree.coverPosition}
+      />
 
       {/* Content grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -239,6 +243,11 @@ export default function TreeDetailPage() {
               </div>
             </div>
           )}
+
+          {/* Progression gallery — below the name/notes, full right-col width */}
+          <div className="pt-2">
+            <ProgressionGallery treeId={tree.id} />
+          </div>
 
           <div className="space-y-6 pt-6 border-t">
             {/* Care Journal header */}

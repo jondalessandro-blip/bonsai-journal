@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -13,6 +13,7 @@ export const treesTable = pgTable("trees", {
   tags: text("tags").array().notNull().default([]),
   notes: text("notes"),
   photoUrl: text("photo_url"),
+  coverPosition: jsonb("cover_position").$type<{ x: number; y: number; zoom: number }>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -525,6 +525,15 @@ components:
           type: ["string", "null"]
         photoUrl:
           type: ["string", "null"]
+        coverPosition:
+          type: ["object", "null"]
+          properties:
+            x:
+              type: number
+            y:
+              type: number
+            zoom:
+              type: number
         createdAt:
           type: string
         updatedAt:
@@ -578,6 +587,15 @@ components:
           type: string
         photoUrl:
           type: string
+        coverPosition:
+          type: object
+          properties:
+            x:
+              type: number
+            y:
+              type: number
+            zoom:
+              type: number
 
     CareLog:
       type: object

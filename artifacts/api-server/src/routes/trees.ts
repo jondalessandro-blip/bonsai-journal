@@ -617,6 +617,7 @@ function formatTree(t: typeof treesTable.$inferSelect) {
     tags: t.tags,
     notes: t.notes,
     photoUrl: t.photoUrl,
+    coverPosition: t.coverPosition ?? null,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
   };

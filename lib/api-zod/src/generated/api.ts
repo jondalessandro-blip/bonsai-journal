@@ -130,6 +130,12 @@ export const UpdateTreeParams = zod.object({
 
 
 
+const CoverPositionSchema = zod.object({
+  x: zod.number(),
+  y: zod.number(),
+  zoom: zod.number(),
+});
+
 export const UpdateTreeBody = zod.object({
   "name": zod.string().min(1).optional(),
   "species": zod.string().optional(),
@@ -139,7 +145,8 @@ export const UpdateTreeBody = zod.object({
   "style": zod.string().optional(),
   "tags": zod.array(zod.string()).optional(),
   "notes": zod.string().optional(),
-  "photoUrl": zod.string().optional()
+  "photoUrl": zod.string().optional(),
+  "coverPosition": CoverPositionSchema.optional(),
 })
 
 export const UpdateTreeResponse = zod.object({
@@ -153,6 +160,7 @@ export const UpdateTreeResponse = zod.object({
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
+  "coverPosition": CoverPositionSchema.nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
