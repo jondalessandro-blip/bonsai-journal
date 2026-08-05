@@ -1,6 +1,25 @@
 import { useLocation, Link as WouterLink } from "wouter";
-import { TreePine, BarChart3, Menu, Leaf } from "lucide-react";
+import { BarChart3, Menu } from "lucide-react";
 import { Button } from "./ui/button";
+
+function DualLeafIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* stem */}
+      <path d="M12 22 C12 22 11.5 16 12 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+      {/* left leaf */}
+      <path d="M12 13 C11 11 7 9.5 5 6 C5 6 8.5 5 11 8 C11.8 9 12 11 12 13Z" />
+      {/* right leaf */}
+      <path d="M12 13 C13 11 17 9.5 19 6 C19 6 15.5 5 13 8 C12.2 9 12 11 12 13Z" />
+    </svg>
+  );
+}
 
 export function Navbar() {
   const [location] = useLocation();
@@ -11,7 +30,7 @@ export function Navbar() {
         <div className="flex items-center gap-6">
           <WouterLink href="/" className="flex items-center gap-2 group">
             <div className="bg-primary/10 p-1.5 rounded-md group-hover:bg-primary/20 transition-colors">
-              <TreePine className="h-5 w-5 text-primary" />
+              <DualLeafIcon className="h-5 w-5 text-primary" />
             </div>
             <span className="font-serif text-lg font-medium">Bonsai Journal <span className="text-muted-foreground font-sans text-sm ml-1">盆栽</span></span>
           </WouterLink>
