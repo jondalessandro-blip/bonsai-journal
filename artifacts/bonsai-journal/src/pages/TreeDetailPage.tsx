@@ -26,6 +26,7 @@ export default function TreeDetailPage() {
   const [careExpanded, setCareExpanded] = useState(false);
   const [editingLog, setEditingLog] = useState<{ id: string; type: string; date: string; notes?: string | null } | null>(null);
   const [editingReminder, setEditingReminder] = useState<{ id: string; type: string; dueDate: string; notes?: string | null } | null>(null);
+  const [careFilter, setCareFilter] = useState<"all" | "completed" | "planned">("all");
 
   // Lock body scroll when any fullscreen panel is open
   useEffect(() => {
@@ -48,6 +49,13 @@ export default function TreeDetailPage() {
 
   const { data: timeline } = useGetTreeTimeline(id!, {
     query: { enabled: !!id, queryKey: ["/api/trees", id, "timeline"] }
+  });
+
+  const filteredTimeline = timeline?.filter((event) => {
+    if (careFilter === "all") return true;
+    if (careFilter === "planned") return event.kind === "reminder" && !event.completed;
+    // "completed" = care logs + completed reminders
+    return event.kind === "log" || (event.kind === "reminder" && event.completed);
   });
 
   const deleteTree = useDeleteTree();
@@ -257,9 +265,20 @@ export default function TreeDetailPage() {
 
           <div className="space-y-6 pt-6 border-t">
             {/* Care Journal header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-2xl font-serif">Care Journal</h2>
-              <div className="flex gap-2 items-center">
+              <div className="flex flex-wrap gap-2 items-center">
+                <div className="flex rounded-md border overflow-hidden text-xs font-medium">
+                  {(["all", "completed", "planned"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setCareFilter(f)}
+                      className={`px-3 py-1.5 capitalize transition-colors ${careFilter === f ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
                 <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
@@ -292,12 +311,12 @@ export default function TreeDetailPage() {
             {/* Scrollable timeline */}
             <div className="overflow-y-auto max-h-[80vh]">
               <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-                {timeline?.length === 0 && (
+                {filteredTimeline?.length === 0 && (
                   <div className="text-center py-12 text-muted-foreground text-sm italic">
-                    The pages are blank. Start logging care.
+                    {careFilter === "all" ? "The pages are blank. Start logging care." : `No ${careFilter} entries.`}
                   </div>
                 )}
-                {timeline?.map((event) => {
+                {filteredTimeline?.map((event) => {
                   const isReminder = event.kind === "reminder";
                   const isCompleted = isReminder && event.completed;
                   const date = parseISO(event.date);
@@ -362,10 +381,21 @@ export default function TreeDetailPage() {
                   <Scissors className="w-5 h-5" />
                   <div>
                     <h2 className="font-serif text-lg leading-tight">Care Journal</h2>
-                    <p className="text-xs text-muted-foreground">{tree.name} · {timeline?.length ?? 0} entr{timeline?.length === 1 ? 'y' : 'ies'}</p>
+                    <p className="text-xs text-muted-foreground">{tree.name} · {filteredTimeline?.length ?? 0} entr{filteredTimeline?.length === 1 ? 'y' : 'ies'}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex rounded-md border overflow-hidden text-xs font-medium">
+                    {(["all", "completed", "planned"] as const).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setCareFilter(f)}
+                        className={`px-3 py-1.5 capitalize transition-colors ${careFilter === f ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
                   <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="secondary" size="sm"><Scissors className="w-4 h-4 mr-2" /> Log Care</Button>
@@ -394,12 +424,12 @@ export default function TreeDetailPage() {
 
               <div className="flex-1 overflow-y-auto px-4 py-6 max-w-4xl w-full mx-auto">
                 <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-                  {timeline?.length === 0 && (
+                  {filteredTimeline?.length === 0 && (
                     <div className="text-center py-12 text-muted-foreground text-sm italic">
-                      The pages are blank. Start logging care.
+                      {careFilter === "all" ? "The pages are blank. Start logging care." : `No ${careFilter} entries.`}
                     </div>
                   )}
-                  {timeline?.map((event) => {
+                  {filteredTimeline?.map((event) => {
                     const isReminder = event.kind === "reminder";
                     const isCompleted = isReminder && event.completed;
                     const date = parseISO(event.date);
