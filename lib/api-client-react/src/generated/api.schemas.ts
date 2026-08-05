@@ -38,6 +38,8 @@ export interface Tree {
   style?: string | null;
   /** @nullable */
   stage?: string | null;
+  /** @nullable — operational health status */
+  status?: string | null;
   tags: string[];
   /** @nullable */
   notes?: string | null;
@@ -59,6 +61,8 @@ export interface TreeInput {
   climate?: string;
   foliage?: string;
   style?: string;
+  stage?: string;
+  status?: string;
   tags?: string[];
   notes?: string;
   photoUrl?: string;
@@ -73,11 +77,12 @@ export interface TreeUpdate {
   climate?: string;
   foliage?: string;
   style?: string;
+  stage?: string;
+  status?: string;
   tags?: string[];
   notes?: string;
   photoUrl?: string;
   coverThumb?: string;
-  stage?: string;
   coverPosition?: { x: number; y: number; zoom: number };
 }
 

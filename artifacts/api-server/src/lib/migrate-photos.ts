@@ -14,7 +14,10 @@ export async function migrateSchema(): Promise<void> {
   await db.execute(sql`
     ALTER TABLE tree_photos ADD COLUMN IF NOT EXISTS photo_thumb text;
   `);
-  logger.info("Schema migration complete (cover_thumb, photo_thumb columns ensured)");
+  await db.execute(sql`
+    ALTER TABLE trees ADD COLUMN IF NOT EXISTS status text;
+  `);
+  logger.info("Schema migration complete (cover_thumb, photo_thumb, status columns ensured)");
 }
 
 /**

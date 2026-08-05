@@ -15,6 +15,7 @@ export const treesTable = pgTable("trees", {
   photoUrl: text("photo_url"),
   coverThumb: text("cover_thumb"),
   stage: text("stage"),
+  status: text("status"),
   coverPosition: jsonb("cover_position").$type<{ x: number; y: number; zoom: number }>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

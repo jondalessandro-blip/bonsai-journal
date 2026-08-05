@@ -21,6 +21,14 @@ const BONSAI_STAGES = [
   "Ramification & Refinement",
 ] as const;
 
+const TREE_STATUSES = [
+  "Thriving",
+  "Dormant",
+  "Stressed/In Distress",
+  "Sick",
+  "Dead/Beyond Recovery",
+] as const;
+
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   species: z.string().optional(),
@@ -29,6 +37,7 @@ const formSchema = z.object({
   foliage: z.string().optional(),
   style: z.string().optional(),
   stage: z.string().optional(),
+  status: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -59,6 +68,7 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
       foliage: initialData?.foliage || "",
       style: initialData?.style || "",
       stage: initialData?.stage || "",
+      status: initialData?.status || "",
       notes: initialData?.notes || "",
     },
   });
@@ -125,6 +135,29 @@ export function TreeForm({ initialData, onSuccess }: TreeFormProps) {
                 <FormControl>
                   <Input placeholder="e.g. Acer palmatum" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Health Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status (optional)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {TREE_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

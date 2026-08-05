@@ -20,6 +20,7 @@ export default function CollectionPage() {
   const [climate, setClimate] = useState<string>("all");
   const [foliage, setFoliage] = useState<string>("all");
   const [stage, setStage] = useState<string>("all");
+  const [status, setStatus] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagsOpen, setTagsOpen] = useState(false);
 
@@ -37,9 +38,10 @@ export default function CollectionPage() {
     climate: climate !== "all" ? climate : undefined,
     foliage: foliage !== "all" ? foliage : undefined,
     stage: stage !== "all" ? stage : undefined,
+    status: status !== "all" ? status : undefined,
     tags: selectedTags.length > 0 ? selectedTags : undefined,
     limit: PAGE_SIZE,
-  }), [debouncedSearch, climate, foliage, stage, selectedTags]);
+  }), [debouncedSearch, climate, foliage, stage, status, selectedTags]);
 
   const {
     data,
@@ -175,6 +177,19 @@ export default function CollectionPage() {
               <SelectItem value="Trunk Development">2. Trunk Dev.</SelectItem>
               <SelectItem value="Primary Branch Development">3. Branch Dev.</SelectItem>
               <SelectItem value="Ramification & Refinement">4. Refinement</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="Thriving">Thriving</SelectItem>
+              <SelectItem value="Dormant">Dormant</SelectItem>
+              <SelectItem value="Stressed/In Distress">Stressed</SelectItem>
+              <SelectItem value="Sick">Sick</SelectItem>
+              <SelectItem value="Dead/Beyond Recovery">Dead</SelectItem>
             </SelectContent>
           </Select>
 

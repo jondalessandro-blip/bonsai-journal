@@ -38,7 +38,7 @@ router.get("/trees", async (req, res): Promise<void> => {
     return;
   }
 
-  const { search, climate, foliage, stage, tag, tags: tagsParam, limit, offset } = query.data;
+  const { search, climate, foliage, stage, status, tag, tags: tagsParam, limit, offset } = query.data;
 
   // Parse comma-separated tags (sent by the client as String(string[]))
   const tagsList: string[] = tagsParam
@@ -67,6 +67,9 @@ router.get("/trees", async (req, res): Promise<void> => {
   if (stage) {
     conditions.push(eq(treesTable.stage, stage));
   }
+  if (status) {
+    conditions.push(eq(treesTable.status, status));
+  }
   if (tagsList.length > 0) {
     // OR logic: tree must have at least one of the selected tags
     conditions.push(or(...tagsList.map(t => sql`${t} = ANY(${treesTable.tags})`)));
@@ -83,6 +86,7 @@ router.get("/trees", async (req, res): Promise<void> => {
       foliage: treesTable.foliage,
       style: treesTable.style,
       stage: treesTable.stage,
+      status: treesTable.status,
       tags: treesTable.tags,
       photoUrl: treesTable.photoUrl,
       coverThumb: treesTable.coverThumb,
@@ -105,6 +109,7 @@ router.get("/trees", async (req, res): Promise<void> => {
     foliage: t.foliage,
     style: t.style,
     stage: t.stage,
+    status: t.status,
     tags: t.tags,
     photoUrl: t.photoUrl,
     coverThumb: t.coverThumb,
@@ -642,6 +647,7 @@ function formatTree(t: typeof treesTable.$inferSelect) {
     photoUrl: t.photoUrl,
     coverThumb: t.coverThumb ?? null,
     stage: t.stage,
+    status: t.status,
     coverPosition: t.coverPosition ?? null,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
