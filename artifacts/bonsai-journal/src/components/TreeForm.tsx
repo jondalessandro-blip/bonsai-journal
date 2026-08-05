@@ -159,15 +159,13 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   type GuardState = { path: string; resume: () => void };
   const [guardState, setGuardState] = useState<GuardState | null>(null);
 
-  // isSaving as STATE (not a ref) so it triggers a render that updates
-  // whenRef.current = false BEFORE the async mutation's onSuccess fires.
-  // This lets setLocation() bypass the guard without calling resume() at all,
-  // eliminating the popstate-race that caused double-prompt + double-create.
-  const [isSaving, setIsSaving] = useState(false);
-  // Destination path stored when "Save & Leave" is clicked
+  // isSavingRef is a REF (not state) so the guard predicate short-circuits
+  // synchronously — no render cycle needed to flip whenRef.current = false.
+  const isSavingRef = useRef(false);
+  // Destination path stored when "Save & Leave" or "Plant Tree" needs to navigate
   const pendingNavPathRef = useRef<string | null>(null);
 
-  useNavigationGuard(!isEdit && isDirty && !isSaving, (path, resume) => {
+  useNavigationGuard(!isEdit && isDirty && !isSavingRef.current, (path, resume) => {
     setGuardState({ path, resume });
   });
 
@@ -199,22 +197,21 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
         { data: clean },
         {
           onSuccess: (tree) => {
+            // Advance baseline to saved values and clear saving flag
             baselineRef.current = { ...values, tags: [...tags] };
             form.reset(values);
+            isSavingRef.current = false;
 
             queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
 
             const action = pendingActionRef.current;
             pendingActionRef.current = null;
+            const dest = pendingNavPathRef.current;
+            pendingNavPathRef.current = null;
 
-            if (pendingNavPathRef.current) {
-              // "Save & Leave" from navigation guard.
-              // isSaving=true was already rendered before this onSuccess fired, so
-              // whenRef.current is false. setLocation() bypasses the guard cleanly —
-              // no resume()/popstate needed, no double-prompt, no double-create.
-              const dest = pendingNavPathRef.current;
-              pendingNavPathRef.current = null;
-              setIsSaving(false);
+            if (dest) {
+              // Manual navigation — guard predicate is already false (isSavingRef
+              // was true; baseline now matches form; no resume()/popstate needed).
               setLocation(dest);
             } else if (action === "plantAnother") {
               onPlantAnother?.();
@@ -234,13 +231,36 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   const createTree = useCreateTree();
   const updateTree = useUpdateTree();
 
+  const isBusy = createTree.isPending || updateTree.isPending;
+
+  // ── Shared save entry-point ───────────────────────────────────────────────
+  // Called by "Plant Tree", "Plant Another Tree", "Add Duplicate Tree", and
+  // "Save & Leave". Sets isSavingRef synchronously so the guard predicate is
+  // false before any render, eliminating the double-prompt / double-create race.
+  const doSave = (destPath: string | null, action: PostSaveAction = null) => {
+    if (isBusy) return;
+    // Snapshot baseline so we can restore it if validation fails
+    const prevBaseline = baselineRef.current;
+    // Bypass guard synchronously and mark form clean (isDirty → false)
+    isSavingRef.current = true;
+    baselineRef.current = { ...form.getValues(), tags: [...tags] };
+    pendingNavPathRef.current = destPath;
+    pendingActionRef.current = action;
+    setGuardState(null); // close dialog if open
+    form.handleSubmit(
+      onSubmit,
+      () => {
+        // Validation failed — restore state so guard and dirty flag work again
+        isSavingRef.current = false;
+        baselineRef.current = prevBaseline;
+      }
+    )();
+  };
+
   // ── Navigation guard dialog handlers (new-tree page) ──────────────────────
   const handleGuardSaveAndLeave = () => {
-    if (!guardState || createTree.isPending || updateTree.isPending) return;
-    pendingNavPathRef.current = guardState.path; // store destination for manual nav
-    setIsSaving(true);   // disables guard → renders before mutation resolves
-    setGuardState(null); // close dialog
-    form.handleSubmit(onSubmit)();
+    if (!guardState) return;
+    doSave(guardState.path, null);
   };
 
   const handleGuardDiscard = () => {
@@ -255,8 +275,6 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   };
 
   const handleGuardCancel = () => setGuardState(null);
-
-  const isBusy = createTree.isPending || updateTree.isPending;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -464,10 +482,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                   type="button"
                   variant="outline"
                   disabled={isBusy}
-                  onClick={() => {
-                    pendingActionRef.current = "plantAnother";
-                    form.handleSubmit(onSubmit)();
-                  }}
+                  onClick={() => doSave(null, "plantAnother")}
                 >
                   <Sprout className="w-4 h-4 mr-2" />
                   Plant Another Tree
@@ -476,10 +491,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                   type="button"
                   variant="outline"
                   disabled={isBusy}
-                  onClick={() => {
-                    pendingActionRef.current = "duplicate";
-                    form.handleSubmit(onSubmit)();
-                  }}
+                  onClick={() => doSave(null, "duplicate")}
                 >
                   <Copy className="w-4 h-4 mr-2" />
                   Add Duplicate Tree
@@ -487,11 +499,13 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               </div>
             )}
 
-            {/* Primary save */}
+            {/* Primary save — type="button" so HTML form submit never fires;
+                all paths go through doSave() for consistent guard bypass. */}
             <Button
-              type="submit"
+              type={isEdit ? "submit" : "button"}
               disabled={isBusy}
               className={isEdit ? "" : "ml-auto"}
+              onClick={isEdit ? undefined : () => doSave(null, null)}
             >
               {isEdit ? "Save Changes" : "Plant Tree"}
             </Button>
