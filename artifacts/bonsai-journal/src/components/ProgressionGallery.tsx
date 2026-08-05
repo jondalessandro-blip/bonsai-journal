@@ -54,7 +54,14 @@ export function ProgressionGallery({ treeId }: Props) {
     if (result) {
       const today = new Date().toISOString().slice(0, 10);
       createPhoto.mutate(
-        { id: treeId, data: { photoUrl: result.serveUrl, takenAt: today } },
+        {
+          id: treeId,
+          data: {
+            photoUrl: result.serveUrl,
+            ...(result.thumbUrl ? { photoThumb: result.thumbUrl } : {}),
+            takenAt: today,
+          },
+        },
         { onSuccess: invalidate },
       );
     }

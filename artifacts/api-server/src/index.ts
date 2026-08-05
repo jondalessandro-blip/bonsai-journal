@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { migrateExistingPhotos } from "./lib/migrate-photos";
+import { migrateSchema, migrateExistingPhotos } from "./lib/migrate-photos";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +14,13 @@ const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+// Add new columns if they don't exist yet (idempotent, no-op when present).
+try {
+  await migrateSchema();
+} catch (err) {
+  logger.warn({ err }, "Schema migration failed (non-fatal) — continuing startup");
 }
 
 // Idempotent migration: copy legacy photoUrl values into tree_photos.

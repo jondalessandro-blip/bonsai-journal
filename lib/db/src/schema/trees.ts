@@ -13,6 +13,7 @@ export const treesTable = pgTable("trees", {
   tags: text("tags").array().notNull().default([]),
   notes: text("notes"),
   photoUrl: text("photo_url"),
+  coverThumb: text("cover_thumb"),
   stage: text("stage"),
   coverPosition: jsonb("cover_position").$type<{ x: number; y: number; zoom: number }>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

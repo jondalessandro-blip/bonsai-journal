@@ -14,9 +14,9 @@ export const TreeGridTile = memo(function TreeGridTile({ tree }: { tree: Tree })
     >
       {/* Square thumbnail */}
       <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-muted border border-border/40">
-        {tree.photoUrl ? (
+        {(tree.coverThumb ?? tree.photoUrl) ? (
           <img
-            src={tree.photoUrl}
+            src={(tree.coverThumb ?? tree.photoUrl)!}
             alt={tree.name}
             loading="lazy"
             decoding="async"

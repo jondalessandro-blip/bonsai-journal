@@ -36,6 +36,13 @@ export const HealthCheckResponse = zod.object({
 })
 
 
+// Shared schema used in multiple tree responses
+const CoverPositionSchema = zod.object({
+  x: zod.number(),
+  y: zod.number(),
+  zoom: zod.number(),
+});
+
 /**
  * @summary List all trees with optional filters
  */
@@ -62,6 +69,8 @@ export const ListTreesResponseItem = zod.object({
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
+  "coverThumb": zod.string().nullish(),
+  "coverPosition": CoverPositionSchema.nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -84,7 +93,8 @@ export const CreateTreeBody = zod.object({
   "stage": zod.string().optional(),
   "tags": zod.array(zod.string()).optional(),
   "notes": zod.string().optional(),
-  "photoUrl": zod.string().optional()
+  "photoUrl": zod.string().optional(),
+  "coverThumb": zod.string().optional()
 })
 
 export const CreateTreeResponse = zod.object({
@@ -99,6 +109,7 @@ export const CreateTreeResponse = zod.object({
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
+  "coverThumb": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -123,6 +134,7 @@ export const GetTreeResponse = zod.object({
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
+  "coverThumb": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -138,12 +150,6 @@ export const UpdateTreeParams = zod.object({
 
 
 
-const CoverPositionSchema = zod.object({
-  x: zod.number(),
-  y: zod.number(),
-  zoom: zod.number(),
-});
-
 export const UpdateTreeBody = zod.object({
   "name": zod.string().min(1).optional(),
   "species": zod.string().optional(),
@@ -155,6 +161,7 @@ export const UpdateTreeBody = zod.object({
   "tags": zod.array(zod.string()).optional(),
   "notes": zod.string().optional(),
   "photoUrl": zod.string().optional(),
+  "coverThumb": zod.string().optional(),
   "coverPosition": CoverPositionSchema.optional(),
 })
 
@@ -170,6 +177,7 @@ export const UpdateTreeResponse = zod.object({
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
+  "coverThumb": zod.string().nullish(),
   "coverPosition": CoverPositionSchema.nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -421,6 +429,7 @@ export const ListTreePhotosResponseItem = zod.object({
   "id": zod.string(),
   "treeId": zod.string(),
   "photoUrl": zod.string(),
+  "photoThumb": zod.string().nullish(),
   "takenAt": zod.string(),
   "createdAt": zod.string()
 })
@@ -436,6 +445,7 @@ export const CreateTreePhotoParams = zod.object({
 
 export const CreateTreePhotoBody = zod.object({
   "photoUrl": zod.string(),
+  "photoThumb": zod.string().optional(),
   "takenAt": zod.string().optional()
 })
 
@@ -443,6 +453,7 @@ export const CreateTreePhotoResponse = zod.object({
   "id": zod.string(),
   "treeId": zod.string(),
   "photoUrl": zod.string(),
+  "photoThumb": zod.string().nullish(),
   "takenAt": zod.string(),
   "createdAt": zod.string()
 })

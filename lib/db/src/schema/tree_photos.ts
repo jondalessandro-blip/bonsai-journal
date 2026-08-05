@@ -9,6 +9,7 @@ export const treePhotosTable = pgTable(
       .notNull()
       .references(() => treesTable.id, { onDelete: "cascade" }),
     photoUrl: text("photo_url").notNull(),
+    photoThumb: text("photo_thumb"),
     takenAt: text("taken_at").notNull(), // "YYYY-MM-DD"
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

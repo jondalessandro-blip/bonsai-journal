@@ -1,20 +1,25 @@
 import { useCallback, useState } from "react";
 
-interface UploadResult {
+export interface UploadResult {
   objectPath: string;
-  /** Full URL to use as photoUrl, served through the API */
+  /** 1400px JPEG — for record detail view */
   serveUrl: string;
+  /** 400px WebP — for collection grid thumbnail */
+  thumbUrl: string | null;
 }
 
 /**
- * Resize and compress an image file client-side before upload.
- * Outputs a JPEG with longest edge capped at maxPx and the given quality.
- * Keeps EXIF-free output; ~150–350 KB for typical garden photos.
+ * Resize and compress an image using the browser canvas.
+ * @param file   Source image file
+ * @param maxPx  Longest edge cap in pixels
+ * @param quality Encode quality 0–1
+ * @param format  MIME type ('image/jpeg' | 'image/webp')
  */
 async function resizeImage(
-  file: File,
-  maxPx = 1400,
-  quality = 0.82,
+  file: File | Blob,
+  maxPx: number,
+  quality: number,
+  format: "image/jpeg" | "image/webp" = "image/jpeg",
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -43,10 +48,18 @@ async function resizeImage(
       ctx.drawImage(img, 0, 0, w, h);
       canvas.toBlob(
         (blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error("Canvas toBlob failed"));
+          if (blob) {
+            resolve(blob);
+          } else {
+            // WebP may not be supported — fall back to JPEG
+            canvas.toBlob(
+              (fb) => { fb ? resolve(fb) : reject(new Error("Canvas toBlob failed")); },
+              "image/jpeg",
+              quality,
+            );
+          }
         },
-        "image/jpeg",
+        format,
         quality,
       );
     };
@@ -60,6 +73,29 @@ async function resizeImage(
   });
 }
 
+async function requestPresignedUrl(
+  name: string,
+  size: number,
+  contentType: string,
+): Promise<{ uploadURL: string; objectPath: string }> {
+  const res = await fetch("/api/storage/uploads/request-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, size, contentType }),
+  });
+  if (!res.ok) throw new Error("Failed to get upload URL");
+  return res.json();
+}
+
+async function putBlob(uploadURL: string, blob: Blob, contentType: string): Promise<void> {
+  const res = await fetch(uploadURL, {
+    method: "PUT",
+    body: blob,
+    headers: { "Content-Type": contentType },
+  });
+  if (!res.ok) throw new Error("Upload PUT failed");
+}
+
 export function usePhotoUpload() {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -71,53 +107,45 @@ export function usePhotoUpload() {
     setError(null);
 
     try {
-      // Step 1: resize + compress client-side before touching the network
+      // ── Step 1: resize both sizes client-side ────────────────────────
       setProgress(5);
-      let uploadBlob: Blob;
+      let medium: Blob;
+      let thumb: Blob | null = null;
+
       try {
-        uploadBlob = await resizeImage(file);
+        // Medium: 1400px JPEG 82% — record detail view
+        medium = await resizeImage(file, 1400, 0.82, "image/jpeg");
+        // Thumb: 400px WebP 70% — collection grid
+        thumb = await resizeImage(file, 400, 0.70, "image/webp");
       } catch {
-        // If canvas resize fails (e.g. SVG), fall back to original file
-        uploadBlob = file;
+        // Canvas unavailable — fall back to original file, no thumb
+        medium = file;
+        thumb = null;
       }
-      setProgress(10);
+      setProgress(15);
 
-      // Step 2: request presigned URL from our API
-      const metaRes = await fetch("/api/storage/uploads/request-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: file.name,
-          size: uploadBlob.size,
-          contentType: "image/jpeg",
-        }),
-      });
-
-      if (!metaRes.ok) {
-        throw new Error("Failed to get upload URL");
-      }
-
-      const { uploadURL, objectPath } = await metaRes.json();
+      // ── Step 2: request presigned URLs in parallel ───────────────────
+      const [mediumMeta, thumbMeta] = await Promise.all([
+        requestPresignedUrl(file.name, medium.size, "image/jpeg"),
+        thumb
+          ? requestPresignedUrl(file.name + ".thumb", thumb.size, "image/webp")
+          : Promise.resolve(null),
+      ]);
       setProgress(30);
 
-      // Step 3: upload the resized blob directly to GCS via presigned URL
-      const uploadRes = await fetch(uploadURL, {
-        method: "PUT",
-        body: uploadBlob,
-        headers: { "Content-Type": "image/jpeg" },
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error("Failed to upload photo");
-      }
-
+      // ── Step 3: upload both in parallel ─────────────────────────────
+      await Promise.all([
+        putBlob(mediumMeta.uploadURL, medium, "image/jpeg"),
+        thumb && thumbMeta
+          ? putBlob(thumbMeta.uploadURL, thumb, "image/webp")
+          : Promise.resolve(),
+      ]);
       setProgress(100);
 
-      // objectPath looks like "/objects/uploads/some-uuid"
-      // serve via /api/storage + objectPath
-      const serveUrl = `/api/storage${objectPath}`;
+      const serveUrl = `/api/storage${mediumMeta.objectPath}`;
+      const thumbUrl = thumbMeta ? `/api/storage${thumbMeta.objectPath}` : null;
 
-      return { objectPath, serveUrl };
+      return { objectPath: mediumMeta.objectPath, serveUrl, thumbUrl };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed";
       setError(msg);

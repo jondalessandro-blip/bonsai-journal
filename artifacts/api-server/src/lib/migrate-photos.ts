@@ -3,6 +3,21 @@ import { db, treesTable, treePhotosTable } from "@workspace/db";
 import { logger } from "./logger";
 
 /**
+ * Idempotent schema migration: add new columns if they don't exist yet.
+ * ALTER TABLE … ADD COLUMN IF NOT EXISTS is a no-op when the column is present,
+ * so this is safe to run on every startup.
+ */
+export async function migrateSchema(): Promise<void> {
+  await db.execute(sql`
+    ALTER TABLE trees ADD COLUMN IF NOT EXISTS cover_thumb text;
+  `);
+  await db.execute(sql`
+    ALTER TABLE tree_photos ADD COLUMN IF NOT EXISTS photo_thumb text;
+  `);
+  logger.info("Schema migration complete (cover_thumb, photo_thumb columns ensured)");
+}
+
+/**
  * Idempotent migration: for every tree that has a legacy photoUrl but no
  * progression photo yet, insert one row into tree_photos using the tree's
  * creation date as the initial taken_at date.

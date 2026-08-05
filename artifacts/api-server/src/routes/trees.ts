@@ -85,6 +85,8 @@ router.get("/trees", async (req, res): Promise<void> => {
       stage: treesTable.stage,
       tags: treesTable.tags,
       photoUrl: treesTable.photoUrl,
+      coverThumb: treesTable.coverThumb,
+      coverPosition: treesTable.coverPosition,
       createdAt: treesTable.createdAt,
       updatedAt: treesTable.updatedAt,
     })
@@ -105,6 +107,8 @@ router.get("/trees", async (req, res): Promise<void> => {
     stage: t.stage,
     tags: t.tags,
     photoUrl: t.photoUrl,
+    coverThumb: t.coverThumb,
+    coverPosition: t.coverPosition ?? null,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
   })));
@@ -468,6 +472,7 @@ router.post("/trees/:id/photos", async (req, res): Promise<void> => {
     .values({
       treeId: params.data.id,
       photoUrl: parsed.data.photoUrl,
+      photoThumb: parsed.data.photoThumb ?? null,
       takenAt: parsed.data.takenAt ?? today,
     })
     .returning();
@@ -617,6 +622,7 @@ function formatPhoto(p: typeof treePhotosTable.$inferSelect) {
     id: p.id,
     treeId: p.treeId,
     photoUrl: p.photoUrl,
+    photoThumb: p.photoThumb ?? null,
     takenAt: p.takenAt,
     createdAt: p.createdAt.toISOString(),
   };
@@ -634,6 +640,7 @@ function formatTree(t: typeof treesTable.$inferSelect) {
     tags: t.tags,
     notes: t.notes,
     photoUrl: t.photoUrl,
+    coverThumb: t.coverThumb ?? null,
     stage: t.stage,
     coverPosition: t.coverPosition ?? null,
     createdAt: t.createdAt.toISOString(),

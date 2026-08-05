@@ -26,9 +26,9 @@ export const TreeCard = memo(function TreeCard({ tree, searchQuery = "" }: TreeC
       onClick={() => setLocation(`/trees/${tree.id}`)}
     >
       <div className="aspect-[4/3] w-full overflow-hidden bg-muted relative">
-        {tree.photoUrl ? (
+        {(tree.coverThumb ?? tree.photoUrl) ? (
           <img
-            src={tree.photoUrl}
+            src={(tree.coverThumb ?? tree.photoUrl)!}
             alt={tree.name}
             loading="lazy"
             decoding="async"

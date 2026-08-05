@@ -43,6 +43,8 @@ export interface Tree {
   notes?: string | null;
   /** @nullable */
   photoUrl?: string | null;
+  /** @nullable — 400px WebP thumb used in collection grid */
+  coverThumb?: string | null;
   /** @nullable */
   coverPosition?: { x: number; y: number; zoom: number } | null;
   createdAt: string;
@@ -60,6 +62,7 @@ export interface TreeInput {
   tags?: string[];
   notes?: string;
   photoUrl?: string;
+  coverThumb?: string;
 }
 
 export interface TreeUpdate {
@@ -73,6 +76,7 @@ export interface TreeUpdate {
   tags?: string[];
   notes?: string;
   photoUrl?: string;
+  coverThumb?: string;
   stage?: string;
   coverPosition?: { x: number; y: number; zoom: number };
 }
@@ -158,12 +162,15 @@ export interface TreePhoto {
   id: string;
   treeId: string;
   photoUrl: string;
+  /** 400px WebP thumb; null for photos uploaded before 2-size system */
+  photoThumb?: string | null;
   takenAt: string;
   createdAt: string;
 }
 
 export interface TreePhotoInput {
   photoUrl: string;
+  photoThumb?: string;
   takenAt?: string;
 }
 

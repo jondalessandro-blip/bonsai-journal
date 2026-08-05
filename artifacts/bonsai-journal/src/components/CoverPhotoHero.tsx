@@ -79,11 +79,22 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
     setPos(next);
     setIsEditing(false);
     try { localStorage.setItem(lsKey(treeId), JSON.stringify(next)); } catch { /* ignore */ }
+    // Persist position AND sync cover photo fields so the collection
+    // thumbnail always matches what's shown in the record header.
     updateTree.mutate(
-      { id: treeId, data: { coverPosition: next } },
+      {
+        id: treeId,
+        data: {
+          coverPosition: next,
+          ...(coverPhoto ? { photoUrl: coverPhoto.photoUrl } : {}),
+          ...(coverPhoto?.photoThumb ? { coverThumb: coverPhoto.photoThumb } : {}),
+        },
+      },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId] });
+          // Invalidate both the detail query and the collection list so the
+          // gallery thumbnail refreshes immediately.
+          queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
         },
       }
     );
