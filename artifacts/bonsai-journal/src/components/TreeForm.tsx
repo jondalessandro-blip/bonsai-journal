@@ -391,7 +391,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               control={form.control}
               name="style"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="relative z-10">
                   <FormLabel>Bonsai Style</FormLabel>
                   <BonsaiStylePicker value={field.value} onChange={field.onChange} />
                   <FormMessage />
