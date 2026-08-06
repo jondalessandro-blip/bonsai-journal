@@ -9,8 +9,6 @@ export interface UploadResult {
   thumbUrl: string | null;
 }
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
-
 /**
  * Resize and compress an image using the browser canvas.
  * Used internally for generating the small grid thumbnail.
@@ -118,13 +116,6 @@ export function usePhotoUpload() {
 
   const uploadPhoto = useCallback(async (file: File): Promise<UploadResult | null> => {
     setError(null);
-
-    // ── Pre-flight: 5 MB hard limit ──────────────────────────────────────
-    if (file.size > MAX_FILE_BYTES) {
-      setError("Photo too large (max 5 MB). Please choose a smaller image.");
-      return null;
-    }
-
     setIsUploading(true);
     setProgress(0);
 
