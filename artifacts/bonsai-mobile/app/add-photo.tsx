@@ -21,6 +21,36 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const WARN_BYTES = 4 * 1024 * 1024; // warn + compress if >4 MB
+
+async function compressToUnder5MB(uri: string): Promise<{ uri: string; size: number }> {
+  // Try quality 0.8 first, then 0.6 if still too large
+  for (const quality of [0.8, 0.6, 0.4]) {
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 1920 } }],
+      { compress: quality, format: ImageManipulator.SaveFormat.JPEG },
+    );
+    // expo-image-manipulator doesn't return file size, so estimate conservatively
+    // by fetching file info — just return uri and let the upload proceed
+    const fileResult = await fetch(result.uri);
+    const blob = await fileResult.blob();
+    if (blob.size < MAX_BYTES || quality === 0.4) {
+      return { uri: result.uri, size: blob.size };
+    }
+  }
+  const fallback = await ImageManipulator.manipulateAsync(
+    uri,
+    [{ resize: { width: 1920 } }],
+    { compress: 0.4, format: ImageManipulator.SaveFormat.JPEG },
+  );
+  const fb = await fetch(fallback.uri);
+  const fbb = await fb.blob();
+  return { uri: fallback.uri, size: fbb.size };
+}
 
 export default function AddPhotoScreen() {
   const { treeId } = useLocalSearchParams<{ treeId: string }>();
@@ -32,11 +62,49 @@ export default function AddPhotoScreen() {
 
   const [pickedUri, setPickedUri] = useState<string | null>(null);
   const [pickedSize, setPickedSize] = useState<number>(0);
+  const [wasCompressed, setWasCompressed] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [date] = useState(new Date().toISOString().slice(0, 10));
 
   const { mutateAsync: requestUploadUrl } = useRequestUploadUrl();
   const { mutateAsync: createPhoto } = useCreateTreePhoto();
+
+  // After picking, check size and offer to compress if over threshold
+  const handlePickedAsset = async (asset: ImagePicker.ImagePickerAsset) => {
+    const size = asset.fileSize ?? 0;
+
+    if (size > WARN_BYTES) {
+      const mb = (size / 1024 / 1024).toFixed(1);
+      Alert.alert(
+        'Large photo',
+        `This photo is ${mb} MB. It will be automatically compressed to stay under the 5 MB upload limit.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'OK',
+            onPress: async () => {
+              setCompressing(true);
+              try {
+                const compressed = await compressToUnder5MB(asset.uri);
+                setPickedUri(compressed.uri);
+                setPickedSize(compressed.size);
+                setWasCompressed(true);
+              } catch {
+                Alert.alert('Error', 'Could not compress the image. Please try a smaller photo.');
+              } finally {
+                setCompressing(false);
+              }
+            },
+          },
+        ],
+      );
+    } else {
+      setPickedUri(asset.uri);
+      setPickedSize(size || 500_000);
+      setWasCompressed(false);
+    }
+  };
 
   const pickFromLibrary = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -47,17 +115,15 @@ export default function AddPhotoScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
-      quality: 0.85,
+      quality: 1, // keep full quality — we compress ourselves if needed
     });
     if (!result.canceled && result.assets[0]) {
-      setPickedUri(result.assets[0].uri);
-      setPickedSize(result.assets[0].fileSize ?? 500_000);
+      handlePickedAsset(result.assets[0]);
     }
   };
 
   const takePhoto = async () => {
     if (Platform.OS === 'web') {
-      // On web, fall back to library picker
       pickFromLibrary();
       return;
     }
@@ -68,11 +134,10 @@ export default function AddPhotoScreen() {
     }
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
-      quality: 0.85,
+      quality: 1,
     });
     if (!result.canceled && result.assets[0]) {
-      setPickedUri(result.assets[0].uri);
-      setPickedSize(result.assets[0].fileSize ?? 500_000);
+      handlePickedAsset(result.assets[0]);
     }
   };
 
@@ -124,8 +189,21 @@ export default function AddPhotoScreen() {
     >
       {/* Preview area */}
       <View style={styles.previewArea}>
-        {pickedUri ? (
-          <RNImage source={{ uri: pickedUri }} style={styles.preview} resizeMode="cover" />
+        {compressing ? (
+          <View style={styles.previewPlaceholder}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.previewHint}>Compressing photo…</Text>
+          </View>
+        ) : pickedUri ? (
+          <>
+            <RNImage source={{ uri: pickedUri }} style={styles.preview} resizeMode="cover" />
+            {wasCompressed && (
+              <View style={styles.compressedBadge}>
+                <Ionicons name="checkmark-circle" size={14} color="#fff" />
+                <Text style={styles.compressedBadgeText}>Compressed</Text>
+              </View>
+            )}
+          </>
         ) : (
           <View style={styles.previewPlaceholder}>
             <Ionicons name="image-outline" size={64} color={colors.mutedForeground} />
@@ -155,7 +233,7 @@ export default function AddPhotoScreen() {
           </Pressable>
         </View>
 
-        {pickedUri && (
+        {pickedUri && !compressing && (
           <>
             <View style={styles.dateLabelRow}>
               <Ionicons name="calendar-outline" size={16} color={colors.mutedForeground} />
@@ -165,7 +243,7 @@ export default function AddPhotoScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.uploadButton,
-                (uploading) && styles.uploadButtonDisabled,
+                uploading && styles.uploadButtonDisabled,
                 pressed && { opacity: 0.85 },
               ]}
               onPress={handleUpload}
@@ -271,6 +349,23 @@ function makeStyles(colors: ReturnType<typeof import('@/hooks/useColors').useCol
       fontSize: 16,
       fontFamily: 'Outfit_600SemiBold',
       color: colors.primaryForeground,
+    },
+    compressedBadge: {
+      position: 'absolute',
+      bottom: 10,
+      right: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: 'rgba(61,107,79,0.85)',
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    compressedBadgeText: {
+      fontSize: 12,
+      fontFamily: 'Outfit_600SemiBold',
+      color: '#fff',
     },
   });
 }
