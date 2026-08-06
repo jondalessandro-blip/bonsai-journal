@@ -49,6 +49,14 @@ export default function LandingPage() {
               Sign in
             </Button>
           </WouterLink>
+          <WouterLink href="/video">
+            <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground" size="lg">
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              Watch demo
+            </Button>
+          </WouterLink>
         </div>
       </div>
     </div>
