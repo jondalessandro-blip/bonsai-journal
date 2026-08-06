@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link as WouterLink } from 'wouter';
 
 export const Scene5 = () => {
   return (
@@ -63,6 +64,22 @@ export const Scene5 = () => {
         >
           A quiet record of every tree
         </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 2.4 }}
+          className="mt-10 flex flex-col items-center gap-3"
+        >
+          <WouterLink href="/sign-up">
+            <button className="px-8 py-3 rounded-full bg-[#3d6b4f] text-[#f5f1eb] font-sans text-lg font-medium tracking-wide shadow-lg hover:bg-[#2e5340] transition-colors">
+              Join the pilot →
+            </button>
+          </WouterLink>
+          <p className="font-sans text-[#8c8880] text-sm tracking-wide">
+            Exclusive early access · Free to join
+          </p>
+        </motion.div>
       </div>
     </motion.div>
   );
