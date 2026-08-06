@@ -13,6 +13,7 @@ import TreeDetailPage from "@/pages/TreeDetailPage";
 import NewTreePage from "@/pages/NewTreePage";
 import StatsPage from "@/pages/StatsPage";
 import LandingPage from "@/pages/LandingPage";
+import VideoTemplate from "@/components/video/VideoTemplate";
 import { useSeedSampleTrees } from "@/hooks/useSeedSampleTrees";
 
 const queryClient = new QueryClient({
@@ -197,6 +198,7 @@ function Router() {
           </Layout>
         </Protected>
       </Route>
+      <Route path="/video" component={VideoTemplate} />
       <Route component={NotFound} />
     </Switch>
   );
