@@ -26,12 +26,37 @@ import {
   UpdateTreePhotoBody,
   DeleteTreePhotoParams,
 } from "@workspace/api-zod";
+import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
+import type { Request } from "express";
 
 const router: IRouter = Router();
+
+// All tree routes require authentication
+router.use(requireAuth);
+
+// Helper: verify a tree belongs to the authenticated user.
+// Returns the tree row or sends 404 and returns null.
+async function getOwnedTree(
+  req: Request,
+  res: { status: (n: number) => { json: (o: object) => void } },
+  treeId: string,
+): Promise<typeof treesTable.$inferSelect | null> {
+  const userId = (req as AuthedRequest).userId;
+  const [tree] = await db
+    .select()
+    .from(treesTable)
+    .where(and(eq(treesTable.id, treeId), eq(treesTable.userId, userId)));
+  if (!tree) {
+    res.status(404).json({ error: "Tree not found" });
+    return null;
+  }
+  return tree;
+}
 
 // ---- Trees ----
 
 router.get("/trees", async (req, res): Promise<void> => {
+  const userId = (req as AuthedRequest).userId;
   const query = ListTreesQueryParams.safeParse(req.query);
   if (!query.success) {
     res.status(400).json({ error: query.error.message });
@@ -40,7 +65,6 @@ router.get("/trees", async (req, res): Promise<void> => {
 
   const { search, climate, foliage, stage, status, tag, tags: tagsParam, limit, offset } = query.data;
 
-  // Parse comma-separated tags (sent by the client as String(string[]))
   const tagsList: string[] = tagsParam
     ? tagsParam.split(",").map(t => t.trim()).filter(Boolean)
     : tag ? [tag] : [];
@@ -48,34 +72,24 @@ router.get("/trees", async (req, res): Promise<void> => {
   const pageSize = Math.min(limit ?? 48, 200);
   const pageOffset = offset ?? 0;
 
-  const conditions = [];
+  const conditions = [eq(treesTable.userId, userId)];
   if (search) {
     conditions.push(
       or(
         ilike(treesTable.name, `%${search}%`),
         ilike(treesTable.species, `%${search}%`),
         sql`EXISTS (SELECT 1 FROM unnest(${treesTable.tags}) AS _t WHERE _t ILIKE ${'%' + search + '%'})`
-      )
+      )!,
     );
   }
-  if (climate) {
-    conditions.push(eq(treesTable.climate, climate));
-  }
-  if (foliage) {
-    conditions.push(eq(treesTable.foliage, foliage));
-  }
-  if (stage) {
-    conditions.push(eq(treesTable.stage, stage));
-  }
-  if (status) {
-    conditions.push(eq(treesTable.status, status));
-  }
+  if (climate) conditions.push(eq(treesTable.climate, climate));
+  if (foliage) conditions.push(eq(treesTable.foliage, foliage));
+  if (stage) conditions.push(eq(treesTable.stage, stage));
+  if (status) conditions.push(eq(treesTable.status, status));
   if (tagsList.length > 0) {
-    // AND logic: tree must have ALL of the selected tags
-    conditions.push(and(...tagsList.map(t => sql`${t} = ANY(${treesTable.tags})`)));
+    conditions.push(and(...tagsList.map(t => sql`${t} = ANY(${treesTable.tags})`))!);
   }
 
-  // Exclude `notes` (large text) from list — detail endpoint returns full record
   const trees = await db
     .select({
       id: treesTable.id,
@@ -95,7 +109,7 @@ router.get("/trees", async (req, res): Promise<void> => {
       updatedAt: treesTable.updatedAt,
     })
     .from(treesTable)
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(treesTable.createdAt)
     .limit(pageSize)
     .offset(pageOffset);
@@ -120,6 +134,7 @@ router.get("/trees", async (req, res): Promise<void> => {
 });
 
 router.post("/trees", async (req, res): Promise<void> => {
+  const userId = (req as AuthedRequest).userId;
   const parsed = CreateTreeBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -129,7 +144,7 @@ router.post("/trees", async (req, res): Promise<void> => {
   const { tags, ...rest } = parsed.data;
   const [tree] = await db
     .insert(treesTable)
-    .values({ ...rest, tags: tags ?? [] })
+    .values({ ...rest, tags: tags ?? [], userId })
     .returning();
 
   res.status(201).json(formatTree(tree));
@@ -142,20 +157,14 @@ router.get("/trees/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [tree] = await db
-    .select()
-    .from(treesTable)
-    .where(eq(treesTable.id, params.data.id));
-
-  if (!tree) {
-    res.status(404).json({ error: "Tree not found" });
-    return;
-  }
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
 
   res.json(formatTree(tree));
 });
 
 router.patch("/trees/:id", async (req, res): Promise<void> => {
+  const userId = (req as AuthedRequest).userId;
   const params = UpdateTreeParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -168,29 +177,24 @@ router.patch("/trees/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  // Perform the read, update, and optional status-change log insertion in a
-  // single transaction with a row-level lock so concurrent PATCHes to the
-  // same tree are serialized and the log entry is always consistent with the
-  // update (both succeed or both roll back).
   let tree: typeof treesTable.$inferSelect | undefined;
 
   await db.transaction(async (tx) => {
-    // Lock the row so concurrent updates queue rather than racing on status
     const [existing] = await tx
       .select({ status: treesTable.status })
       .from(treesTable)
-      .where(eq(treesTable.id, params.data.id))
+      .where(and(eq(treesTable.id, params.data.id), eq(treesTable.userId, userId)))
       .for("update");
 
-    if (!existing) return; // handled below
+    if (!existing) return;
 
     const [updated] = await tx
       .update(treesTable)
       .set(parsed.data)
-      .where(eq(treesTable.id, params.data.id))
+      .where(and(eq(treesTable.id, params.data.id), eq(treesTable.userId, userId)))
       .returning();
 
-    if (!updated) return; // should not happen after a successful lock
+    if (!updated) return;
     tree = updated;
 
     const newStatus = parsed.data.status;
@@ -216,6 +220,7 @@ router.patch("/trees/:id", async (req, res): Promise<void> => {
 });
 
 router.delete("/trees/:id", async (req, res): Promise<void> => {
+  const userId = (req as AuthedRequest).userId;
   const params = DeleteTreeParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -224,7 +229,7 @@ router.delete("/trees/:id", async (req, res): Promise<void> => {
 
   const [tree] = await db
     .delete(treesTable)
-    .where(eq(treesTable.id, params.data.id))
+    .where(and(eq(treesTable.id, params.data.id), eq(treesTable.userId, userId)))
     .returning();
 
   if (!tree) {
@@ -244,6 +249,9 @@ router.get("/trees/:id/logs", async (req, res): Promise<void> => {
     return;
   }
 
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
+
   const logs = await db
     .select()
     .from(careLogsTable)
@@ -259,6 +267,9 @@ router.post("/trees/:id/logs", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
+
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
 
   const parsed = CreateTreeLogBody.safeParse(req.body);
   if (!parsed.success) {
@@ -280,6 +291,9 @@ router.patch("/trees/:id/logs/:logId", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
+
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
 
   const parsed = CreateTreeLogBody.safeParse(req.body);
   if (!parsed.success) {
@@ -313,6 +327,9 @@ router.delete("/trees/:id/logs/:logId", async (req, res): Promise<void> => {
     return;
   }
 
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
+
   const [log] = await db
     .delete(careLogsTable)
     .where(
@@ -331,7 +348,7 @@ router.delete("/trees/:id/logs/:logId", async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
-// ---- Care Reminders (per tree) ----
+// ---- Care Reminders ----
 
 router.get("/trees/:id/reminders", async (req, res): Promise<void> => {
   const params = ListTreeRemindersParams.safeParse(req.params);
@@ -339,6 +356,9 @@ router.get("/trees/:id/reminders", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
+
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
 
   const reminders = await db
     .select()
@@ -355,6 +375,9 @@ router.post("/trees/:id/reminders", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
+
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
 
   const parsed = CreateTreeReminderBody.safeParse(req.body);
   if (!parsed.success) {
@@ -376,6 +399,9 @@ router.patch("/trees/:id/reminders/:reminderId", async (req, res): Promise<void>
     res.status(400).json({ error: params.error.message });
     return;
   }
+
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
 
   const parsed = UpdateTreeReminderBody.safeParse(req.body);
   if (!parsed.success) {
@@ -409,6 +435,9 @@ router.delete("/trees/:id/reminders/:reminderId", async (req, res): Promise<void
     return;
   }
 
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
+
   const [reminder] = await db
     .delete(careRemindersTable)
     .where(
@@ -435,6 +464,9 @@ router.get("/trees/:id/timeline", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
+
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
 
   const [logs, reminders] = await Promise.all([
     db.select().from(careLogsTable).where(eq(careLogsTable.treeId, params.data.id)),
@@ -472,6 +504,9 @@ router.get("/trees/:id/photos", async (req, res): Promise<void> => {
     return;
   }
 
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
+
   const photos = await db
     .select()
     .from(treePhotosTable)
@@ -488,19 +523,12 @@ router.post("/trees/:id/photos", async (req, res): Promise<void> => {
     return;
   }
 
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
+
   const parsed = CreateTreePhotoBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-
-  const [tree] = await db
-    .select({ id: treesTable.id })
-    .from(treesTable)
-    .where(eq(treesTable.id, params.data.id));
-
-  if (!tree) {
-    res.status(404).json({ error: "Tree not found" });
     return;
   }
 
@@ -524,6 +552,9 @@ router.patch("/trees/:id/photos/:photoId", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
+
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
 
   const parsed = UpdateTreePhotoBody.safeParse(req.body);
   if (!parsed.success) {
@@ -557,6 +588,9 @@ router.delete("/trees/:id/photos/:photoId", async (req, res): Promise<void> => {
     return;
   }
 
+  const tree = await getOwnedTree(req, res, params.data.id);
+  if (!tree) return;
+
   const [photo] = await db
     .delete(treePhotosTable)
     .where(
@@ -575,14 +609,17 @@ router.delete("/trees/:id/photos/:photoId", async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
-// ---- Collection stats ----
+// ---- Collection stats (scoped to current user) ----
 
-router.get("/collection/stats", async (_req, res): Promise<void> => {
+router.get("/collection/stats", async (req, res): Promise<void> => {
+  const userId = (req as AuthedRequest).userId;
+
   const [trees, recentlyAdded] = await Promise.all([
-    db.select().from(treesTable),
+    db.select().from(treesTable).where(eq(treesTable.userId, userId)),
     db
       .select()
       .from(treesTable)
+      .where(eq(treesTable.userId, userId))
       .orderBy(sql`${treesTable.createdAt} DESC`)
       .limit(3),
   ]);
@@ -613,9 +650,10 @@ router.get("/collection/stats", async (_req, res): Promise<void> => {
   });
 });
 
-// ---- Upcoming reminders ----
+// ---- Upcoming reminders (scoped to current user) ----
 
-router.get("/reminders/upcoming", async (_req, res): Promise<void> => {
+router.get("/reminders/upcoming", async (req, res): Promise<void> => {
+  const userId = (req as AuthedRequest).userId;
   const today = new Date();
   const in30 = new Date(today);
   in30.setDate(in30.getDate() + 30);
@@ -637,6 +675,7 @@ router.get("/reminders/upcoming", async (_req, res): Promise<void> => {
     .innerJoin(treesTable, eq(careRemindersTable.treeId, treesTable.id))
     .where(
       and(
+        eq(treesTable.userId, userId),
         eq(careRemindersTable.completed, false),
         sql`${careRemindersTable.dueDate} >= ${todayStr}`,
         sql`${careRemindersTable.dueDate} <= ${in30Str}`,

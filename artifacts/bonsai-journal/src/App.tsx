@@ -13,6 +13,7 @@ import TreeDetailPage from "@/pages/TreeDetailPage";
 import NewTreePage from "@/pages/NewTreePage";
 import StatsPage from "@/pages/StatsPage";
 import LandingPage from "@/pages/LandingPage";
+import { useSeedSampleTrees } from "@/hooks/useSeedSampleTrees";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +111,12 @@ function SignUpPage() {
       <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
     </div>
   );
+}
+
+// Seed sample trees for new users and invalidate React Query cache on user change
+function ClerkSessionEffects() {
+  useSeedSampleTrees();
+  return null;
 }
 
 // Invalidate React Query cache when signed-in user changes
@@ -224,6 +231,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
+        <ClerkSessionEffects />
         <TooltipProvider>
           <Router />
           <Toaster />

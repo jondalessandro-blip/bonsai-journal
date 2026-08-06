@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const treesTable = pgTable("trees", {
   id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id"),
   name: text("name").notNull(),
   species: text("species"),
   acquiredDate: text("acquired_date"),
