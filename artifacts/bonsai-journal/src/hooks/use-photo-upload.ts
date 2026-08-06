@@ -1,19 +1,19 @@
 import { useCallback, useState } from "react";
+import { compressImage } from "@/utils/compressImage";
 
 export interface UploadResult {
   objectPath: string;
-  /** 1400px JPEG — for record detail view */
+  /** Compressed WebP/JPEG ≤ 1200px — for record detail view */
   serveUrl: string;
   /** 400px WebP — for collection grid thumbnail */
   thumbUrl: string | null;
 }
 
+const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
+
 /**
  * Resize and compress an image using the browser canvas.
- * @param file   Source image file
- * @param maxPx  Longest edge cap in pixels
- * @param quality Encode quality 0–1
- * @param format  MIME type ('image/jpeg' | 'image/webp')
+ * Used internally for generating the small grid thumbnail.
  */
 async function resizeImage(
   file: File | Blob,
@@ -83,7 +83,10 @@ async function requestPresignedUrl(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, size, contentType }),
   });
-  if (!res.ok) throw new Error("Failed to get upload URL");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? "Failed to get upload URL");
+  }
   return res.json();
 }
 
@@ -93,7 +96,7 @@ async function putBlob(uploadURL: string, blob: Blob, contentType: string): Prom
     body: blob,
     headers: { "Content-Type": contentType },
   });
-  if (!res.ok) throw new Error("Upload PUT failed");
+  if (!res.ok) throw new Error("Upload failed");
 }
 
 export function usePhotoUpload() {
@@ -102,21 +105,28 @@ export function usePhotoUpload() {
   const [error, setError] = useState<string | null>(null);
 
   const uploadPhoto = useCallback(async (file: File): Promise<UploadResult | null> => {
-    setIsUploading(true);
-    setProgress(0);
     setError(null);
 
+    // ── Pre-flight: 5 MB hard limit ──────────────────────────────────────
+    if (file.size > MAX_FILE_BYTES) {
+      setError("Photo too large (max 5 MB). Please choose a smaller image.");
+      return null;
+    }
+
+    setIsUploading(true);
+    setProgress(0);
+
     try {
-      // ── Step 1: resize both sizes client-side ────────────────────────
+      // ── Step 1: compress both sizes client-side ──────────────────────
       setProgress(5);
-      let medium: Blob;
+      let medium: File | Blob;
       let thumb: Blob | null = null;
 
       try {
-        // Medium: 1400px JPEG 82% — record detail view
-        medium = await resizeImage(file, 1400, 0.82, "image/jpeg");
+        // Main: compress to ≤ 1200px WebP at 75% quality (retry at 60% if > 4 MB)
+        medium = await compressImage(file, 1200, 1200, 0.75);
         // Thumb: 400px WebP 70% — collection grid
-        thumb = await resizeImage(file, 400, 0.70, "image/webp");
+        thumb = await resizeImage(medium, 400, 0.70, "image/webp");
       } catch {
         // Canvas unavailable — fall back to original file, no thumb
         medium = file;
@@ -124,9 +134,11 @@ export function usePhotoUpload() {
       }
       setProgress(15);
 
+      const mediumType = medium instanceof File ? medium.type : "image/webp";
+
       // ── Step 2: request presigned URLs in parallel ───────────────────
       const [mediumMeta, thumbMeta] = await Promise.all([
-        requestPresignedUrl(file.name, medium.size, "image/jpeg"),
+        requestPresignedUrl(file.name, medium.size, mediumType),
         thumb
           ? requestPresignedUrl(file.name + ".thumb", thumb.size, "image/webp")
           : Promise.resolve(null),
@@ -135,7 +147,7 @@ export function usePhotoUpload() {
 
       // ── Step 3: upload both in parallel ─────────────────────────────
       await Promise.all([
-        putBlob(mediumMeta.uploadURL, medium, "image/jpeg"),
+        putBlob(mediumMeta.uploadURL, medium, mediumType),
         thumb && thumbMeta
           ? putBlob(thumbMeta.uploadURL, thumb, "image/webp")
           : Promise.resolve(),

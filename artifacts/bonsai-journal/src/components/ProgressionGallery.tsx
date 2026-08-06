@@ -67,7 +67,7 @@ export function ProgressionGallery({ treeId }: Props) {
   const updatePhoto = useUpdateTreePhoto();
   const deletePhoto = useDeleteTreePhoto();
   const updateTree = useUpdateTree();
-  const { uploadPhoto, isUploading, progress } = usePhotoUpload();
+  const { uploadPhoto, isUploading, progress, error: uploadError } = usePhotoUpload();
 
   // Invalidate the photo list (so CoverPhotoHero picks up the new image)
   // AND the trees list (so collection cards refresh their thumbnail).
@@ -184,11 +184,23 @@ export function ProgressionGallery({ treeId }: Props) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           className="hidden"
           onChange={handleFileChange}
         />
       </div>
+
+      {/* Upload error */}
+      {uploadError && (
+        <p className="text-sm text-destructive">{uploadError}</p>
+      )}
+
+      {/* Upload hint — shown when there are already photos so it doesn't crowd the empty state */}
+      {!isLoading && photos.length > 0 && (
+        <p className="text-xs text-muted-foreground/60">
+          Max 5 MB · auto-compressed to save space
+        </p>
+      )}
 
       {/* Skeleton */}
       {isLoading && (

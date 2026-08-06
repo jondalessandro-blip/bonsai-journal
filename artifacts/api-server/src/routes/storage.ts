@@ -47,6 +47,12 @@ router.post(
     try {
       const { name, size, contentType } = parsed.data;
 
+      const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
+      if (size > MAX_UPLOAD_BYTES) {
+        res.status(413).json({ error: "File too large (max 5 MB)" });
+        return;
+      }
+
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       const objectPath =
         objectStorageService.normalizeObjectEntityPath(uploadURL);
