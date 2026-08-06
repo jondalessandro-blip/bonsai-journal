@@ -1,5 +1,6 @@
 import { useLocation, Link as WouterLink } from "wouter";
-import { BarChart3, Menu } from "lucide-react";
+import { useUser, useClerk, Show } from "@clerk/react";
+import { LogOut, User } from "lucide-react";
 import { Button } from "./ui/button";
 
 function DualLeafIcon({ className }: { className?: string }) {
@@ -21,6 +22,33 @@ function DualLeafIcon({ className }: { className?: string }) {
   );
 }
 
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+function UserMenu() {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const displayName = user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "Account";
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground">
+        <User className="h-3.5 w-3.5" />
+        <span className="max-w-[140px] truncate">{displayName}</span>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground hover:text-foreground gap-1.5"
+        onClick={() => signOut({ redirectUrl: basePath || "/" })}
+      >
+        <LogOut className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Sign out</span>
+      </Button>
+    </div>
+  );
+}
+
 export function Navbar() {
   const [location] = useLocation();
 
@@ -32,19 +60,46 @@ export function Navbar() {
             <div className="bg-primary/10 p-1.5 rounded-md group-hover:bg-primary/20 transition-colors">
               <DualLeafIcon className="h-5 w-5 text-primary" />
             </div>
-            <span className="font-serif text-lg font-medium">Bonsai Journal <span className="text-muted-foreground font-sans text-sm ml-1">盆栽</span></span>
+            <span className="font-serif text-lg font-medium">
+              Bonsai Journal{" "}
+              <span className="text-muted-foreground font-sans text-sm ml-1">盆栽</span>
+            </span>
           </WouterLink>
-          
-          <div className="hidden md:flex items-center gap-1">
-            <WouterLink href="/" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${location === '/' || location.startsWith('/trees') ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-secondary/50'}`}>
-              Collection
-            </WouterLink>
-            <WouterLink href="/stats" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${location === '/stats' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-secondary/50'}`}>
-              Stats
-            </WouterLink>
-          </div>
+
+          <Show when="signed-in">
+            <div className="hidden md:flex items-center gap-1">
+              <WouterLink
+                href="/"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location === "/" || location.startsWith("/trees")
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50"
+                }`}
+              >
+                Collection
+              </WouterLink>
+              <WouterLink
+                href="/stats"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location === "/stats"
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50"
+                }`}
+              >
+                Stats
+              </WouterLink>
+            </div>
+          </Show>
         </div>
-        <span className="hidden md:block text-sm text-muted-foreground italic tracking-wide">A quiet record of every tree</span>
+
+        <Show when="signed-in">
+          <UserMenu />
+        </Show>
+        <Show when="signed-out">
+          <span className="hidden md:block text-sm text-muted-foreground italic tracking-wide">
+            A quiet record of every tree
+          </span>
+        </Show>
       </div>
     </nav>
   );
