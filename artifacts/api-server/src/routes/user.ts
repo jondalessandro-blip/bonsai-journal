@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, count } from "drizzle-orm";
-import { db, treesTable, careLogsTable, careRemindersTable } from "@workspace/db";
+import { db, treesTable, careLogsTable, careRemindersTable, treePhotosTable } from "@workspace/db";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import type { Request } from "express";
 
@@ -92,6 +92,13 @@ router.post("/user/seed", requireAuth, async (req: Request, res) => {
       .insert(treesTable)
       .values({ ...treeData, userId })
       .returning();
+
+    // Insert a cover photo so the tree detail hero shows the sample image
+    await db.insert(treePhotosTable).values({
+      treeId: tree.id,
+      photoUrl: treeData.photoUrl,
+      takenAt: treeData.acquiredDate,
+    });
 
     if (logs.length > 0) {
       await db.insert(careLogsTable).values(
