@@ -77,7 +77,7 @@ async function requestPresignedUrl(
   name: string,
   size: number,
   contentType: string,
-): Promise<{ uploadURL: string; objectPath: string }> {
+): Promise<{ uploadURL: string; objectPath: string; ownershipToken: string }> {
   const res = await fetch("/api/storage/uploads/request-url", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -97,6 +97,18 @@ async function putBlob(uploadURL: string, blob: Blob, contentType: string): Prom
     headers: { "Content-Type": contentType },
   });
   if (!res.ok) throw new Error("Upload failed");
+}
+
+async function finalizeUpload(objectPath: string, ownershipToken: string): Promise<void> {
+  const res = await fetch("/api/storage/uploads/finalize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ objectPath, ownershipToken }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? "Failed to finalize upload");
+  }
 }
 
 export function usePhotoUpload() {
@@ -150,6 +162,15 @@ export function usePhotoUpload() {
         putBlob(mediumMeta.uploadURL, medium, mediumType),
         thumb && thumbMeta
           ? putBlob(thumbMeta.uploadURL, thumb, "image/webp")
+          : Promise.resolve(),
+      ]);
+      setProgress(80);
+
+      // ── Step 4: finalize ownership so the download endpoint allows access ─
+      await Promise.all([
+        finalizeUpload(mediumMeta.objectPath, mediumMeta.ownershipToken),
+        thumbMeta
+          ? finalizeUpload(thumbMeta.objectPath, thumbMeta.ownershipToken)
           : Promise.resolve(),
       ]);
       setProgress(100);

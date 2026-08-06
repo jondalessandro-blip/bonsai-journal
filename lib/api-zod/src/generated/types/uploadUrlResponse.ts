@@ -9,4 +9,6 @@
 export interface UploadUrlResponse {
   uploadURL: string;
   objectPath: string;
+  /** HMAC token binding this objectPath to the requesting user. Must be sent to POST /storage/uploads/finalize to set ownership. */
+  ownershipToken: string;
 }

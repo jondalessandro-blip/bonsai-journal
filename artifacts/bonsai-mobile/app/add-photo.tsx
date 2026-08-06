@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   useRequestUploadUrl,
+  useFinalizeUpload,
   useCreateTreePhoto,
   getListTreePhotosQueryKey,
 } from '@workspace/api-client-react';
@@ -68,6 +69,7 @@ export default function AddPhotoScreen() {
   const [date] = useState(new Date().toISOString().slice(0, 10));
 
   const { mutateAsync: requestUploadUrl } = useRequestUploadUrl();
+  const { mutateAsync: finalizeUpload } = useFinalizeUpload();
   const { mutateAsync: createPhoto } = useCreateTreePhoto();
 
   // After picking, check size and offer to compress if over threshold
@@ -149,8 +151,8 @@ export default function AddPhotoScreen() {
       const size = pickedSize || 500_000;
       const contentType = 'image/jpeg';
 
-      // 1. Get presigned upload URL
-      const { uploadURL, objectPath } = await requestUploadUrl({
+      // 1. Get presigned upload URL (includes ownership token for finalization)
+      const { uploadURL, objectPath, ownershipToken } = await requestUploadUrl({
         data: { name, size, contentType },
       });
 
@@ -163,10 +165,13 @@ export default function AddPhotoScreen() {
         body: blob,
       });
 
-      // 3. Create photo record
+      // 3. Finalize ownership so the download endpoint allows access
+      await finalizeUpload({ data: { objectPath, ownershipToken } });
+
+      // 4. Create photo record
       await createPhoto({
         id: treeId,
-        data: { photoUrl: objectPath, takenAt: date },
+        data: { photoUrl: `/api/storage${objectPath}`, takenAt: date },
       });
 
       queryClient.invalidateQueries({ queryKey: getListTreePhotosQueryKey(treeId) });

@@ -41,8 +41,41 @@ paths:
                 $ref: "#/components/schemas/UploadUrlResponse"
         "400":
           description: Missing or invalid fields
+        "401":
+          description: Unauthorized
         "500":
           description: Failed to generate upload URL
+
+  /storage/uploads/finalize:
+    post:
+      tags: [storage]
+      operationId: finalizeUpload
+      summary: >
+        Set ownership on a newly uploaded object.
+        Must be called after the file is PUT to the presigned URL.
+        The ownershipToken from the request-url response proves the caller
+        is the user who minted that upload URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FinalizeUploadRequest"
+      responses:
+        "200":
+          description: Ownership set successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinalizeUploadResult"
+        "400":
+          description: Missing objectPath or ownershipToken
+        "401":
+          description: Unauthorized
+        "403":
+          description: Invalid ownership token
+        "500":
+          description: Failed to finalize upload
 
   /healthz:
     get:
@@ -72,9 +105,29 @@ paths:
         - name: foliage
           in: query
           schema: { type: string }
+        - name: stage
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
         - name: tag
           in: query
           schema: { type: string }
+        - name: tags
+          in: query
+          description: "Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder."
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - name: limit
+          in: query
+          schema: { type: integer }
+        - name: offset
+          in: query
+          schema: { type: integer }
       responses:
         "200":
           description: List of trees
@@ -486,10 +539,34 @@ components:
 
     UploadUrlResponse:
       type: object
-      required: [uploadURL, objectPath]
+      required: [uploadURL, objectPath, ownershipToken]
       properties:
         uploadURL:
           type: string
+        objectPath:
+          type: string
+        ownershipToken:
+          type: string
+          description: >
+            HMAC token binding this objectPath to the requesting user.
+            Must be sent to POST /storage/uploads/finalize to set ownership.
+
+    FinalizeUploadRequest:
+      type: object
+      required: [objectPath, ownershipToken]
+      properties:
+        objectPath:
+          type: string
+          minLength: 1
+        ownershipToken:
+          type: string
+          minLength: 1
+          description: Token received from POST /storage/uploads/request-url.
+
+    FinalizeUploadResult:
+      type: object
+      required: [objectPath]
+      properties:
         objectPath:
           type: string
 
@@ -520,6 +597,8 @@ components:
           type: ["string", "null"]
         stage:
           type: ["string", "null"]
+        status:
+          type: ["string", "null"]
         tags:
           type: array
           items: { type: string }
@@ -527,8 +606,11 @@ components:
           type: ["string", "null"]
         photoUrl:
           type: ["string", "null"]
+        coverThumb:
+          type: ["string", "null"]
         coverPosition:
           type: ["object", "null"]
+          required: [x, y, zoom]
           properties:
             x:
               type: number
@@ -560,12 +642,16 @@ components:
           type: string
         stage:
           type: string
+        status:
+          type: string
         tags:
           type: array
           items: { type: string }
         notes:
           type: string
         photoUrl:
+          type: string
+        coverThumb:
           type: string
 
     TreeUpdate:
@@ -586,6 +672,8 @@ components:
           type: string
         stage:
           type: string
+        status:
+          type: string
         tags:
           type: array
           items: { type: string }
@@ -593,8 +681,11 @@ components:
           type: string
         photoUrl:
           type: string
+        coverThumb:
+          type: string
         coverPosition:
           type: object
+          required: [x, y, zoom]
           properties:
             x:
               type: number
@@ -675,7 +766,7 @@ components:
 
     CollectionStats:
       type: object
-      required: [totalTrees, byClimate, byFoliage, byTag, recentlyAdded]
+      required: [totalTrees, byClimate, byFoliage, byStatus, byTag, recentlyAdded]
       properties:
         totalTrees:
           type: integer
@@ -684,6 +775,10 @@ components:
           items:
             $ref: "#/components/schemas/LabelCount"
         byFoliage:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelCount"
+        byStatus:
           type: array
           items:
             $ref: "#/components/schemas/LabelCount"
@@ -754,6 +849,8 @@ components:
           type: string
         photoUrl:
           type: string
+        photoThumb:
+          type: ["string", "null"]
         takenAt:
           type: string
         createdAt:
@@ -764,6 +861,8 @@ components:
       required: [photoUrl]
       properties:
         photoUrl:
+          type: string
+        photoThumb:
           type: string
         takenAt:
           type: string

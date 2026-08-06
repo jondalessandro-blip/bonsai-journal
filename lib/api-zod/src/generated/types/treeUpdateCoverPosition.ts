@@ -6,8 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface TreePhotoInput {
-  photoUrl: string;
-  photoThumb?: string;
-  takenAt?: string;
-}
+export type TreeUpdateCoverPosition = {
+  x: number;
+  y: number;
+  zoom: number;
+};

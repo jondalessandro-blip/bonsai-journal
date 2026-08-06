@@ -10,5 +10,13 @@ export type ListTreesParams = {
 search?: string;
 climate?: string;
 foliage?: string;
+stage?: string;
+status?: string;
 tag?: string;
+/**
+ * Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder.
+ */
+tags?: string[];
+limit?: number;
+offset?: number;
 };

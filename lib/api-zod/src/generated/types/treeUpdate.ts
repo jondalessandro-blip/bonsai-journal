@@ -5,6 +5,7 @@
  * Bonsai Journal API
  * OpenAPI spec version: 0.1.0
  */
+import type { TreeUpdateCoverPosition } from './treeUpdateCoverPosition';
 
 export interface TreeUpdate {
   /** @minLength 1 */
@@ -14,7 +15,11 @@ export interface TreeUpdate {
   climate?: string;
   foliage?: string;
   style?: string;
+  stage?: string;
+  status?: string;
   tags?: string[];
   notes?: string;
   photoUrl?: string;
+  coverThumb?: string;
+  coverPosition?: TreeUpdateCoverPosition;
 }

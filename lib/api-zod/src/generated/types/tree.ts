@@ -5,6 +5,7 @@
  * Bonsai Journal API
  * OpenAPI spec version: 0.1.0
  */
+import type { TreeCoverPosition } from './treeCoverPosition';
 
 export interface Tree {
   id: string;
@@ -19,11 +20,19 @@ export interface Tree {
   foliage?: string | null;
   /** @nullable */
   style?: string | null;
+  /** @nullable */
+  stage?: string | null;
+  /** @nullable */
+  status?: string | null;
   tags: string[];
   /** @nullable */
   notes?: string | null;
   /** @nullable */
   photoUrl?: string | null;
+  /** @nullable */
+  coverThumb?: string | null;
+  /** @nullable */
+  coverPosition?: TreeCoverPosition;
   createdAt: string;
   updatedAt: string;
 }

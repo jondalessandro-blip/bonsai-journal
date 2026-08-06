@@ -10,6 +10,8 @@ export interface TreePhoto {
   id: string;
   treeId: string;
   photoUrl: string;
+  /** @nullable */
+  photoThumb?: string | null;
   takenAt: string;
   createdAt: string;
 }

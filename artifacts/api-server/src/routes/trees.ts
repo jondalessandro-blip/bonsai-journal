@@ -65,9 +65,12 @@ router.get("/trees", async (req, res): Promise<void> => {
 
   const { search, climate, foliage, stage, status, tag, tags: tagsParam, limit, offset } = query.data;
 
-  const tagsList: string[] = tagsParam
-    ? tagsParam.split(",").map(t => t.trim()).filter(Boolean)
-    : tag ? [tag] : [];
+  // `tags` is now a string[] from the generated query schema.
+  // `tag` is a single-value legacy alias; merge both into one list.
+  const tagsList: string[] = [
+    ...(tagsParam ?? []),
+    ...(tag ? [tag] : []),
+  ].map(t => t.trim()).filter(Boolean);
 
   const pageSize = Math.min(limit ?? 48, 200);
   const pageOffset = offset ?? 0;
@@ -164,7 +167,7 @@ router.get("/trees/:id", async (req, res): Promise<void> => {
 });
 
 router.patch("/trees/:id", async (req, res): Promise<void> => {
-  const userId = (req as AuthedRequest).userId;
+  const userId = (req as unknown as AuthedRequest).userId;
   const params = UpdateTreeParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -220,7 +223,7 @@ router.patch("/trees/:id", async (req, res): Promise<void> => {
 });
 
 router.delete("/trees/:id", async (req, res): Promise<void> => {
-  const userId = (req as AuthedRequest).userId;
+  const userId = (req as unknown as AuthedRequest).userId;
   const params = DeleteTreeParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

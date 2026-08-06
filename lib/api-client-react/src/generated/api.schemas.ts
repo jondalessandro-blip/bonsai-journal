@@ -17,11 +17,36 @@ export interface UploadUrlRequest {
 export interface UploadUrlResponse {
   uploadURL: string;
   objectPath: string;
+  /** HMAC token binding this objectPath to the requesting user. Must be sent to POST /storage/uploads/finalize to set ownership. */
+  ownershipToken: string;
+}
+
+export interface FinalizeUploadRequest {
+  /** @minLength 1 */
+  objectPath: string;
+  /**
+     * Token received from POST /storage/uploads/request-url.
+     * @minLength 1
+     */
+  ownershipToken: string;
+}
+
+export interface FinalizeUploadResult {
+  objectPath: string;
 }
 
 export interface HealthStatus {
   status: string;
 }
+
+/**
+ * @nullable
+ */
+export type TreeCoverPosition = {
+  x: number;
+  y: number;
+  zoom: number;
+} | null;
 
 export interface Tree {
   id: string;
@@ -38,17 +63,17 @@ export interface Tree {
   style?: string | null;
   /** @nullable */
   stage?: string | null;
-  /** @nullable — operational health status */
+  /** @nullable */
   status?: string | null;
   tags: string[];
   /** @nullable */
   notes?: string | null;
   /** @nullable */
   photoUrl?: string | null;
-  /** @nullable — 400px WebP thumb used in collection grid */
+  /** @nullable */
   coverThumb?: string | null;
   /** @nullable */
-  coverPosition?: { x: number; y: number; zoom: number } | null;
+  coverPosition?: TreeCoverPosition;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,6 +94,12 @@ export interface TreeInput {
   coverThumb?: string;
 }
 
+export type TreeUpdateCoverPosition = {
+  x: number;
+  y: number;
+  zoom: number;
+};
+
 export interface TreeUpdate {
   /** @minLength 1 */
   name?: string;
@@ -83,7 +114,7 @@ export interface TreeUpdate {
   notes?: string;
   photoUrl?: string;
   coverThumb?: string;
-  coverPosition?: { x: number; y: number; zoom: number };
+  coverPosition?: TreeUpdateCoverPosition;
 }
 
 export interface CareLog {
@@ -168,7 +199,7 @@ export interface TreePhoto {
   id: string;
   treeId: string;
   photoUrl: string;
-  /** 400px WebP thumb; null for photos uploaded before 2-size system */
+  /** @nullable */
   photoThumb?: string | null;
   takenAt: string;
   createdAt: string;
@@ -189,8 +220,11 @@ search?: string;
 climate?: string;
 foliage?: string;
 stage?: string;
+status?: string;
 tag?: string;
-/** Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder. */
+/**
+ * Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder.
+ */
 tags?: string[];
 limit?: number;
 offset?: number;

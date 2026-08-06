@@ -14,7 +14,10 @@ export interface TreeInput {
   climate?: string;
   foliage?: string;
   style?: string;
+  stage?: string;
+  status?: string;
   tags?: string[];
   notes?: string;
   photoUrl?: string;
+  coverThumb?: string;
 }
