@@ -17,6 +17,7 @@ const SAMPLE_TREES: Array<{
   tags: string[];
   notes: string;
   acquiredDate: string;
+  photoUrl: string;
   logs: Array<{ type: string; date: string; notes: string }>;
   reminders: Array<{ type: string; dueDate: string; notes: string }>;
 }> = [
@@ -30,6 +31,7 @@ const SAMPLE_TREES: Array<{
     stage: "Development",
     status: "Healthy",
     tags: ["maple", "sample"],
+    photoUrl: "/sample-trees/maple.jpg",
     notes:
       "A sample tree to get you started. Japanese maples are prized for their delicate, star-shaped leaves and brilliant autumn colour. Feel free to delete this and add your own trees.",
     logs: [
@@ -52,6 +54,7 @@ const SAMPLE_TREES: Array<{
     stage: "Refinement",
     status: "Healthy",
     tags: ["juniper", "sample"],
+    photoUrl: "/sample-trees/juniper.jpg",
     notes:
       "A sample tree to show the journal in action. Chinese junipers are one of the most popular bonsai species — forgiving, vigorous, and beautiful year-round. Feel free to delete this and add your own trees.",
     logs: [
