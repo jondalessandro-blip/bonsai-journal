@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/bonsai-mobile/"
+title = "Bonsai Journal Mobile"
+description = "A mobile companion app for Bonsai Journal that lets users log care activities and take photos of their bonsai trees while in the garden. Supports browsing the tree collection, viewing tree details, adding care logs (watering, pruning, fertilizing, etc.), and capturing/uploading progression photos. Uses the same Clerk authentication and API backend as the web app."
+version = "1.0.0"
+id = "artifacts/bonsai-mobile"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/bonsai-mobile/" ]
+localPort = 18142
+
+[services.development]
+run = "pnpm --filter @workspace/bonsai-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/bonsai-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/bonsai-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "18142"
+BASE_PATH = "/bonsai-mobile/"
