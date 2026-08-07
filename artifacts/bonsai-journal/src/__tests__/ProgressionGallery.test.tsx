@@ -31,8 +31,9 @@ vi.mock("@/components/Lightbox", () => ({
 // Shared mutation mock refs (created with vi.hoisted so they can be referenced
 // inside the vi.mock factory below without hoisting issues).
 // ---------------------------------------------------------------------------
-const { mockUpdateMutate, mockInvalidateQueries } = vi.hoisted(() => ({
+const { mockUpdateMutate, mockDeleteMutate, mockInvalidateQueries } = vi.hoisted(() => ({
   mockUpdateMutate: vi.fn(),
+  mockDeleteMutate: vi.fn(),
   mockInvalidateQueries: vi.fn(),
 }));
 
@@ -51,7 +52,7 @@ vi.mock("@workspace/api-client-react", () => {
     useListTreePhotos: () => ({ data: [photo], isLoading: false }),
     useCreateTreePhoto: () => ({ mutate: vi.fn(), isPending: false }),
     useUpdateTreePhoto: () => ({ mutate: mockUpdateMutate, isPending: false }),
-    useDeleteTreePhoto: () => ({ mutate: vi.fn(), isPending: false }),
+    useDeleteTreePhoto: () => ({ mutate: mockDeleteMutate, isPending: false }),
     useUpdateTree: () => ({ mutate: vi.fn(), isPending: false }),
   };
 });
@@ -225,5 +226,65 @@ describe("ProgressionGallery — date edit flow", () => {
 
     // The component must remain in edit mode so the user can correct the date.
     expect(screen.getByRole("button", { name: /save date/i })).toBeInTheDocument();
+  });
+});
+
+describe("ProgressionGallery — delete flow", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Default: delete mutate calls onSuccess immediately.
+    mockDeleteMutate.mockImplementation(
+      (_vars: unknown, opts: { onSuccess?: () => void }) => {
+        opts?.onSuccess?.();
+      },
+    );
+  });
+
+  it("shows confirmation UI when the trash icon is clicked", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    // The trash button is present before confirmation.
+    const trashBtn = screen.getByRole("button", { name: /delete photo/i });
+    await user.click(trashBtn);
+
+    // Confirmation buttons should now be visible.
+    expect(screen.getByRole("button", { name: /^delete$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+    // The initial trash button should be gone.
+    expect(screen.queryByRole("button", { name: /delete photo/i })).toBeNull();
+  });
+
+  it("calls deletePhoto.mutate with the correct photoId when Delete is confirmed", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    await user.click(screen.getByRole("button", { name: /delete photo/i }));
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+
+    expect(mockDeleteMutate).toHaveBeenCalledOnce();
+    expect(mockDeleteMutate).toHaveBeenCalledWith(
+      { id: "tree-abc", photoId: "photo-1" },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+  });
+
+  it("does NOT call deletePhoto.mutate and clears confirm state when Cancel is clicked", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    await user.click(screen.getByRole("button", { name: /delete photo/i }));
+
+    // Confirm state is active — cancel it.
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
+
+    // Mutate must never have been called.
+    expect(mockDeleteMutate).not.toHaveBeenCalled();
+
+    // Confirm UI is gone; the trash button is back.
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /^delete$/i })).toBeNull();
+    });
+    expect(screen.getByRole("button", { name: /delete photo/i })).toBeInTheDocument();
   });
 });
