@@ -635,6 +635,16 @@ router.delete("/trees/:id/photos/:photoId", requireAuth, async (req, res): Promi
     })
     .where(eq(treesTable.id, params.data.id));
 
+  console.log("NEW_COVER_DEBUG", {
+    treeId: params.data.id,
+    oldDeletedPhotoId: params.data.photoId,
+    oldDeletedPhotoUrl: photo.photoUrl,
+    newPhotoId: newCoverPhoto?.id ?? null,
+    newPhotoUrl: newCoverPhoto?.photoUrl ?? null,
+    newPhotoThumb: newCoverPhoto?.photoThumb ?? null,
+    coverThumbWritten: newCoverPhoto?.photoThumb ?? null,
+  });
+
   res.sendStatus(204);
 });
 
