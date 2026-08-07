@@ -606,6 +606,22 @@ router.delete("/trees/:id/photos/:photoId", requireAuth, async (req, res): Promi
     return;
   }
 
+  // Find the new most-recent remaining photo to use as the cover
+  const [newCoverPhoto] = await db
+    .select()
+    .from(treePhotosTable)
+    .where(eq(treePhotosTable.treeId, params.data.id))
+    .orderBy(desc(treePhotosTable.takenAt), desc(treePhotosTable.createdAt))
+    .limit(1);
+
+  await db
+    .update(treesTable)
+    .set({
+      photoUrl: newCoverPhoto?.photoUrl ?? null,
+      coverThumb: newCoverPhoto?.photoThumb ?? null,
+    })
+    .where(eq(treesTable.id, params.data.id));
+
   res.sendStatus(204);
 });
 
