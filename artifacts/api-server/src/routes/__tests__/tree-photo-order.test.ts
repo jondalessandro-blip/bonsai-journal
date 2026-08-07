@@ -87,7 +87,7 @@ vi.mock('@workspace/db', () => ({
     update: mockUpdate,
   },
   treesTable:         { id: 'id', userId: 'userId', photoUrl: 'photoUrl', coverThumb: 'coverThumb' },
-  treePhotosTable:    { id: 'id', treeId: 'treeId', takenAt: 'takenAt', createdAt: 'createdAt' },
+  treePhotosTable:    { id: 'id', treeId: 'treeId', takenAt: 'takenAt', createdAt: 'createdAt', insertionSeq: 'insertionSeq' },
   careLogsTable:      {},
   careRemindersTable: {},
 }));
@@ -124,32 +124,35 @@ const fakeTree = {
 
 /** Oldest photo — should appear first in the list. */
 const photoOldest = {
-  id:         'dddddddd-0000-0000-0000-000000000001',
-  treeId:     TREE_ID,
-  photoUrl:   'https://cdn.example.com/oldest.jpg',
-  photoThumb: 'https://cdn.example.com/oldest-thumb.jpg',
-  takenAt:    '2022-03-01',
-  createdAt:  new Date('2022-03-01T10:00:00Z'),
+  id:           'dddddddd-0000-0000-0000-000000000001',
+  treeId:       TREE_ID,
+  photoUrl:     'https://cdn.example.com/oldest.jpg',
+  photoThumb:   'https://cdn.example.com/oldest-thumb.jpg',
+  takenAt:      '2022-03-01',
+  createdAt:    new Date('2022-03-01T10:00:00Z'),
+  insertionSeq: 1,
 };
 
 /** Middle photo — will be deleted in the ordering-after-delete test. */
 const photoMiddle = {
-  id:         'dddddddd-0000-0000-0000-000000000002',
-  treeId:     TREE_ID,
-  photoUrl:   'https://cdn.example.com/middle.jpg',
-  photoThumb: 'https://cdn.example.com/middle-thumb.jpg',
-  takenAt:    '2023-06-15',
-  createdAt:  new Date('2023-06-15T10:00:00Z'),
+  id:           'dddddddd-0000-0000-0000-000000000002',
+  treeId:       TREE_ID,
+  photoUrl:     'https://cdn.example.com/middle.jpg',
+  photoThumb:   'https://cdn.example.com/middle-thumb.jpg',
+  takenAt:      '2023-06-15',
+  createdAt:    new Date('2023-06-15T10:00:00Z'),
+  insertionSeq: 2,
 };
 
 /** Newest photo — should appear last in the list. */
 const photoNewest = {
-  id:         'dddddddd-0000-0000-0000-000000000003',
-  treeId:     TREE_ID,
-  photoUrl:   'https://cdn.example.com/newest.jpg',
-  photoThumb: 'https://cdn.example.com/newest-thumb.jpg',
-  takenAt:    '2024-11-20',
-  createdAt:  new Date('2024-11-20T10:00:00Z'),
+  id:           'dddddddd-0000-0000-0000-000000000003',
+  treeId:       TREE_ID,
+  photoUrl:     'https://cdn.example.com/newest.jpg',
+  photoThumb:   'https://cdn.example.com/newest-thumb.jpg',
+  takenAt:      '2024-11-20',
+  createdAt:    new Date('2024-11-20T10:00:00Z'),
+  insertionSeq: 3,
 };
 
 /**
@@ -157,21 +160,55 @@ const photoNewest = {
  * createdAt ASC acts as a stable tiebreaker.
  */
 const photoSameDay1 = {
-  id:         'eeeeeeee-0000-0000-0000-000000000001',
-  treeId:     TREE_ID,
-  photoUrl:   'https://cdn.example.com/same-day-a.jpg',
-  photoThumb: 'https://cdn.example.com/same-day-a-thumb.jpg',
-  takenAt:    '2023-09-10',
-  createdAt:  new Date('2023-09-10T08:00:00Z'),  // uploaded first
+  id:           'eeeeeeee-0000-0000-0000-000000000001',
+  treeId:       TREE_ID,
+  photoUrl:     'https://cdn.example.com/same-day-a.jpg',
+  photoThumb:   'https://cdn.example.com/same-day-a-thumb.jpg',
+  takenAt:      '2023-09-10',
+  createdAt:    new Date('2023-09-10T08:00:00Z'),  // uploaded first
+  insertionSeq: 4,
 };
 
 const photoSameDay2 = {
-  id:         'eeeeeeee-0000-0000-0000-000000000002',
-  treeId:     TREE_ID,
-  photoUrl:   'https://cdn.example.com/same-day-b.jpg',
-  photoThumb: 'https://cdn.example.com/same-day-b-thumb.jpg',
-  takenAt:    '2023-09-10',                        // same takenAt as photoSameDay1
-  createdAt:  new Date('2023-09-10T09:30:00Z'),  // uploaded second
+  id:           'eeeeeeee-0000-0000-0000-000000000002',
+  treeId:       TREE_ID,
+  photoUrl:     'https://cdn.example.com/same-day-b.jpg',
+  photoThumb:   'https://cdn.example.com/same-day-b-thumb.jpg',
+  takenAt:      '2023-09-10',                        // same takenAt as photoSameDay1
+  createdAt:    new Date('2023-09-10T09:30:00Z'),  // uploaded second
+  insertionSeq: 5,
+};
+
+/**
+ * Two photos that share both takenAt AND createdAt (sub-second rapid upload).
+ *
+ * When createdAt values are identical the sort key (takenAt ASC, createdAt ASC)
+ * cannot distinguish between the rows.  insertionSeq — a bigint backed by a
+ * database sequence assigned at insert time — is the deterministic final
+ * tiebreaker: the first-inserted row always has a strictly lower sequence value
+ * than subsequent rows, guaranteeing stable ordering regardless of clock
+ * resolution.
+ */
+const SAME_TIMESTAMP = new Date('2024-05-01T12:00:00.000Z');
+
+const photoRapid1 = {
+  id:           'ffffffff-0000-0000-0000-000000000001',
+  treeId:       TREE_ID,
+  photoUrl:     'https://cdn.example.com/rapid-a.jpg',
+  photoThumb:   'https://cdn.example.com/rapid-a-thumb.jpg',
+  takenAt:      '2024-05-01',
+  createdAt:    SAME_TIMESTAMP,
+  insertionSeq: 10,   // lower seq = inserted first
+};
+
+const photoRapid2 = {
+  id:           'ffffffff-0000-0000-0000-000000000002',
+  treeId:       TREE_ID,
+  photoUrl:     'https://cdn.example.com/rapid-b.jpg',
+  photoThumb:   'https://cdn.example.com/rapid-b-thumb.jpg',
+  takenAt:      '2024-05-01',
+  createdAt:    SAME_TIMESTAMP,
+  insertionSeq: 11,   // higher seq = inserted second
 };
 
 const LIST_ENDPOINT   = `/api/trees/${TREE_ID}/photos`;
@@ -261,6 +298,48 @@ describe('GET /api/trees/:id/photos — ordering', () => {
     const tags = photoQueryOrderBy!.map((a: any) => `${a._tag}:${a.col}`);
     expect(tags).toContain('asc:takenAt');
     expect(tags).toContain('asc:createdAt');
+  });
+
+  // -------------------------------------------------------------------------
+  // Test 5: rapid uploads with identical createdAt timestamps.
+  //
+  // When two photos arrive within the same DB clock tick (sub-second collision),
+  // createdAt cannot distinguish them.  The handler must:
+  //   a) still issue the query with takenAt ASC + createdAt ASC,
+  //   b) pass through whatever order the DB returns without re-sorting.
+  //
+  // The DB's physical insertion order is the effective tiebreaker; the handler
+  // must not disturb it.  This test verifies that the response preserves the
+  // order the mock DB provides, confirming no client-side re-shuffle occurs.
+  // -------------------------------------------------------------------------
+  it('uses insertionSeq ASC as the final tiebreaker for photos with identical takenAt and createdAt (sub-second collision)', async () => {
+    vi.mocked(getAuth).mockReturnValue({ userId: USER_ID } as any);
+
+    // DB applies takenAt ASC → createdAt ASC → insertionSeq ASC and returns
+    // rapid1 (seq 10) before rapid2 (seq 11) because it was inserted first.
+    selectResultQueue.push([fakeTree]);
+    selectResultQueue.push([photoRapid1, photoRapid2]);
+
+    const res = await request(app).get(LIST_ENDPOINT);
+
+    expect(res.status).toBe(200);
+
+    const ids = res.body.map((p: any) => p.id);
+
+    // rapid1 must come first (lower insertionSeq = earlier insert).
+    expect(ids).toEqual([photoRapid1.id, photoRapid2.id]);
+
+    // The critical assertion: the query must include insertionSeq ASC so the DB
+    // can deterministically break ties when both takenAt and createdAt collide.
+    const photoQueryOrderBy = capturedOrderBy.find((args) =>
+      args.some((a: any) => a?.col === 'takenAt' || a?.col === 'createdAt' || a?.col === 'insertionSeq'),
+    );
+    expect(photoQueryOrderBy).toBeDefined();
+    const tags = photoQueryOrderBy!.map((a: any) => `${a._tag}:${a.col}`);
+    expect(tags).toContain('asc:takenAt');
+    expect(tags).toContain('asc:createdAt');
+    // insertionSeq ASC is the deterministic tiebreaker for sub-second collisions.
+    expect(tags).toContain('asc:insertionSeq');
   });
 
   // -------------------------------------------------------------------------

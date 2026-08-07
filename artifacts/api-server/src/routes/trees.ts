@@ -511,7 +511,11 @@ router.get("/trees/:id/photos", requireAuth, async (req, res): Promise<void> => 
     .select()
     .from(treePhotosTable)
     .where(eq(treePhotosTable.treeId, params.data.id))
-    .orderBy(asc(treePhotosTable.takenAt), asc(treePhotosTable.createdAt));
+    .orderBy(
+      asc(treePhotosTable.takenAt),
+      asc(treePhotosTable.createdAt),
+      asc(treePhotosTable.insertionSeq),
+    );
 
   res.json(photos.map(formatPhoto));
 });
@@ -611,7 +615,11 @@ router.delete("/trees/:id/photos/:photoId", requireAuth, async (req, res): Promi
     .select()
     .from(treePhotosTable)
     .where(eq(treePhotosTable.treeId, params.data.id))
-    .orderBy(desc(treePhotosTable.takenAt), desc(treePhotosTable.createdAt))
+    .orderBy(
+      desc(treePhotosTable.takenAt),
+      desc(treePhotosTable.createdAt),
+      desc(treePhotosTable.insertionSeq),
+    )
     .limit(1);
 
   // When the deleted photo was the designated cover its stored focal-point
