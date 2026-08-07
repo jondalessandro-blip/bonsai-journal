@@ -152,6 +152,28 @@ const photoNewest = {
   createdAt:  new Date('2024-11-20T10:00:00Z'),
 };
 
+/**
+ * Two photos that share the same takenAt date — used to verify that
+ * createdAt ASC acts as a stable tiebreaker.
+ */
+const photoSameDay1 = {
+  id:         'eeeeeeee-0000-0000-0000-000000000001',
+  treeId:     TREE_ID,
+  photoUrl:   'https://cdn.example.com/same-day-a.jpg',
+  photoThumb: 'https://cdn.example.com/same-day-a-thumb.jpg',
+  takenAt:    '2023-09-10',
+  createdAt:  new Date('2023-09-10T08:00:00Z'),  // uploaded first
+};
+
+const photoSameDay2 = {
+  id:         'eeeeeeee-0000-0000-0000-000000000002',
+  treeId:     TREE_ID,
+  photoUrl:   'https://cdn.example.com/same-day-b.jpg',
+  photoThumb: 'https://cdn.example.com/same-day-b-thumb.jpg',
+  takenAt:    '2023-09-10',                        // same takenAt as photoSameDay1
+  createdAt:  new Date('2023-09-10T09:30:00Z'),  // uploaded second
+};
+
 const LIST_ENDPOINT   = `/api/trees/${TREE_ID}/photos`;
 const DELETE_ENDPOINT = `/api/trees/${TREE_ID}/photos/${photoMiddle.id}`;
 
@@ -206,6 +228,36 @@ describe('GET /api/trees/:id/photos — ordering', () => {
 
     expect(photoQueryOrderBy).toBeDefined();
 
+    const tags = photoQueryOrderBy!.map((a: any) => `${a._tag}:${a.col}`);
+    expect(tags).toContain('asc:takenAt');
+    expect(tags).toContain('asc:createdAt');
+  });
+
+  // -------------------------------------------------------------------------
+  // Test 4: photos with identical takenAt dates are ordered by createdAt ASC.
+  // -------------------------------------------------------------------------
+  it('orders photos with the same takenAt date by createdAt ASC as a tiebreaker', async () => {
+    vi.mocked(getAuth).mockReturnValue({ userId: USER_ID } as any);
+
+    // The DB returns the two same-day photos in createdAt ASC order (as the
+    // query requests).  The handler must preserve and surface that order.
+    selectResultQueue.push([fakeTree]);                         // ownership check
+    selectResultQueue.push([photoSameDay1, photoSameDay2]);     // photo list (oldest upload first)
+
+    const res = await request(app).get(LIST_ENDPOINT);
+
+    expect(res.status).toBe(200);
+
+    const ids = res.body.map((p: any) => p.id);
+
+    // photoSameDay1 was uploaded first (earlier createdAt) and must come first.
+    expect(ids).toEqual([photoSameDay1.id, photoSameDay2.id]);
+
+    // Confirm the DB was asked to sort by createdAt as a tiebreaker.
+    const photoQueryOrderBy = capturedOrderBy.find((args) =>
+      args.some((a: any) => a?.col === 'takenAt' || a?.col === 'createdAt'),
+    );
+    expect(photoQueryOrderBy).toBeDefined();
     const tags = photoQueryOrderBy!.map((a: any) => `${a._tag}:${a.col}`);
     expect(tags).toContain('asc:takenAt');
     expect(tags).toContain('asc:createdAt');
