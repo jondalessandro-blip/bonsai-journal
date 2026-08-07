@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -187,5 +187,43 @@ describe("ProgressionGallery — date edit flow", () => {
     // Mutation ran and the component is still mounted without error.
     expect(mockUpdateMutate).toHaveBeenCalledOnce();
     expect(screen.getByText("Progression")).toBeInTheDocument();
+  });
+
+  it("does not call updatePhoto.mutate when the date field is empty", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    // Enter edit mode.
+    await user.click(screen.getByText("Mar 15, 2024"));
+
+    // Clear the date input by firing a change event with an empty value.
+    // (userEvent.clear on type="date" inputs is unreliable in JSDOM; fireEvent
+    // directly sets the raw value and triggers the onChange handler.)
+    const dateInput = screen.getByDisplayValue("2024-03-15");
+    fireEvent.change(dateInput, { target: { value: "" } });
+
+    // Click Save with an empty date.
+    await user.click(screen.getByRole("button", { name: /save date/i }));
+
+    // saveEdit must bail out early — mutate must never be called.
+    expect(mockUpdateMutate).not.toHaveBeenCalled();
+  });
+
+  it("stays in edit mode when save is blocked by an empty date", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    // Enter edit mode.
+    await user.click(screen.getByText("Mar 15, 2024"));
+
+    // Clear the date field.
+    const dateInput = screen.getByDisplayValue("2024-03-15");
+    fireEvent.change(dateInput, { target: { value: "" } });
+
+    // Attempt to save.
+    await user.click(screen.getByRole("button", { name: /save date/i }));
+
+    // The component must remain in edit mode so the user can correct the date.
+    expect(screen.getByRole("button", { name: /save date/i })).toBeInTheDocument();
   });
 });
