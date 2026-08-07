@@ -246,6 +246,24 @@ describe("ProgressionGallery — date edit flow", () => {
     expect(screen.getByText("Date is required")).toBeInTheDocument();
   });
 
+  it("does not call updatePhoto.mutate when the date is syntactically non-empty but invalid", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    // Enter edit mode.
+    await user.click(screen.getByText("Mar 15, 2024"));
+
+    // Inject a non-empty but invalid date string directly via fireEvent.
+    const dateInput = screen.getByDisplayValue("2024-03-15");
+    fireEvent.change(dateInput, { target: { value: "not-a-date" } });
+
+    // Attempt to save.
+    await user.click(screen.getByRole("button", { name: /save date/i }));
+
+    // saveEdit must bail out — mutate must never be called.
+    expect(mockUpdateMutate).not.toHaveBeenCalled();
+  });
+
   it("clears the error message when the user enters a valid date", async () => {
     const user = userEvent.setup();
     renderGallery();

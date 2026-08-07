@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import {
   ImagePlus,
   Loader2,
@@ -120,6 +120,11 @@ export function ProgressionGallery({ treeId }: Props) {
     if (!editingId) return;
     if (!editingDate) {
       setDateError("Date is required");
+      return;
+    }
+    const parsed = parseISO(editingDate);
+    if (!isValid(parsed)) {
+      setDateError("Please enter a valid date");
       return;
     }
     setDateError(null);
