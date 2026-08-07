@@ -12,10 +12,11 @@ vi.mock("@/hooks/use-navigation-guard", () => ({
   useNavigationGuard: vi.fn(),
 }));
 
-// Mock photo upload hook (not exercised by this test).
+// Mock photo upload hook — uploadPhoto is a hoisted ref so upload tests can
+// control what it resolves to.
 vi.mock("@/hooks/use-photo-upload", () => ({
   usePhotoUpload: () => ({
-    uploadPhoto: vi.fn(),
+    uploadPhoto: mockUploadPhoto,
     isUploading: false,
     progress: 0,
     error: null,
@@ -44,9 +45,19 @@ vi.mock("@/components/Lightbox", () => ({
 // Shared mutation mock refs (created with vi.hoisted so they can be referenced
 // inside the vi.mock factory below without hoisting issues).
 // ---------------------------------------------------------------------------
-const { mockUpdateMutate, mockDeleteMutate, mockInvalidateQueries } = vi.hoisted(() => ({
+const {
+  mockCreateMutate,
+  mockUpdateMutate,
+  mockDeleteMutate,
+  mockUpdateTreeMutate,
+  mockUploadPhoto,
+  mockInvalidateQueries,
+} = vi.hoisted(() => ({
+  mockCreateMutate: vi.fn(),
   mockUpdateMutate: vi.fn(),
   mockDeleteMutate: vi.fn(),
+  mockUpdateTreeMutate: vi.fn(),
+  mockUploadPhoto: vi.fn(),
   mockInvalidateQueries: vi.fn(),
 }));
 
@@ -63,10 +74,10 @@ vi.mock("@workspace/api-client-react", () => {
 
   return {
     useListTreePhotos: () => ({ data: [photo], isLoading: false }),
-    useCreateTreePhoto: () => ({ mutate: vi.fn(), isPending: false }),
+    useCreateTreePhoto: () => ({ mutate: mockCreateMutate, isPending: false }),
     useUpdateTreePhoto: () => ({ mutate: mockUpdateMutate, isPending: false }),
     useDeleteTreePhoto: () => ({ mutate: mockDeleteMutate, isPending: false }),
-    useUpdateTree: () => ({ mutate: vi.fn(), isPending: false }),
+    useUpdateTree: () => ({ mutate: mockUpdateTreeMutate, isPending: false }),
   };
 });
 
@@ -351,6 +362,123 @@ describe("ProgressionGallery — delete flow", () => {
       expect(screen.queryByRole("button", { name: /^delete$/i })).toBeNull();
     });
     expect(screen.getByRole("button", { name: /delete photo/i })).toBeInTheDocument();
+  });
+});
+
+describe("ProgressionGallery — photo upload flow", () => {
+  const uploadResult = {
+    objectPath: "/photos/test.webp",
+    serveUrl: "https://cdn.example.com/photos/test.webp",
+    thumbUrl: "https://cdn.example.com/photos/test-thumb.webp",
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Default: upload succeeds with both medium and thumb URLs.
+    mockUploadPhoto.mockResolvedValue(uploadResult);
+    // Default: createPhoto.mutate calls onSuccess immediately.
+    mockCreateMutate.mockImplementation(
+      (_vars: unknown, opts: { onSuccess?: () => void }) => {
+        opts?.onSuccess?.();
+      },
+    );
+  });
+
+  it("calls createPhoto.mutate with correct photoUrl, photoThumb, and takenAt after a successful upload", async () => {
+    renderGallery();
+
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    const file = new File(["img-data"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(mockCreateMutate).toHaveBeenCalledOnce();
+    });
+
+    expect(mockCreateMutate).toHaveBeenCalledWith(
+      {
+        id: "tree-abc",
+        data: {
+          photoUrl: uploadResult.serveUrl,
+          photoThumb: uploadResult.thumbUrl,
+          takenAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        },
+      },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+  });
+
+  it("calls updateTree.mutate with correct photoUrl and coverThumb to promote the cover", async () => {
+    renderGallery();
+
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    const file = new File(["img-data"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(mockUpdateTreeMutate).toHaveBeenCalledOnce();
+    });
+
+    expect(mockUpdateTreeMutate).toHaveBeenCalledWith({
+      id: "tree-abc",
+      data: {
+        photoUrl: uploadResult.serveUrl,
+        coverThumb: uploadResult.thumbUrl,
+      },
+    });
+  });
+
+  it("omits photoThumb and coverThumb when the upload returns no thumbUrl", async () => {
+    mockUploadPhoto.mockResolvedValue({
+      objectPath: "/photos/test.webp",
+      serveUrl: uploadResult.serveUrl,
+      thumbUrl: null,
+    });
+
+    renderGallery();
+
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    const file = new File(["img-data"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(mockCreateMutate).toHaveBeenCalledOnce();
+    });
+
+    // photoThumb must be absent (not present as undefined or null key).
+    const [createArgs] = mockCreateMutate.mock.calls[0];
+    expect(createArgs.data).not.toHaveProperty("photoThumb");
+
+    expect(mockUpdateTreeMutate).toHaveBeenCalledWith({
+      id: "tree-abc",
+      data: { photoUrl: uploadResult.serveUrl },
+    });
+    const [updateArgs] = mockUpdateTreeMutate.mock.calls[0];
+    expect(updateArgs.data).not.toHaveProperty("coverThumb");
+  });
+
+  it("does not call createPhoto.mutate or updateTree.mutate when uploadPhoto returns null", async () => {
+    mockUploadPhoto.mockResolvedValue(null);
+
+    renderGallery();
+
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    const file = new File(["img-data"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    // Give async handlers time to settle.
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(mockCreateMutate).not.toHaveBeenCalled();
+    expect(mockUpdateTreeMutate).not.toHaveBeenCalled();
   });
 });
 
