@@ -307,7 +307,7 @@ export function ProgressionGallery({ treeId }: Props) {
                       }}
                     />
                     <button
-                      onClick={saveEdit}
+                      onClick={() => saveEdit()}
                       disabled={updatePhoto.isPending}
                       className="p-1 rounded hover:bg-primary/10 text-primary transition-colors shrink-0"
                       aria-label="Save date"
