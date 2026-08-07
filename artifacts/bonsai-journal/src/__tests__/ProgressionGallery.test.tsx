@@ -227,6 +227,40 @@ describe("ProgressionGallery — date edit flow", () => {
     // The component must remain in edit mode so the user can correct the date.
     expect(screen.getByRole("button", { name: /save date/i })).toBeInTheDocument();
   });
+
+  it("shows an inline error message when save is attempted with an empty date", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    // Enter edit mode.
+    await user.click(screen.getByText("Mar 15, 2024"));
+
+    // Clear the date field.
+    const dateInput = screen.getByDisplayValue("2024-03-15");
+    fireEvent.change(dateInput, { target: { value: "" } });
+
+    // Attempt to save.
+    await user.click(screen.getByRole("button", { name: /save date/i }));
+
+    // An inline error message must be visible.
+    expect(screen.getByText("Date is required")).toBeInTheDocument();
+  });
+
+  it("clears the error message when the user enters a valid date", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    // Enter edit mode and trigger the error.
+    await user.click(screen.getByText("Mar 15, 2024"));
+    const dateInput = screen.getByDisplayValue("2024-03-15");
+    fireEvent.change(dateInput, { target: { value: "" } });
+    await user.click(screen.getByRole("button", { name: /save date/i }));
+    expect(screen.getByText("Date is required")).toBeInTheDocument();
+
+    // Now type a valid date — error should clear.
+    fireEvent.change(dateInput, { target: { value: "2024-09-01" } });
+    expect(screen.queryByText("Date is required")).toBeNull();
+  });
 });
 
 describe("ProgressionGallery — delete flow", () => {

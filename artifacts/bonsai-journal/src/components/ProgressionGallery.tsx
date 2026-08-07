@@ -34,6 +34,7 @@ export function ProgressionGallery({ treeId }: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDate, setEditingDate] = useState("");
+  const [dateError, setDateError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Navigation guard — fires when user navigates away with an unsaved date edit
@@ -112,10 +113,16 @@ export function ProgressionGallery({ treeId }: Props) {
   const startEdit = (photo: TreePhoto) => {
     setEditingId(photo.id);
     setEditingDate(photo.takenAt);
+    setDateError(null);
   };
 
   const saveEdit = (resumeAfterSave?: () => void) => {
-    if (!editingId || !editingDate) return;
+    if (!editingId) return;
+    if (!editingDate) {
+      setDateError("Date is required");
+      return;
+    }
+    setDateError(null);
     // Store resume before mutating — useEffect fires it after editingId → null,
     // by which point whenRef.current is false and the guard won't re-intercept.
     if (resumeAfterSave) pendingResumeRef.current = resumeAfterSave;
@@ -294,33 +301,41 @@ export function ProgressionGallery({ treeId }: Props) {
               {/* Date — click to edit */}
               <div className="mt-1.5 px-0.5">
                 {editingId === photo.id ? (
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="date"
-                      value={editingDate}
-                      onChange={(e) => setEditingDate(e.target.value)}
-                      className="flex-1 min-w-0 text-xs border rounded px-1.5 py-0.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") saveEdit();
-                        if (e.key === "Escape") setEditingId(null);
-                      }}
-                    />
-                    <button
-                      onClick={() => saveEdit()}
-                      disabled={updatePhoto.isPending}
-                      className="p-1 rounded hover:bg-primary/10 text-primary transition-colors shrink-0"
-                      aria-label="Save date"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="p-1 rounded hover:bg-muted text-muted-foreground transition-colors shrink-0"
-                      aria-label="Cancel"
-                    >
-                      <XIcon className="w-3.5 h-3.5" />
-                    </button>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="date"
+                        value={editingDate}
+                        onChange={(e) => {
+                          setEditingDate(e.target.value);
+                          if (e.target.value) setDateError(null);
+                        }}
+                        className={`flex-1 min-w-0 text-xs border rounded px-1.5 py-0.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary ${dateError ? "border-destructive" : ""}`}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveEdit();
+                          if (e.key === "Escape") { setEditingId(null); setDateError(null); }
+                        }}
+                      />
+                      <button
+                        onClick={() => saveEdit()}
+                        disabled={updatePhoto.isPending}
+                        className="p-1 rounded hover:bg-primary/10 text-primary transition-colors shrink-0"
+                        aria-label="Save date"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => { setEditingId(null); setDateError(null); }}
+                        className="p-1 rounded hover:bg-muted text-muted-foreground transition-colors shrink-0"
+                        aria-label="Cancel"
+                      >
+                        <XIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {dateError && (
+                      <p className="text-[10px] text-destructive leading-none">{dateError}</p>
+                    )}
                   </div>
                 ) : (
                   <button
