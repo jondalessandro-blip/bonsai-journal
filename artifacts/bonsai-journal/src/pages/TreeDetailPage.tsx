@@ -278,7 +278,7 @@ export default function TreeDetailPage() {
               <div className="flex items-center justify-between px-5 pt-4 pb-2">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <ScrollText className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-widest">General Notes</span>
+                  <span className="text-xs font-medium uppercase tracking-widest">Notes (Markdown supported)</span>
                 </div>
                 <button
                   onClick={() => setNotesExpanded(true)}
@@ -305,13 +305,13 @@ export default function TreeDetailPage() {
               className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col animate-in fade-in duration-200"
               role="dialog"
               aria-modal="true"
-              aria-label="General Notes — full view"
+              aria-label="Notes (Markdown supported) — full view"
             >
               <div className="flex items-center justify-between px-5 py-4 border-b bg-card shrink-0">
                 <div className="flex items-center gap-2.5 text-primary">
                   <ScrollText className="w-5 h-5" />
                   <div>
-                    <h2 className="font-serif text-lg leading-tight">General Notes</h2>
+                    <h2 className="font-serif text-lg leading-tight">Notes (Markdown supported)</h2>
                     <p className="text-xs text-muted-foreground">{tree.name}</p>
                   </div>
                 </div>

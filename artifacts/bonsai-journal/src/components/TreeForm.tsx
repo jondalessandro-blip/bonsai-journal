@@ -461,7 +461,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>General Notes (Markdown supported)</FormLabel>
+                <FormLabel>Notes (Markdown supported)</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="History, specific care needs, origin story..."
@@ -470,6 +470,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                   />
                 </FormControl>
                 <FormMessage />
+                <p className="text-xs text-gray-500 mt-1">Tip: Use # for headers, **bold**, *italic*, - for lists. Markdown supported.</p>
               </FormItem>
             )}
           />
