@@ -22,9 +22,22 @@ vi.mock("@/hooks/use-photo-upload", () => ({
   }),
 }));
 
-// Stub Lightbox so it doesn't need real DOM metrics.
+// Stub Lightbox so it doesn't need real DOM metrics, but still renders
+// something we can inspect and interact with in tests.
 vi.mock("@/components/Lightbox", () => ({
-  Lightbox: () => null,
+  Lightbox: ({
+    src,
+    alt,
+    onClose,
+  }: {
+    src: string;
+    alt?: string;
+    onClose: () => void;
+  }) => (
+    <div data-testid="lightbox" data-src={src} data-alt={alt ?? ""}>
+      <button aria-label="Close lightbox" onClick={onClose} />
+    </div>
+  ),
 }));
 
 // ---------------------------------------------------------------------------
@@ -338,5 +351,70 @@ describe("ProgressionGallery — delete flow", () => {
       expect(screen.queryByRole("button", { name: /^delete$/i })).toBeNull();
     });
     expect(screen.getByRole("button", { name: /delete photo/i })).toBeInTheDocument();
+  });
+});
+
+describe("ProgressionGallery — lightbox", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("opens the lightbox with the correct src and alt when a photo tile is clicked", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    // The lightbox must not be present before any interaction.
+    expect(screen.queryByTestId("lightbox")).toBeNull();
+
+    // Click the photo tile (the div with cursor-zoom-in).
+    const tile = screen
+      .getByRole("img", { name: /progression/i })
+      .closest("div[class*='cursor-zoom-in']") as HTMLElement;
+    await user.click(tile);
+
+    // Lightbox must now be mounted with the photo's URL and formatted alt text.
+    const lightbox = screen.getByTestId("lightbox");
+    expect(lightbox).toBeInTheDocument();
+    expect(lightbox).toHaveAttribute("data-src", "https://example.com/photo.jpg");
+    expect(lightbox).toHaveAttribute("data-alt", "Progression — Mar 15, 2024");
+  });
+
+  it("does NOT open the lightbox when the tile is clicked while delete-confirm is active for that photo", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    // Activate the delete-confirm state for photo-1.
+    await user.click(screen.getByRole("button", { name: /delete photo/i }));
+    // Confirm UI is now visible.
+    expect(screen.getByRole("button", { name: /^delete$/i })).toBeInTheDocument();
+
+    // Click the tile — should be a no-op because confirmDeleteId === photo.id.
+    const tile = screen
+      .getByRole("img", { name: /progression/i })
+      .closest("div[class*='cursor-zoom-in']") as HTMLElement;
+    await user.click(tile);
+
+    // Lightbox must remain unmounted.
+    expect(screen.queryByTestId("lightbox")).toBeNull();
+  });
+
+  it("closes the lightbox (unmounts it) when the close handler is called", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    // Open the lightbox.
+    const tile = screen
+      .getByRole("img", { name: /progression/i })
+      .closest("div[class*='cursor-zoom-in']") as HTMLElement;
+    await user.click(tile);
+    expect(screen.getByTestId("lightbox")).toBeInTheDocument();
+
+    // Trigger onClose via the stub's close button.
+    await user.click(screen.getByRole("button", { name: /close lightbox/i }));
+
+    // Lightbox must be unmounted.
+    await waitFor(() => {
+      expect(screen.queryByTestId("lightbox")).toBeNull();
+    });
   });
 });
