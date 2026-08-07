@@ -31,9 +31,6 @@ import type { Request } from "express";
 
 const router: IRouter = Router();
 
-// All tree routes require authentication
-router.use(requireAuth);
-
 // Helper: verify a tree belongs to the authenticated user.
 // Returns the tree row or sends 404 and returns null.
 async function getOwnedTree(
@@ -55,7 +52,7 @@ async function getOwnedTree(
 
 // ---- Trees ----
 
-router.get("/trees", async (req, res): Promise<void> => {
+router.get("/trees", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthedRequest).userId;
   const query = ListTreesQueryParams.safeParse(req.query);
   if (!query.success) {
@@ -136,7 +133,7 @@ router.get("/trees", async (req, res): Promise<void> => {
   })));
 });
 
-router.post("/trees", async (req, res): Promise<void> => {
+router.post("/trees", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthedRequest).userId;
   const parsed = CreateTreeBody.safeParse(req.body);
   if (!parsed.success) {
@@ -153,7 +150,7 @@ router.post("/trees", async (req, res): Promise<void> => {
   res.status(201).json(formatTree(tree));
 });
 
-router.get("/trees/:id", async (req, res): Promise<void> => {
+router.get("/trees/:id", requireAuth, async (req, res): Promise<void> => {
   const params = GetTreeParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -166,7 +163,7 @@ router.get("/trees/:id", async (req, res): Promise<void> => {
   res.json(formatTree(tree));
 });
 
-router.patch("/trees/:id", async (req, res): Promise<void> => {
+router.patch("/trees/:id", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as unknown as AuthedRequest).userId;
   const params = UpdateTreeParams.safeParse(req.params);
   if (!params.success) {
@@ -222,7 +219,7 @@ router.patch("/trees/:id", async (req, res): Promise<void> => {
   res.json(formatTree(tree));
 });
 
-router.delete("/trees/:id", async (req, res): Promise<void> => {
+router.delete("/trees/:id", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as unknown as AuthedRequest).userId;
   const params = DeleteTreeParams.safeParse(req.params);
   if (!params.success) {
@@ -245,7 +242,7 @@ router.delete("/trees/:id", async (req, res): Promise<void> => {
 
 // ---- Care Logs ----
 
-router.get("/trees/:id/logs", async (req, res): Promise<void> => {
+router.get("/trees/:id/logs", requireAuth, async (req, res): Promise<void> => {
   const params = ListTreeLogsParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -264,7 +261,7 @@ router.get("/trees/:id/logs", async (req, res): Promise<void> => {
   res.json(logs.map(formatLog));
 });
 
-router.post("/trees/:id/logs", async (req, res): Promise<void> => {
+router.post("/trees/:id/logs", requireAuth, async (req, res): Promise<void> => {
   const params = CreateTreeLogParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -288,7 +285,7 @@ router.post("/trees/:id/logs", async (req, res): Promise<void> => {
   res.status(201).json(formatLog(log));
 });
 
-router.patch("/trees/:id/logs/:logId", async (req, res): Promise<void> => {
+router.patch("/trees/:id/logs/:logId", requireAuth, async (req, res): Promise<void> => {
   const params = DeleteTreeLogParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -323,7 +320,7 @@ router.patch("/trees/:id/logs/:logId", async (req, res): Promise<void> => {
   res.json(formatLog(log));
 });
 
-router.delete("/trees/:id/logs/:logId", async (req, res): Promise<void> => {
+router.delete("/trees/:id/logs/:logId", requireAuth, async (req, res): Promise<void> => {
   const params = DeleteTreeLogParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -353,7 +350,7 @@ router.delete("/trees/:id/logs/:logId", async (req, res): Promise<void> => {
 
 // ---- Care Reminders ----
 
-router.get("/trees/:id/reminders", async (req, res): Promise<void> => {
+router.get("/trees/:id/reminders", requireAuth, async (req, res): Promise<void> => {
   const params = ListTreeRemindersParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -372,7 +369,7 @@ router.get("/trees/:id/reminders", async (req, res): Promise<void> => {
   res.json(reminders.map(formatReminder));
 });
 
-router.post("/trees/:id/reminders", async (req, res): Promise<void> => {
+router.post("/trees/:id/reminders", requireAuth, async (req, res): Promise<void> => {
   const params = CreateTreeReminderParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -396,7 +393,7 @@ router.post("/trees/:id/reminders", async (req, res): Promise<void> => {
   res.status(201).json(formatReminder(reminder));
 });
 
-router.patch("/trees/:id/reminders/:reminderId", async (req, res): Promise<void> => {
+router.patch("/trees/:id/reminders/:reminderId", requireAuth, async (req, res): Promise<void> => {
   const params = UpdateTreeReminderParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -431,7 +428,7 @@ router.patch("/trees/:id/reminders/:reminderId", async (req, res): Promise<void>
   res.json(formatReminder(reminder));
 });
 
-router.delete("/trees/:id/reminders/:reminderId", async (req, res): Promise<void> => {
+router.delete("/trees/:id/reminders/:reminderId", requireAuth, async (req, res): Promise<void> => {
   const params = DeleteTreeReminderParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -461,7 +458,7 @@ router.delete("/trees/:id/reminders/:reminderId", async (req, res): Promise<void
 
 // ---- Timeline ----
 
-router.get("/trees/:id/timeline", async (req, res): Promise<void> => {
+router.get("/trees/:id/timeline", requireAuth, async (req, res): Promise<void> => {
   const params = GetTreeTimelineParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -500,7 +497,7 @@ router.get("/trees/:id/timeline", async (req, res): Promise<void> => {
 
 // ---- Progression Photos ----
 
-router.get("/trees/:id/photos", async (req, res): Promise<void> => {
+router.get("/trees/:id/photos", requireAuth, async (req, res): Promise<void> => {
   const params = ListTreePhotosParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -519,7 +516,7 @@ router.get("/trees/:id/photos", async (req, res): Promise<void> => {
   res.json(photos.map(formatPhoto));
 });
 
-router.post("/trees/:id/photos", async (req, res): Promise<void> => {
+router.post("/trees/:id/photos", requireAuth, async (req, res): Promise<void> => {
   const params = CreateTreePhotoParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -549,7 +546,7 @@ router.post("/trees/:id/photos", async (req, res): Promise<void> => {
   res.status(201).json(formatPhoto(photo));
 });
 
-router.patch("/trees/:id/photos/:photoId", async (req, res): Promise<void> => {
+router.patch("/trees/:id/photos/:photoId", requireAuth, async (req, res): Promise<void> => {
   const params = UpdateTreePhotoParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -584,7 +581,7 @@ router.patch("/trees/:id/photos/:photoId", async (req, res): Promise<void> => {
   res.json(formatPhoto(photo));
 });
 
-router.delete("/trees/:id/photos/:photoId", async (req, res): Promise<void> => {
+router.delete("/trees/:id/photos/:photoId", requireAuth, async (req, res): Promise<void> => {
   const params = DeleteTreePhotoParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -614,7 +611,7 @@ router.delete("/trees/:id/photos/:photoId", async (req, res): Promise<void> => {
 
 // ---- Collection stats (scoped to current user) ----
 
-router.get("/collection/stats", async (req, res): Promise<void> => {
+router.get("/collection/stats", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthedRequest).userId;
 
   const [trees, recentlyAdded] = await Promise.all([
@@ -655,7 +652,7 @@ router.get("/collection/stats", async (req, res): Promise<void> => {
 
 // ---- Upcoming reminders (scoped to current user) ----
 
-router.get("/reminders/upcoming", async (req, res): Promise<void> => {
+router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthedRequest).userId;
   const today = new Date();
   const in30 = new Date(today);
