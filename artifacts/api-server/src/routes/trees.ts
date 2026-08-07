@@ -614,11 +614,16 @@ router.delete("/trees/:id/photos/:photoId", requireAuth, async (req, res): Promi
     .orderBy(desc(treePhotosTable.takenAt), desc(treePhotosTable.createdAt))
     .limit(1);
 
+  // When the deleted photo was the designated cover its stored focal-point
+  // (coverPosition) is no longer valid for the replacement photo, so clear it.
+  const deletedWasCover = photo.photoUrl === tree.photoUrl;
+
   await db
     .update(treesTable)
     .set({
       photoUrl: newCoverPhoto?.photoUrl ?? null,
       coverThumb: newCoverPhoto?.photoThumb ?? null,
+      ...(deletedWasCover ? { coverPosition: null } : {}),
     })
     .where(eq(treesTable.id, params.data.id));
 

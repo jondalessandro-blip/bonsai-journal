@@ -176,8 +176,9 @@ describe('DELETE /api/trees/:id/photos/:photoId — cover-sync behaviour', () =>
 
     expect(res.status).toBe(204);
     expect(capturedUpdateSet.current).toEqual({
-      photoUrl:   remainingPhoto.photoUrl,
-      coverThumb: remainingPhoto.photoThumb,
+      photoUrl:      remainingPhoto.photoUrl,
+      coverThumb:    remainingPhoto.photoThumb,
+      coverPosition: null,
     });
   });
 
@@ -197,8 +198,9 @@ describe('DELETE /api/trees/:id/photos/:photoId — cover-sync behaviour', () =>
 
     expect(res.status).toBe(204);
     expect(capturedUpdateSet.current).toEqual({
-      photoUrl:   null,
-      coverThumb: null,
+      photoUrl:      null,
+      coverThumb:    null,
+      coverPosition: null,
     });
   });
 
@@ -243,5 +245,59 @@ describe('DELETE /api/trees/:id/photos/:photoId — cover-sync behaviour', () =>
 
     expect(res.status).toBe(404);
     expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------------
+  // Case 6: deleted photo was the designated cover (photoUrl matches tree).
+  // coverPosition must be reset to null in the tree update.
+  // -------------------------------------------------------------------------
+  it('resets coverPosition to null when the deleted photo was the designated cover', async () => {
+    vi.mocked(getAuth).mockReturnValue({ userId: USER_ID } as any);
+
+    // Tree whose cover points at PHOTO_A and has a stored focal-point position.
+    const treeWithPosition = {
+      ...fakeTree,
+      coverPosition: { x: 0.4, y: 0.6, zoom: 1.2 },
+    };
+
+    selectResultQueue.push([treeWithPosition]);
+    deleteResultHolder.rows = [deletedPhoto]; // PHOTO_A — photoUrl matches tree.photoUrl
+    selectResultQueue.push([remainingPhoto]);  // PHOTO_B becomes the new cover
+
+    const res = await request(app).delete(ENDPOINT);
+
+    expect(res.status).toBe(204);
+    expect(capturedUpdateSet.current).toMatchObject({
+      photoUrl:      remainingPhoto.photoUrl,
+      coverThumb:    remainingPhoto.photoThumb,
+      coverPosition: null,
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Case 7: deleted photo was NOT the designated cover.
+  // coverPosition must be left untouched (not included in the update set).
+  // -------------------------------------------------------------------------
+  it('does not clear coverPosition when the deleted photo was not the designated cover', async () => {
+    vi.mocked(getAuth).mockReturnValue({ userId: USER_ID } as any);
+
+    // Tree whose cover is PHOTO_B (remainingPhoto), not the photo being deleted.
+    const treeWithPositionOnB = {
+      ...fakeTree,
+      photoUrl:      remainingPhoto.photoUrl,
+      coverThumb:    remainingPhoto.photoThumb,
+      coverPosition: { x: 0.3, y: 0.5, zoom: 1.0 },
+    };
+
+    selectResultQueue.push([treeWithPositionOnB]);
+    deleteResultHolder.rows = [deletedPhoto]; // PHOTO_A — photoUrl does NOT match tree.photoUrl
+    selectResultQueue.push([remainingPhoto]);  // PHOTO_B is still the most-recent photo
+
+    const res = await request(app).delete(ENDPOINT);
+
+    expect(res.status).toBe(204);
+    // coverPosition must not appear in the update — it belongs to the cover
+    // that was NOT deleted and its focal point remains valid.
+    expect(capturedUpdateSet.current).not.toHaveProperty('coverPosition');
   });
 });
