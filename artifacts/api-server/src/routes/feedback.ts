@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { desc } from "drizzle-orm";
-import { clerkClient } from "@clerk/express";
+import { createClerkClient } from "@clerk/express";
 import { db, feedbackTable } from "@workspace/db";
 import { insertFeedbackSchema } from "@workspace/db";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
@@ -26,7 +26,8 @@ router.post("/feedback", requireAuth, async (req: Request, res) => {
 router.get("/feedback", requireAuth, async (req: Request, res) => {
   const { userId } = req as AuthedRequest;
 
-  const user = await clerkClient().users.getUser(userId);
+  const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+  const user = await clerk.users.getUser(userId);
   const email = user.emailAddresses.find(
     (e) => e.id === user.primaryEmailAddressId,
   )?.emailAddress;
