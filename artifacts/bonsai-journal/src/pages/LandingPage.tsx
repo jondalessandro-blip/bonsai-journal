@@ -1,21 +1,7 @@
 import { Link as WouterLink } from "wouter";
 import { Button } from "@/components/ui/button";
 
-function DualLeafIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12 22 C12 22 11.5 16 12 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-      <path d="M12 13 C11 11 7 9.5 5 6 C5 6 8.5 5 11 8 C11.8 9 12 11 12 13Z" />
-      <path d="M12 13 C13 11 17 9.5 19 6 C19 6 15.5 5 13 8 C12.2 9 12 11 12 13Z" />
-    </svg>
-  );
-}
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function LandingPage() {
   return (
@@ -23,7 +9,7 @@ export default function LandingPage() {
       <div className="max-w-sm w-full space-y-8">
         <div className="flex flex-col items-center gap-4">
           <div className="bg-primary/10 p-4 rounded-2xl">
-            <DualLeafIcon className="h-10 w-10 text-primary" />
+            <img src={`${basePath}/logo.svg`} alt="" aria-hidden className="h-10 w-10" />
           </div>
           <div>
             <h1 className="font-serif text-3xl font-medium text-foreground">
