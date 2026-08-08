@@ -1,0 +1,45 @@
+# Prompt for Replit: Add a simple admin page to view feedback
+
+Add a page at `/feedback-admin` that lists all submitted feedback in a
+readable format, restricted to me only. This is for reading the
+`feedbackTable` rows added in the earlier feedback feature — no new
+database changes needed here.
+
+## 1. API endpoint
+
+Add `GET /api/feedback` in the API server, alongside the existing
+`POST /api/feedback` route. Require auth (`requireAuth`, same as other
+routes), but additionally restrict access to a single email:
+`jon.dalessandro@gmail.com`. Get the authed user's email from Clerk
+(same way the feedback POST route identifies the submitting user) and
+return a 403 if it doesn't match. Return all feedback rows ordered by
+`createdAt` descending.
+
+## 2. Frontend page
+
+Add `src/pages/FeedbackAdminPage.tsx`, following the visual style of
+`CollectionPage.tsx` (reuse the same layout/spacing conventions, card
+styling, and typography — this should look like it belongs in the app).
+
+- Register the route as `/feedback-admin` in `App.tsx`, alongside the
+  other authenticated routes.
+- On load, call `GET /api/feedback`. If the request comes back 403
+  (i.e. someone who isn't me tries to visit this page), show a simple
+  "Not authorized" message instead of the list — no need for anything
+  fancier.
+- Display each feedback entry as a row or card showing: category (as a
+  small badge, similar style to the status badges on tree cards),
+  the message text, and a relative/readable timestamp (e.g. "2 hours
+  ago" or a formatted date — match whatever date formatting utility is
+  already used elsewhere in this app, don't add a new one).
+- Sort newest first.
+- No edit/delete/resolve functionality needed — this is read-only for now.
+- Don't add a nav link to this page anywhere — I'll access it by typing
+  the URL directly, since it's just for me.
+
+## Constraints
+
+- Don't modify the feedback submission dialog, the `POST /api/feedback`
+  route, or the `feedbackTable` schema.
+- Don't touch any other page or route.
+- Match existing code style and formatting throughout.
