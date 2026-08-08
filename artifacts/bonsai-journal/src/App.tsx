@@ -92,7 +92,7 @@ const clerkAppearance = {
     footerAction: "bg-transparent",
     dividerLine: "bg-[hsl(30,15%,85%)]",
     alert: "border-[hsl(30,15%,85%)]",
-    otpCodeFieldInput: "bg-[hsl(30,15%,85%)] text-[hsl(24,20%,20%)] border-[hsl(30,15%,80%)]",
+    otpCodeFieldInput: "bg-[hsl(30,15%,85%)] text-[hsl(24,20%,20%)] border-[hsl(24,12%,55%)] focus:border-[hsl(125,25%,35%)] focus:ring-2 focus:ring-[hsl(125,25%,35%)]/30 focus:outline-none",
     formFieldRow: "",
     main: "",
   },
