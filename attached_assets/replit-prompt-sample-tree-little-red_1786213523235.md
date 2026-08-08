@@ -1,0 +1,63 @@
+# Prompt for Replit: Add a third sample tree ("Little Red")
+
+Add a third entry to the `SAMPLE_TREES` array in
+`artifacts/api-server/src/routes/user.ts`. The first two sample trees
+("Autumn Flame" and "Old Silver") are mature, refined specimens — this one
+should represent a young, early-development tree so new users see the
+full range of what the journal tracks, from raw material to refined bonsai.
+
+## 1. Add the photo
+
+I've attached `cedar.jpg`, already cropped to 1024x1024 to match the
+existing sample images. Place it at:
+`artifacts/bonsai-journal/public/sample-trees/cedar.jpg`
+
+## 2. Add this object to the SAMPLE_TREES array
+
+```ts
+{
+  name: "Little Red",
+  species: "Juniperus virginiana",
+  acquiredDate: today, // use the same `today` variable already defined in this file
+  climate: "Hardy / Outdoor",
+  foliage: "Conifer",
+  style: "Moyogi (模様木) — Informal Upright",
+  stage: "Trunk Development",
+  status: "Thriving",
+  tags: ["juniper", "sample", "native"],
+  photoUrl: "/sample-trees/cedar.jpg",
+  notes: `**Eastern Red Cedar** *Juniperus virginiana* — not a true cedar, it's a juniper. Evergreen scale/juvenile needle foliage, extremely tough, long-lived, and one of the best native North American species for bonsai, but with its own rules.
+
+This is a dry, sunny, alkaline, poor-soil pioneer. Treat it like a juniper, not like your maples or figs.
+
+### Light
+Full sun, absolute maximum — 8+ hours direct. Will not survive indoors, not even briefly. Shade produces weak, leggy juvenile foliage that never transitions to mature scale.
+
+### Watering & Soil
+Drought tolerant once established. Let the top 2-3cm dry between waterings, then soak thoroughly — overwatering kills faster than underwatering. Neutral to alkaline soil (pH 6.5-8.0). Classic juniper mix: 50% akadama + 25% pumice + 25% lava rock, or 1:1:1 akadama/pumice/lava. Must drain instantly.
+
+### Pruning
+Never treat like a larch — junipers die if stripped bare. Let this year's growth run wild to thicken the trunk; heavy structural work waits for late fall through early spring. Always leave green on a branch — this species rarely buds back from bare old wood.
+
+### Repotting
+Hates root disturbance — the most sensitive species in this collection. Young trees: every 2-3 years, in early-mid spring or September. Never bare-root, never remove more than 30-40% of the root mass.
+
+### Winter Care
+Hardy to Zone 2-3. Needs a real outdoor dormancy — never bring it inside. Protect roots from repeated freeze/thaw below -15°C by burying the pot to its rim or storing in an unheated garage with light.
+
+### Disease Watch
+Alternate host for cedar-apple rust. Remove orange jelly galls by hand in spring if apples, crabapples, or serviceberry grow nearby.
+
+**This is a long-term project tree.** Spend this first year building roots and trunk in a large grow pot, full sun, limestone grit. Next fall: select the trunk line, consider a jin from the sacrifice apex, and start wiring primary branches while the structure is still visible.`,
+  logs: [],
+  reminders: [],
+},
+```
+
+## Notes for you (Replit)
+
+- Match the existing code style/formatting in this file exactly (indentation, quote style, etc.)
+- Don't modify the "Autumn Flame" or "Old Silver" entries
+- The `notes` field renders as Markdown on the tree detail page — confirm the headers, bold text, and paragraph breaks render correctly, not as raw text with literal `**` or `###` characters
+- `logs` and `reminders` are empty arrays here since this is a brand-new specimen with no history yet — that's intentional, not a placeholder to fill in
+- After the change, this only affects **new** user signups (the seed endpoint is idempotent and only runs for users with zero trees) — existing test accounts won't retroactively get "Little Red" unless their tree count is zero
