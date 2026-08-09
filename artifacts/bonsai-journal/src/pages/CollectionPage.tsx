@@ -16,30 +16,60 @@ import { DEFAULT_TAGS } from "@/data/defaultTags";
 const PAGE_SIZE = 24;
 const CUSTOM_TAGS_KEY = "bonsai_custom_tags";
 
-// Short display labels for chips
+// Display labels for chips (full text — CSS truncation handles overflow in triggers)
 const CLIMATE_LABELS: Record<string, string> = {
   "Hardy / Outdoor": "Hardy / Outdoor",
-  "Tropical & Subtropical": "Tropical",
+  "Tropical & Subtropical": "Tropical & Subtropical",
 };
 const FOLIAGE_LABELS: Record<string, string> = {
   "Deciduous": "Deciduous",
   "Conifer": "Conifer",
-  "Deciduous Conifer": "Deciduous Con.",
-  "Broadleaf Evergreen": "Broadleaf Evergr.",
-  "Succulent / Desert": "Succulent",
+  "Deciduous Conifer": "Deciduous Conifer",
+  "Broadleaf Evergreen": "Broadleaf Evergreen",
+  "Succulent / Desert": "Succulent / Desert",
 };
 const STAGE_LABELS: Record<string, string> = {
   "Establishment": "Establishment",
-  "Trunk Development": "Trunk Dev.",
-  "Primary Branch Development": "Branch Dev.",
-  "Ramification & Refinement": "Refinement",
+  "Trunk Development": "Trunk Development",
+  "Primary Branch Development": "Primary Branch Development",
+  "Ramification & Refinement": "Ramification & Refinement",
 };
 const STATUS_LABELS: Record<string, string> = {
   "Thriving": "Thriving",
   "Dormant": "Dormant",
-  "Stressed/In Distress": "Stressed",
+  "Stressed/In Distress": "Stressed/In Distress",
   "Sick": "Sick",
-  "Dead/Beyond Recovery": "Dead",
+  "Dead/Beyond Recovery": "Dead/Beyond Recovery",
+};
+
+// Full trigger display text (mirrors SelectItem text content, for title tooltip)
+const CLIMATE_TRIGGER: Record<string, string> = {
+  "all": "All Climates",
+  "Hardy / Outdoor": "Hardy / Outdoor",
+  "Tropical & Subtropical": "Tropical & Subtropical",
+};
+const FOLIAGE_TRIGGER: Record<string, string> = {
+  "all": "All Foliage",
+  "Deciduous": "Deciduous",
+  "Conifer": "Conifer",
+  "Deciduous Conifer": "Deciduous Conifer",
+  "Broadleaf Evergreen": "Broadleaf Evergreen",
+  "Succulent / Desert": "Succulent / Desert",
+};
+const STAGE_TRIGGER: Record<string, string> = {
+  "all": "All Stages",
+  "Establishment": "1. Establishment",
+  "Trunk Development": "2. Trunk Development",
+  "Primary Branch Development": "3. Primary Branch Development",
+  "Ramification & Refinement": "4. Ramification & Refinement",
+};
+const STATUS_TRIGGER: Record<string, string> = {
+  "all": "All Statuses",
+  "Thriving": "Thriving",
+  "Dormant": "Dormant",
+  "Stressed/In Distress": "Stressed/In Distress",
+  "Sick": "Sick",
+  "Dead/Beyond Recovery": "Dead/Beyond Recovery",
 };
 
 export default function CollectionPage() {
@@ -286,51 +316,51 @@ export default function CollectionPage() {
         {filtersOpen && (
           <div className="flex gap-2 w-full flex-wrap animate-in fade-in duration-200">
             <Select value={climate} onValueChange={setClimate}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1">
-                <SelectValue placeholder="Climate" />
+              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1" title={CLIMATE_TRIGGER[climate] ?? climate}>
+                <SelectValue className="truncate" placeholder="Climate" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Climates</SelectItem>
                 <SelectItem value="Hardy / Outdoor">Hardy / Outdoor</SelectItem>
-                <SelectItem value="Tropical & Subtropical">Tropical</SelectItem>
+                <SelectItem value="Tropical & Subtropical">Tropical & Subtropical</SelectItem>
               </SelectContent>
             </Select>
             <Select value={foliage} onValueChange={setFoliage}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1">
-                <SelectValue placeholder="Foliage" />
+              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1" title={FOLIAGE_TRIGGER[foliage] ?? foliage}>
+                <SelectValue className="truncate" placeholder="Foliage" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Foliage</SelectItem>
                 <SelectItem value="Deciduous">Deciduous</SelectItem>
                 <SelectItem value="Conifer">Conifer</SelectItem>
-                <SelectItem value="Deciduous Conifer">Deciduous Con.</SelectItem>
-                <SelectItem value="Broadleaf Evergreen">Broadleaf Evergr.</SelectItem>
-                <SelectItem value="Succulent / Desert">Succulent</SelectItem>
+                <SelectItem value="Deciduous Conifer">Deciduous Conifer</SelectItem>
+                <SelectItem value="Broadleaf Evergreen">Broadleaf Evergreen</SelectItem>
+                <SelectItem value="Succulent / Desert">Succulent / Desert</SelectItem>
               </SelectContent>
             </Select>
             <Select value={stage} onValueChange={setStage}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1">
-                <SelectValue placeholder="Stage" />
+              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1" title={STAGE_TRIGGER[stage] ?? stage}>
+                <SelectValue className="truncate" placeholder="Stage" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Stages</SelectItem>
                 <SelectItem value="Establishment">1. Establishment</SelectItem>
-                <SelectItem value="Trunk Development">2. Trunk Dev.</SelectItem>
-                <SelectItem value="Primary Branch Development">3. Branch Dev.</SelectItem>
-                <SelectItem value="Ramification & Refinement">4. Refinement</SelectItem>
+                <SelectItem value="Trunk Development">2. Trunk Development</SelectItem>
+                <SelectItem value="Primary Branch Development">3. Primary Branch Development</SelectItem>
+                <SelectItem value="Ramification & Refinement">4. Ramification & Refinement</SelectItem>
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1">
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1" title={STATUS_TRIGGER[status] ?? status}>
+                <SelectValue className="truncate" placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="Thriving">Thriving</SelectItem>
                 <SelectItem value="Dormant">Dormant</SelectItem>
-                <SelectItem value="Stressed/In Distress">Stressed</SelectItem>
+                <SelectItem value="Stressed/In Distress">Stressed/In Distress</SelectItem>
                 <SelectItem value="Sick">Sick</SelectItem>
-                <SelectItem value="Dead/Beyond Recovery">Dead</SelectItem>
+                <SelectItem value="Dead/Beyond Recovery">Dead/Beyond Recovery</SelectItem>
               </SelectContent>
             </Select>
 
