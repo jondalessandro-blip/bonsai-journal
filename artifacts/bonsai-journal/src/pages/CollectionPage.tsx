@@ -24,6 +24,7 @@ const CLIMATE_LABELS: Record<string, string> = {
 const FOLIAGE_LABELS: Record<string, string> = {
   "Deciduous": "Deciduous",
   "Conifer": "Conifer",
+  "Deciduous Conifer": "Deciduous Con.",
   "Broadleaf Evergreen": "Broadleaf Evergr.",
   "Succulent / Desert": "Succulent",
 };
@@ -302,6 +303,7 @@ export default function CollectionPage() {
                 <SelectItem value="all">All Foliage</SelectItem>
                 <SelectItem value="Deciduous">Deciduous</SelectItem>
                 <SelectItem value="Conifer">Conifer</SelectItem>
+                <SelectItem value="Deciduous Conifer">Deciduous Con.</SelectItem>
                 <SelectItem value="Broadleaf Evergreen">Broadleaf Evergr.</SelectItem>
                 <SelectItem value="Succulent / Desert">Succulent</SelectItem>
               </SelectContent>
