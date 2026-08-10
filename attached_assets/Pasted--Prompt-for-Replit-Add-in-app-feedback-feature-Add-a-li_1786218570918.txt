@@ -1,0 +1,91 @@
+# Prompt for Replit: Add in-app feedback feature
+
+Add a lightweight feedback feature so signed-in users can submit feedback
+without leaving the app or needing a separate Replit account. Follow the
+existing patterns in this codebase closely — this should look and feel
+like a natural extension of it, not a bolted-on feature.
+
+## 1. Database
+
+Add a new schema file `lib/db/src/schema/feedback.ts`, following the same
+shape as `lib/db/src/schema/care_logs.ts`:
+
+```ts
+import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod/v4";
+
+export const feedbackTable = pgTable("feedback", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").notNull(),
+  category: text("category").notNull(), // "bug" | "idea" | "other"
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const insertFeedbackSchema = createInsertSchema(feedbackTable).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type Feedback = typeof feedbackTable.$inferSelect;
+```
+
+Register it in `lib/db/src/schema/index.ts` alongside the other tables, and
+run the appropriate command to push this schema change to the dev database
+(check `replit.md` for the exact command — it's the `db run push` script).
+
+## 2. API endpoint
+
+Add `POST /api/feedback` in the API server, following the same auth pattern
+as `artifacts/api-server/src/routes/user.ts` (`requireAuth` middleware,
+`userId` pulled from the authed request). Validate the request body with
+`insertFeedbackSchema`. On success, insert the row, then send an email
+notification (see step 3), and respond with the created record.
+
+## 3. Email notification
+
+Add the `resend` npm package to `artifacts/api-server`. Use it to send a
+plain-text email to a fixed address whenever feedback is submitted.
+
+- Read the recipient email and the Resend API key from environment
+  variables (e.g. `FEEDBACK_NOTIFY_EMAIL` and `RESEND_API_KEY`) — don't
+  hardcode either.
+- Email subject: `New feedback: [category]`. Body: the message text, the
+  submitting user's email (available from Clerk's auth context), and the
+  timestamp.
+- If sending the email fails, don't fail the whole request — the feedback
+  should still save even if the email notification fails. Log the error
+  server-side instead.
+- After this is built, tell me clearly that I need to set
+  `RESEND_API_KEY` and `FEEDBACK_NOTIFY_EMAIL` in Replit's Secrets pane
+  myself, and that I'll need to sign up for a free Resend account to get
+  an API key if I don't have one.
+
+## 4. Frontend
+
+Add a small floating feedback button, visible on every page (add it to
+`artifacts/bonsai-journal/src/components/Layout.tsx` so it wraps all
+routes). Style:
+- A small circular button fixed to the bottom-right corner of the screen,
+  consistent with the app's existing warm/neutral theme (reuse existing
+  Tailwind classes/design tokens — don't introduce new colors).
+- Clicking it opens a small dialog (use the existing `Dialog` component
+  from `src/components/ui/dialog.tsx`, same as other forms in this app)
+  with:
+  - A category selector: Bug / Idea / Other (use the existing `Select`
+    component, same pattern as `TreeForm.tsx`'s status/stage fields)
+  - A textarea for the message (use the existing `Textarea` component)
+  - A submit button that calls `POST /api/feedback`
+  - A success state (e.g. a brief "Thanks — got it!" confirmation) before
+    the dialog closes
+- Don't show this button on the landing page or auth screens — only on
+  authenticated app pages.
+
+## Constraints
+
+- Don't modify `careLogsTable`, `careRemindersTable`, or any other
+  existing schema.
+- Don't touch the video/landing page components.
+- Match existing code style and formatting throughout.

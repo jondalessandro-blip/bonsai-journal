@@ -1,0 +1,24 @@
+Let me check what's already there — I recall seeing task items in Replit's sidebar mentioning a "lightbox," which suggests there's already a full-screen photo viewer for the progression gallery.This is genuinely good news — you already have exactly the right foundation. Clicking a progression photo opens this `Lightbox` (full-screen overlay, closes on Escape/click-outside), so we're not building zoom from scratch — just adding pinch/scroll-to-zoom *inside* this existing component. That changes the answer to your cost question meaningfully.
+
+**Is it expensive?** Genuinely no — this is a well-scoped, moderate change, not a big lift:
+
+- **Desktop (scroll/click to zoom)**: straightforward — a bit of state to track zoom level and pan position, mouse wheel and drag handlers. No new dependencies needed, can be built with plain React.
+- **Mobile (pinch-to-zoom)**: touch gesture math (tracking two fingers, calculating pinch distance/pan) is fiddly to get exactly right by hand. The efficient path here is a small, well-established library rather than hand-rolling gesture detection — keeps it reliable across devices rather than reinventing pinch-math that's easy to get subtly wrong (janky, jumpy, or unresponsive zoom).
+
+Here's the prompt:
+
+"Add pinch-to-zoom (mobile) and scroll/click-to-zoom (desktop) to the existing `Lightbox` component (`artifacts/bonsai-journal/src/components/Lightbox.tsx`), used when viewing progression photos full-screen. This should only affect the Lightbox, not the hero image elsewhere in the app.
+
+Use a small, well-supported gesture/zoom library rather than hand-rolling touch math — check what's already a good fit for this React version, something commonly used for exactly this (image pan/zoom in a lightbox). Keep the bundle-size impact reasonable; this doesn't need pan-and-zoom features beyond basic zoom in/out and drag-to-pan once zoomed.
+
+Requirements:
+- Pinch gesture zooms in/out on mobile; two-finger drag pans while zoomed
+- Mouse wheel or a visible +/- control zooms in/out on desktop; click-and-drag pans while zoomed
+- Double-tap (mobile) / double-click (desktop) toggles between fit-to-screen and a reasonable zoomed-in level
+- Zoom/pan resets when the Lightbox closes or switches to a different photo
+- The existing close button, Escape-to-close, and click-outside-to-close behavior must keep working exactly as before — don't let zoom/pan gestures interfere with or accidentally trigger the close action
+- Keep the existing fade-in animation and overall visual style unchanged
+
+Don't modify `ProgressionGallery.tsx` or how the Lightbox gets triggered — only the Lightbox's internal zoom/pan behavior."
+
+This is scoped tightly enough that it should be a clean, contained addition — but flag one thing to me once it's done: **test the "doesn't interfere with closing" requirement carefully**, since gesture libraries and click-to-close handlers can sometimes fight each other (a drag-to-pan gesture accidentally registering as a click-outside-to-close). That's the one part of this I'd actually verify by hand on your phone before considering it done, using the "prove it, don't just claim it" approach from earlier.

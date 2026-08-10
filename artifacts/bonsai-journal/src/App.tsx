@@ -12,6 +12,7 @@ import CollectionPage from "@/pages/CollectionPage";
 import TreeDetailPage from "@/pages/TreeDetailPage";
 import NewTreePage from "@/pages/NewTreePage";
 import StatsPage from "@/pages/StatsPage";
+import FeedbackAdminPage from "@/pages/FeedbackAdminPage";
 import LandingPage from "@/pages/LandingPage";
 import VideoTemplate from "@/components/video/VideoTemplate";
 import { useSeedSampleTrees } from "@/hooks/useSeedSampleTrees";
@@ -92,7 +93,8 @@ const clerkAppearance = {
     footerAction: "bg-transparent",
     dividerLine: "bg-[hsl(30,15%,85%)]",
     alert: "border-[hsl(30,15%,85%)]",
-    otpCodeFieldInput: "bg-[hsl(30,15%,85%)] text-[hsl(24,20%,20%)] border-[hsl(30,15%,80%)]",
+    otpCodeFieldInput: "bg-[hsl(30,15%,85%)] text-[hsl(24,20%,20%)]",
+    otpCodeFieldInputContainer: "border border-[hsl(24,12%,55%)] focus-within:border-[hsl(125,25%,35%)] focus-within:ring-2 focus-within:ring-[hsl(125,25%,35%)]/30",
     formFieldRow: "",
     main: "",
   },
@@ -195,6 +197,13 @@ function Router() {
         <Protected>
           <Layout>
             <StatsPage />
+          </Layout>
+        </Protected>
+      </Route>
+      <Route path="/feedback-admin">
+        <Protected>
+          <Layout>
+            <FeedbackAdminPage />
           </Layout>
         </Protected>
       </Route>

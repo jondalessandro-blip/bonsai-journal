@@ -1,4 +1,5 @@
 import { Navbar } from "./Navbar";
+import { FeedbackButton } from "./FeedbackButton";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-6 lg:p-8">
         {children}
       </main>
+
+      <FeedbackButton />
     </div>
   );
 }

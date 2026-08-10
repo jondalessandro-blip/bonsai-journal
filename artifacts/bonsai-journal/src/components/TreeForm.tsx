@@ -423,6 +423,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                     <SelectContent>
                       <SelectItem value="Deciduous">Deciduous</SelectItem>
                       <SelectItem value="Conifer">Conifer</SelectItem>
+                      <SelectItem value="Deciduous Conifer">Deciduous Conifer</SelectItem>
                       <SelectItem value="Broadleaf Evergreen">Broadleaf Evergreen</SelectItem>
                       <SelectItem value="Succulent / Desert">Succulent / Desert</SelectItem>
                     </SelectContent>

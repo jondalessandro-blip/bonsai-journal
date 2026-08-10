@@ -16,7 +16,7 @@ const SAMPLE_TREES: Array<{
   status: string;
   tags: string[];
   notes: string;
-  acquiredDate: string;
+  acquiredDate?: string; // optional; entries that omit it receive `today` at seed time
   photoUrl: string;
   logs: Array<{ type: string; date: string; notes: string }>;
   reminders: Array<{ type: string; dueDate: string; notes: string }>;
@@ -67,6 +67,43 @@ const SAMPLE_TREES: Array<{
       { type: "Pruning", dueDate: "2025-06-01", notes: "Pinch new foliage pads to refine ramification." },
     ],
   },
+  {
+    name: "Little Red",
+    species: "Juniperus virginiana",
+    // acquiredDate omitted — resolved to `today` at seed time
+    climate: "Hardy / Outdoor",
+    foliage: "Conifer",
+    style: "Moyogi (模様木) — Informal Upright",
+    stage: "Trunk Development",
+    status: "Thriving",
+    tags: ["juniper", "sample", "native"],
+    photoUrl: "/sample-trees/cedar.jpg",
+    notes: `**Eastern Red Cedar** *Juniperus virginiana* — not a true cedar, it's a juniper. Evergreen scale/juvenile needle foliage, extremely tough, long-lived, and one of the best native North American species for bonsai, but with its own rules.
+
+This is a dry, sunny, alkaline, poor-soil pioneer. Treat it like a juniper, not like your maples or figs.
+
+### Light
+Full sun, absolute maximum — 8+ hours direct. Will not survive indoors, not even briefly. Shade produces weak, leggy juvenile foliage that never transitions to mature scale.
+
+### Watering & Soil
+Drought tolerant once established. Let the top 2-3cm dry between waterings, then soak thoroughly — overwatering kills faster than underwatering. Neutral to alkaline soil (pH 6.5-8.0). Classic juniper mix: 50% akadama + 25% pumice + 25% lava rock, or 1:1:1 akadama/pumice/lava. Must drain instantly.
+
+### Pruning
+Never treat like a larch — junipers die if stripped bare. Let this year's growth run wild to thicken the trunk; heavy structural work waits for late fall through early spring. Always leave green on a branch — this species rarely buds back from bare old wood.
+
+### Repotting
+Hates root disturbance — the most sensitive species in this collection. Young trees: every 2-3 years, in early-mid spring or September. Never bare-root, never remove more than 30-40% of the root mass.
+
+### Winter Care
+Hardy to Zone 2-3. Needs a real outdoor dormancy — never bring it inside. Protect roots from repeated freeze/thaw below -15°C by burying the pot to its rim or storing in an unheated garage with light.
+
+### Disease Watch
+Alternate host for cedar-apple rust. Remove orange jelly galls by hand in spring if apples, crabapples, or serviceberry grow nearby.
+
+**This is a long-term project tree.** Spend this first year building roots and trunk in a large grow pot, full sun, limestone grit. Next fall: select the trunk line, consider a jin from the sacrifice apex, and start wiring primary branches while the structure is still visible.`,
+    logs: [],
+    reminders: [],
+  },
 ];
 
 router.post("/user/seed", requireAuth, async (req: Request, res) => {
@@ -87,17 +124,18 @@ router.post("/user/seed", requireAuth, async (req: Request, res) => {
 
   for (const sample of SAMPLE_TREES) {
     const { logs, reminders, ...treeData } = sample;
+    const acquiredDate = treeData.acquiredDate ?? today;
 
     const [tree] = await db
       .insert(treesTable)
-      .values({ ...treeData, userId })
+      .values({ ...treeData, acquiredDate, userId })
       .returning();
 
     // Insert a cover photo so the tree detail hero shows the sample image
     await db.insert(treePhotosTable).values({
       treeId: tree.id,
       photoUrl: treeData.photoUrl,
-      takenAt: treeData.acquiredDate,
+      takenAt: acquiredDate,
     });
 
     if (logs.length > 0) {
