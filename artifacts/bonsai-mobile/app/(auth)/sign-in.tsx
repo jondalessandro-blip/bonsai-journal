@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,33 +10,14 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
-import * as AuthSession from 'expo-auth-session';
-import { useSignIn, useSSO } from '@clerk/expo';
+import { useSignIn } from '@clerk/expo';
 import { type Href, Link, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { Ionicons } from '@expo/vector-icons';
 
-// Completes any pending auth sessions left open on Android/web
-WebBrowser.maybeCompleteAuthSession();
-
-// Warms up the browser on Android for faster OAuth load
-function useWarmUpBrowser() {
-  useEffect(() => {
-    if (Platform.OS !== 'android') return;
-    void WebBrowser.warmUpAsync();
-    return () => {
-      void WebBrowser.coolDownAsync();
-    };
-  }, []);
-}
-
 export default function SignInPage() {
-  useWarmUpBrowser();
-
   const { signIn, errors, fetchStatus } = useSignIn();
-  const { startSSOFlow } = useSSO();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const colors = useColors();
@@ -45,7 +26,6 @@ export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const isLoading = fetchStatus === 'fetching';
 
@@ -67,29 +47,6 @@ export default function SignInPage() {
     }
   };
 
-  const handleGoogleSignIn = useCallback(async () => {
-    setGoogleLoading(true);
-    try {
-      const { createdSessionId, setActive } = await startSSOFlow({
-        strategy: 'oauth_google',
-        redirectUrl: AuthSession.makeRedirectUri({ scheme: 'bonsai-mobile' }),
-      });
-
-      if (createdSessionId && setActive) {
-        await setActive({
-          session: createdSessionId,
-          navigate: async ({ decorateUrl }) => {
-            router.replace(decorateUrl('/') as Href);
-          },
-        });
-      }
-    } catch (err) {
-      console.error('Google sign-in error:', JSON.stringify(err, null, 2));
-    } finally {
-      setGoogleLoading(false);
-    }
-  }, [startSSOFlow, router]);
-
   return (
     <KeyboardAvoidingView
       style={[styles.container, { paddingTop: insets.top }]}
@@ -107,33 +64,6 @@ export default function SignInPage() {
           </View>
           <Text style={styles.title}>Welcome back</Text>
           <Text style={styles.subtitle}>Sign in to your Bonsai Journal</Text>
-        </View>
-
-        {/* Google OAuth */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.googleButton,
-            pressed && styles.buttonPressed,
-            googleLoading && styles.buttonDisabled,
-          ]}
-          onPress={handleGoogleSignIn}
-          disabled={googleLoading}
-        >
-          {googleLoading ? (
-            <ActivityIndicator color={colors.foreground} />
-          ) : (
-            <>
-              <Ionicons name="logo-google" size={18} color={colors.foreground} style={styles.googleIcon} />
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
-            </>
-          )}
-        </Pressable>
-
-        {/* Divider */}
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
         </View>
 
         {/* Form */}
@@ -248,41 +178,6 @@ function makeStyles(colors: ReturnType<typeof import('@/hooks/useColors').useCol
     },
     subtitle: {
       fontSize: 15,
-      fontFamily: 'Outfit_400Regular',
-      color: colors.mutedForeground,
-    },
-    googleButton: {
-      height: 52,
-      borderRadius: 12,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 10,
-    },
-    googleIcon: {
-      marginRight: 2,
-    },
-    googleButtonText: {
-      fontSize: 15,
-      fontFamily: 'Outfit_600SemiBold',
-      color: colors.foreground,
-    },
-    divider: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginVertical: 20,
-      gap: 12,
-    },
-    dividerLine: {
-      flex: 1,
-      height: 1,
-      backgroundColor: colors.border,
-    },
-    dividerText: {
-      fontSize: 13,
       fontFamily: 'Outfit_400Regular',
       color: colors.mutedForeground,
     },
