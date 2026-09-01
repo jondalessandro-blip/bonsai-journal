@@ -1,0 +1,1 @@
+- [Transient Vite runtime reports](transient-vite-runtime-reports.md) — verify unknown sendError-only crashes against HMR reconnects before changing app code.
