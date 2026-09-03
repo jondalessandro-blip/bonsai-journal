@@ -3,21 +3,16 @@ import { Move, ZoomIn, ZoomOut, Check, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useListTreePhotos, useUpdateTree } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  DEFAULT_COVER_POSITION,
+  coverPositionStorageKey,
+  type CoverPosition,
+} from "@/lib/coverPosition";
 
-interface CoverPosition {
-  x: number;    // 0–100 (left → right)
-  y: number;    // 0–100 (top → bottom)
-  zoom: number; // 1.0 – 3.0
-}
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2.5;
 
-const DEFAULT_POS: CoverPosition = { x: 50, y: 50, zoom: 1 };
-const COVER_HEIGHT = 300;
-const MIN_ZOOM = 1;
-const MAX_ZOOM = 3;
-
-function lsKey(treeId: string) {
-  return `bonsai-cover-${treeId}`;
-}
+const DEFAULT_POS = DEFAULT_COVER_POSITION;
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
@@ -25,7 +20,7 @@ function clamp(v: number, lo: number, hi: number) {
 
 function loadPosition(treeId: string, serverPos: CoverPosition | null | undefined): CoverPosition {
   try {
-    const raw = localStorage.getItem(lsKey(treeId));
+    const raw = localStorage.getItem(coverPositionStorageKey(treeId));
     if (raw) return { ...DEFAULT_POS, ...JSON.parse(raw) };
   } catch { /* ignore */ }
   return serverPos ? { ...DEFAULT_POS, ...serverPos } : DEFAULT_POS;
@@ -53,9 +48,11 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
     loadPosition(treeId, serverCoverPosition)
   );
   const [draft, setDraft] = useState<CoverPosition>(pos);
+  const previousCoverUrl = useRef<string | undefined>(undefined);
 
   // Re-initialise when tree changes
   useEffect(() => {
+    previousCoverUrl.current = undefined;
     const p = loadPosition(treeId, serverCoverPosition);
     setPos(p);
     setDraft(p);
@@ -78,7 +75,7 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
     const next = { ...draft };
     setPos(next);
     setIsEditing(false);
-    try { localStorage.setItem(lsKey(treeId), JSON.stringify(next)); } catch { /* ignore */ }
+    try { localStorage.setItem(coverPositionStorageKey(treeId), JSON.stringify(next)); } catch { /* ignore */ }
     // Persist position AND sync cover photo fields so the collection
     // thumbnail always matches what's shown in the record header.
     updateTree.mutate(
@@ -104,9 +101,29 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
     setDraft(d => ({ ...d, ...preset }));
   };
 
+  // A new most-recent photo is a new cover and must not inherit the previous
+  // cover's focal point or zoom.
+  useEffect(() => {
+    if (!coverPhoto) return;
+    const coverUrl = coverPhoto.photoUrl;
+    if (previousCoverUrl.current === undefined) {
+      previousCoverUrl.current = coverUrl;
+      return;
+    }
+    if (previousCoverUrl.current === coverUrl) return;
+
+    previousCoverUrl.current = coverUrl;
+    const reset = { ...DEFAULT_POS };
+    setPos(reset);
+    setDraft(reset);
+    try {
+      localStorage.setItem(coverPositionStorageKey(treeId), JSON.stringify(reset));
+    } catch { /* ignore */ }
+  }, [coverPhoto?.photoUrl, treeId]);
+
   // Pointer drag
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isEditing) return;
+    if (!isEditing || draft.zoom <= 1) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     isDragging.current = true;
     dragAnchor.current = {
@@ -115,10 +132,10 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
       posX: draft.x,
       posY: draft.y,
     };
-  }, [isEditing, draft.x, draft.y]);
+  }, [isEditing, draft.zoom, draft.x, draft.y]);
 
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isEditing || !isDragging.current || !dragAnchor.current) return;
+    if (!isEditing || draft.zoom <= 1 || !isDragging.current || !dragAnchor.current) return;
     const container = containerRef.current;
     if (!container) return;
     // Capture ref values before entering the async state updater
@@ -154,15 +171,14 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
 
   return (
     <div
-      className="relative w-full rounded-xl overflow-hidden shadow-sm"
-      style={{ height: COVER_HEIGHT }}
+      className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-black shadow-sm"
     >
       {/* Photo layer */}
       <div
         ref={containerRef}
         className={[
           "absolute inset-0 select-none touch-none",
-          isEditing ? "cursor-grab active:cursor-grabbing" : "",
+          isEditing && current.zoom > 1 ? "cursor-grab active:cursor-grabbing" : "",
         ].join(" ")}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -175,8 +191,8 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
           draggable={false}
           className="w-full h-full pointer-events-none"
           style={{
-            objectFit: "cover",
-            objectPosition: `${current.x}% ${current.y}%`,
+            objectFit: current.zoom <= 1 ? "contain" : "cover",
+            objectPosition: current.zoom <= 1 ? "50% 50%" : `${current.x}% ${current.y}%`,
             transform: `scale(${current.zoom})`,
             transformOrigin: `${current.x}% ${current.y}%`,
             transition: isEditing ? "none" : "transform 0.4s ease, object-position 0.4s ease",
@@ -215,13 +231,16 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
                 min={MIN_ZOOM}
                 max={MAX_ZOOM}
                 step={0.05}
-                value={[draft.zoom]}
+                // Keep the fitted state visually at the left end. Zoom values
+                // below 1 remain available, but all of them use whole-image
+                // contain mode.
+                value={[draft.zoom <= 1 ? MIN_ZOOM : draft.zoom]}
                 onValueChange={([v]) => setDraft(d => ({ ...d, zoom: v }))}
                 className="flex-1"
               />
               <ZoomIn className="w-4 h-4 text-white/80 shrink-0" />
               <span className="text-white/80 text-xs font-mono w-9 text-right tabular-nums">
-                {Math.round(draft.zoom * 100)}%
+                {draft.zoom <= 1 ? "Fit" : `${Math.round(draft.zoom * 100)}%`}
               </span>
             </div>
 
@@ -242,7 +261,7 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
                 ☁️ Apex
               </button>
               <button
-                onClick={() => applyPreset({ zoom: 1, y: 50 })}
+                onClick={() => applyPreset({ zoom: 1, x: 50, y: 50 })}
                 className="text-xs bg-black/65 backdrop-blur-sm text-white rounded-lg px-2.5 py-1.5 hover:bg-black/80 transition-colors font-medium"
                 title="Fit Whole Tree"
               >

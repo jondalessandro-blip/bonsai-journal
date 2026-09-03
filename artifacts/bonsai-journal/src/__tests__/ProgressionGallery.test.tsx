@@ -428,8 +428,9 @@ describe("ProgressionGallery — photo upload flow", () => {
       data: {
         photoUrl: uploadResult.serveUrl,
         coverThumb: uploadResult.thumbUrl,
+        coverPosition: { x: 50, y: 50, zoom: 1 },
       },
-    });
+    }, expect.any(Object));
   });
 
   it("omits photoThumb and coverThumb when the upload returns no thumbUrl", async () => {
@@ -457,8 +458,11 @@ describe("ProgressionGallery — photo upload flow", () => {
 
     expect(mockUpdateTreeMutate).toHaveBeenCalledWith({
       id: "tree-abc",
-      data: { photoUrl: uploadResult.serveUrl },
-    });
+      data: {
+        photoUrl: uploadResult.serveUrl,
+        coverPosition: { x: 50, y: 50, zoom: 1 },
+      },
+    }, expect.any(Object));
     const [updateArgs] = mockUpdateTreeMutate.mock.calls[0];
     expect(updateArgs.data).not.toHaveProperty("coverThumb");
   });

@@ -18,6 +18,10 @@ import {
 } from "@workspace/api-client-react";
 import type { TreePhoto } from "@workspace/api-client-react";
 import { usePhotoUpload } from "@/hooks/use-photo-upload";
+import {
+  DEFAULT_COVER_POSITION,
+  coverPositionStorageKey,
+} from "@/lib/coverPosition";
 import { Lightbox } from "@/components/Lightbox";
 import { Button } from "@/components/ui/button";
 import { useNavigationGuard } from "@/hooks/use-navigation-guard";
@@ -100,13 +104,29 @@ export function ProgressionGallery({ treeId }: Props) {
 
       // Auto-promote to cover: new upload immediately becomes the top-of-record
       // hero AND the collection gallery thumbnail — no manual "Save Position" needed.
-      updateTree.mutate({
-        id: treeId,
-        data: {
-          photoUrl: result.serveUrl,
-          ...(result.thumbUrl ? { coverThumb: result.thumbUrl } : {}),
+      // Reset the focal point because it belongs to the previous cover image.
+      const defaultCoverPosition = { ...DEFAULT_COVER_POSITION };
+      try {
+        localStorage.setItem(
+          coverPositionStorageKey(treeId),
+          JSON.stringify(defaultCoverPosition),
+        );
+      } catch { /* ignore */ }
+      updateTree.mutate(
+        {
+          id: treeId,
+          data: {
+            photoUrl: result.serveUrl,
+            ...(result.thumbUrl ? { coverThumb: result.thumbUrl } : {}),
+            coverPosition: defaultCoverPosition,
+          },
         },
-      });
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId] });
+          },
+        },
+      );
     }
   };
 
