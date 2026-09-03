@@ -9,7 +9,8 @@ interface Props {
 }
 
 function urgencyClass(days: number) {
-  if (days <= 0) return "bg-destructive/10 text-destructive border-destructive/30";
+  if (days < 0) return "bg-destructive/10 text-destructive border-destructive/30";
+  if (days === 0) return "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-400/30";
   if (days <= 3) return "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-400/30";
   return "bg-background text-foreground border-border/50";
 }
@@ -23,6 +24,7 @@ function daysLabel(days: number) {
 
 export function UpcomingCarePanel({ reminders }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const overdueCount = reminders.filter((reminder) => reminder.daysUntilDue < 0).length;
 
   // Prevent body scroll when panel is fullscreen
   useEffect(() => {
@@ -53,14 +55,15 @@ export function UpcomingCarePanel({ reminders }: Props) {
             <div className="min-w-0">
               <p className="font-medium text-sm leading-tight">Upcoming Care Needed</p>
               <p className="text-xs opacity-70 leading-tight">
-                {reminders.length} task{reminders.length !== 1 ? "s" : ""} due soon
+                {overdueCount > 0 && `${overdueCount} overdue · `}
+                {reminders.length - overdueCount} upcoming task{reminders.length - overdueCount !== 1 ? "s" : ""}
               </p>
             </div>
           </div>
           <button
             onClick={() => setExpanded(true)}
             className="shrink-0 flex items-center gap-1.5 text-xs text-primary/80 hover:text-primary font-medium px-2.5 py-1.5 rounded-md hover:bg-primary/10 transition-colors"
-            aria-label="View all upcoming care tasks"
+            aria-label="View all upcoming and overdue care tasks"
           >
             <span className="hidden sm:inline">View all</span>
             <Maximize2 className="w-3.5 h-3.5" />
@@ -101,7 +104,8 @@ export function UpcomingCarePanel({ reminders }: Props) {
               <div>
                 <h2 className="font-serif text-lg leading-tight">Upcoming Care</h2>
                 <p className="text-xs text-muted-foreground">
-                  {reminders.length} task{reminders.length !== 1 ? "s" : ""} in the next 30 days
+                  {overdueCount > 0 && `${overdueCount} overdue · `}
+                  {reminders.length - overdueCount} upcoming task{reminders.length - overdueCount !== 1 ? "s" : ""}
                 </p>
               </div>
             </div>

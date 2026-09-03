@@ -679,7 +679,7 @@ router.get("/collection/stats", requireAuth, async (req, res): Promise<void> => 
   });
 });
 
-// ---- Upcoming reminders (scoped to current user) ----
+// ---- Upcoming and overdue reminders (scoped to current user) ----
 
 router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthedRequest).userId;
@@ -687,7 +687,6 @@ router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> =
   const in30 = new Date(today);
   in30.setDate(in30.getDate() + 30);
 
-  const todayStr = today.toISOString().slice(0, 10);
   const in30Str = in30.toISOString().slice(0, 10);
 
   const rows = await db
@@ -706,7 +705,6 @@ router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> =
       and(
         eq(treesTable.userId, userId),
         eq(careRemindersTable.completed, false),
-        sql`${careRemindersTable.dueDate} >= ${todayStr}`,
         sql`${careRemindersTable.dueDate} <= ${in30Str}`,
       ),
     )
