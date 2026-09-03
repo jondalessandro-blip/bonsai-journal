@@ -227,10 +227,46 @@ router.delete("/trees/:id", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const [tree] = await db
-    .delete(treesTable)
-    .where(and(eq(treesTable.id, params.data.id), eq(treesTable.userId, userId)))
-    .returning();
+  let tree: typeof treesTable.$inferSelect | undefined;
+
+  await db.transaction(async (tx) => {
+    const [ownedTree] = await tx
+      .select()
+      .from(treesTable)
+      .where(
+        and(
+          eq(treesTable.id, params.data.id),
+          eq(treesTable.userId, userId),
+        ),
+      )
+      .for("update");
+
+    if (!ownedTree) return;
+
+    // Delete related rows explicitly instead of relying only on FK cascade
+    // constraints, since older databases may not have those constraints.
+    await tx
+      .delete(careRemindersTable)
+      .where(eq(careRemindersTable.treeId, params.data.id));
+    await tx
+      .delete(careLogsTable)
+      .where(eq(careLogsTable.treeId, params.data.id));
+    await tx
+      .delete(treePhotosTable)
+      .where(eq(treePhotosTable.treeId, params.data.id));
+
+    const [deletedTree] = await tx
+      .delete(treesTable)
+      .where(
+        and(
+          eq(treesTable.id, params.data.id),
+          eq(treesTable.userId, userId),
+        ),
+      )
+      .returning();
+
+    tree = deletedTree;
+  });
 
   if (!tree) {
     res.status(404).json({ error: "Tree not found" });

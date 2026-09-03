@@ -85,7 +85,10 @@ export default function TreeDetailPage() {
     setConfirmDeleteTree(false);
     deleteTree.mutate({ id: tree.id }, {
       onSuccess: () => {
+        queryClient.removeQueries({ queryKey: ["/api/trees", tree.id] });
         queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/reminders/upcoming"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/collection/stats"] });
         setLocation("/");
       }
     });
