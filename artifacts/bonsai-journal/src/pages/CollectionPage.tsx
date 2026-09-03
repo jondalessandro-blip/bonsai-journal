@@ -20,6 +20,7 @@ const CUSTOM_TAGS_KEY = "bonsai_custom_tags";
 const CLIMATE_LABELS: Record<string, string> = {
   "Hardy / Outdoor": "Hardy / Outdoor",
   "Tropical & Subtropical": "Tropical & Subtropical",
+  "Hybrid / Other": "Hybrid / Other",
 };
 const FOLIAGE_LABELS: Record<string, string> = {
   "Deciduous": "Deciduous",
@@ -47,6 +48,7 @@ const CLIMATE_TRIGGER: Record<string, string> = {
   "all": "All Climates",
   "Hardy / Outdoor": "Hardy / Outdoor",
   "Tropical & Subtropical": "Tropical & Subtropical",
+  "Hybrid / Other": "Hybrid / Other",
 };
 const FOLIAGE_TRIGGER: Record<string, string> = {
   "all": "All Foliage",
@@ -323,6 +325,7 @@ export default function CollectionPage() {
                 <SelectItem value="all">All Climates</SelectItem>
                 <SelectItem value="Hardy / Outdoor">Hardy / Outdoor</SelectItem>
                 <SelectItem value="Tropical & Subtropical">Tropical & Subtropical</SelectItem>
+                <SelectItem value="Hybrid / Other">Hybrid / Other</SelectItem>
               </SelectContent>
             </Select>
             <Select value={foliage} onValueChange={setFoliage}>
