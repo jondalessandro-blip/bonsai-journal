@@ -8,13 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CareEventMultiSelect } from "@/components/CareEventMultiSelect";
+import { CARE_EVENT_TYPES } from "@/lib/care-events";
 import { useQueryClient } from "@tanstack/react-query";
 import { addDays, format } from "date-fns";
 import { useState } from "react";
 import { RotateCcw, AlertCircle, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
-  type: z.string().min(1, "Type is required"),
+  types: z.array(z.string()).min(1, "Select at least one care event"),
   date: z.string().min(1, "Date is required"),
   notes: z.string().optional(),
 });
@@ -45,11 +47,12 @@ export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
+  const [isLogging, setIsLogging] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: initialData?.type ?? "Watering",
+      types: [initialData?.type ?? "Watering"],
       date: initialData?.date
         ? initialData.date.split("T")[0]
         : new Date().toISOString().split("T")[0],
@@ -72,14 +75,41 @@ export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
     }
     if (isEdit) {
       updateLog.mutate(
-        { id: treeId, logId: initialData.id, data: values },
+        {
+          id: treeId,
+          logId: initialData.id,
+          data: {
+            type: values.types[0],
+            date: values.date,
+            notes: values.notes,
+          },
+        },
         { onSuccess: () => { invalidateAll(); onSuccess(); } }
       );
     } else {
-      createLog.mutate(
-        { id: treeId, data: values },
-        { onSuccess: () => { invalidateAll(); form.reset(); onSuccess(); } }
-      );
+      setSubmitError(null);
+      setIsLogging(true);
+      Promise.all(
+        values.types.map((type) =>
+          createLog.mutateAsync({
+            id: treeId,
+            data: {
+              type,
+              date: values.date,
+              notes: values.notes || undefined,
+            },
+          })
+        )
+      )
+        .then(() => {
+          invalidateAll();
+          form.reset();
+          onSuccess();
+        })
+        .catch(() => {
+          setSubmitError("Could not save all selected care events. Please try again.");
+        })
+        .finally(() => setIsLogging(false));
     }
   };
 
@@ -93,7 +123,7 @@ export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
       {
         id: treeId,
         data: {
-          type: values.type,
+          type: values.types[0],
           dueDate: plannedDate,
           notes: values.notes || undefined,
         },
@@ -129,7 +159,7 @@ export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
     );
   };
 
-  const isSaving = createLog.isPending || updateLog.isPending;
+  const isSaving = isLogging || createLog.isPending || updateLog.isPending;
 
   return (
     <Form {...form}>
@@ -139,26 +169,31 @@ export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="type"
+            name="types"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Action</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                {isEdit ? (
+                  <Select onValueChange={(value) => field.onChange([value])} value={field.value?.[0]}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {CARE_EVENT_TYPES.map((event) => (
+                        <SelectItem key={event} value={event}>{event}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <CareEventMultiSelect
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Watering">Watering</SelectItem>
-                    <SelectItem value="Pruning">Pruning</SelectItem>
-                    <SelectItem value="Repotting">Repotting</SelectItem>
-                    <SelectItem value="Fertilizing">Fertilizing</SelectItem>
-                    <SelectItem value="Wiring">Wiring</SelectItem>
-                    <SelectItem value="Winter Prep">Winter Prep</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -254,7 +289,7 @@ export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
               <RotateCcw className="w-4 h-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
               <p className="text-sm text-foreground leading-snug">
                 This will create a planned reminder for{" "}
-                <strong>{form.getValues("type")}</strong> due{" "}
+                <strong>{form.getValues("types").join(", ")}</strong> due{" "}
                 <strong>{plannedDate}</strong> and permanently remove this care log entry.
                 This cannot be undone.
               </p>

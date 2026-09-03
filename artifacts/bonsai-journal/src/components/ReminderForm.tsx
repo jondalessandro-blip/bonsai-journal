@@ -7,13 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CareEventMultiSelect } from "@/components/CareEventMultiSelect";
+import { CARE_EVENT_TYPES } from "@/lib/care-events";
 import { useQueryClient } from "@tanstack/react-query";
 import { addDays, format } from "date-fns";
 import { useState } from "react";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
-  type: z.string().min(1, "Type is required"),
+  types: z.array(z.string()).min(1, "Select at least one care event"),
   dueDate: z.string().min(1, "Due date is required"),
   notes: z.string().optional(),
 });
@@ -42,11 +44,12 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isScheduling, setIsScheduling] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: initialData?.type ?? "Watering",
+      types: [initialData?.type ?? "Watering"],
       dueDate: initialData?.dueDate
         ? initialData.dueDate.split("T")[0]
         : format(addDays(new Date(), 7), "yyyy-MM-dd"),
@@ -70,14 +73,41 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
     }
     if (isEdit) {
       updateReminder.mutate(
-        { id: treeId, reminderId: initialData.id, data: values },
+        {
+          id: treeId,
+          reminderId: initialData.id,
+          data: {
+            type: values.types[0],
+            dueDate: values.dueDate,
+            notes: values.notes,
+          },
+        },
         { onSuccess: () => { invalidateAll(); onSuccess(); } }
       );
     } else {
-      createReminder.mutate(
-        { id: treeId, data: values },
-        { onSuccess: () => { invalidateAll(); form.reset(); onSuccess(); } }
-      );
+      setSubmitError(null);
+      setIsScheduling(true);
+      Promise.all(
+        values.types.map((type) =>
+          createReminder.mutateAsync({
+            id: treeId,
+            data: {
+              type,
+              dueDate: values.dueDate,
+              notes: values.notes || undefined,
+            },
+          })
+        )
+      )
+        .then(() => {
+          invalidateAll();
+          form.reset();
+          onSuccess();
+        })
+        .catch(() => {
+          setSubmitError("Could not schedule all selected care events. Please try again.");
+        })
+        .finally(() => setIsScheduling(false));
     }
   };
 
@@ -91,7 +121,7 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
       {
         id: treeId,
         data: {
-          type: values.type,
+          type: values.types[0],
           date: performedDate,
           notes: values.notes || undefined,
         },
@@ -128,7 +158,7 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
     );
   };
 
-  const isSaving = createReminder.isPending || updateReminder.isPending;
+  const isSaving = isScheduling || createReminder.isPending || updateReminder.isPending;
 
   return (
     <Form {...form}>
@@ -138,26 +168,31 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="type"
+            name="types"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Task</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                {isEdit ? (
+                  <Select onValueChange={(value) => field.onChange([value])} value={field.value?.[0]}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {CARE_EVENT_TYPES.map((event) => (
+                        <SelectItem key={event} value={event}>{event}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <CareEventMultiSelect
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Watering">Watering</SelectItem>
-                    <SelectItem value="Pruning">Pruning</SelectItem>
-                    <SelectItem value="Repotting">Repotting</SelectItem>
-                    <SelectItem value="Fertilizing">Fertilizing</SelectItem>
-                    <SelectItem value="Wiring">Wiring</SelectItem>
-                    <SelectItem value="Winter Prep">Winter Prep</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -251,7 +286,7 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
               <CheckCircle2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
               <p className="text-sm text-foreground leading-snug">
                 This will permanently log{" "}
-                <strong>{form.getValues("type")}</strong> on{" "}
+                <strong>{form.getValues("types").join(", ")}</strong> on{" "}
                 <strong>{performedDate}</strong> and remove this planned care item.
                 This cannot be undone.
               </p>
