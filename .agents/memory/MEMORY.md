@@ -1,1 +1,2 @@
 - [Transient Vite runtime reports](transient-vite-runtime-reports.md) — verify unknown sendError-only crashes against HMR reconnects before changing app code.
+- [PWA app-shell updates](pwa-app-shell-updates.md) — keep app-shell requests network-first and remove old caches so deployments cannot remain hidden behind stale bundles.
