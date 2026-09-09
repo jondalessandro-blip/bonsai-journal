@@ -3,7 +3,7 @@ import { useParams, useLocation, Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText, Activity } from "lucide-react";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText, Activity, Copy, Sprout } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { TreeForm, type TreeFormHandle } from "@/components/TreeForm";
@@ -15,6 +15,7 @@ import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
+import { buildTreePrefill } from "@/pages/NewTreePage";
 
 export default function TreeDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -80,6 +81,15 @@ export default function TreeDetailPage() {
   if (!tree) return <div className="p-8 text-center">Tree not found.</div>;
 
   const handleDelete = () => setConfirmDeleteTree(true);
+
+  const handlePlantAnother = () => {
+    setLocation("/trees/new");
+  };
+
+  const handleDuplicate = () => {
+    sessionStorage.setItem("bonsai:clonePrefill", JSON.stringify(buildTreePrefill(tree)));
+    setLocation("/trees/new");
+  };
 
   const confirmDoDeleteTree = () => {
     setConfirmDeleteTree(false);
@@ -156,7 +166,7 @@ export default function TreeDetailPage() {
           <h1 className="text-3xl md:text-4xl font-serif text-foreground mb-1">{tree.name}</h1>
           {tree.species && <p className="text-lg md:text-xl italic text-muted-foreground">{tree.species}</p>}
         </div>
-        <div className="flex gap-2 shrink-0 pt-1">
+        <div className="flex flex-wrap justify-end gap-2 shrink-0 pt-1">
           <UnsavedChangesDialog
             open={showEditGuard}
             onSaveAndLeave={() => {
@@ -198,6 +208,14 @@ export default function TreeDetailPage() {
               />
             </DialogContent>
           </Dialog>
+          <Button variant="outline" size="sm" onClick={handlePlantAnother}>
+            <Sprout className="w-4 h-4 mr-2" />
+            Plant Another Tree
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDuplicate}>
+            <Copy className="w-4 h-4 mr-2" />
+            Add Duplicate Tree
+          </Button>
           <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive border-transparent" onClick={handleDelete}>
             <Trash2 className="w-4 h-4" />
           </Button>

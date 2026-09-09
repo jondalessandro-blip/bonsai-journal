@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { Tree } from "@workspace/api-client-react";
 import { TreeForm } from "@/components/TreeForm";
 import type { TreePrefillData } from "@/components/TreeForm";
@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Leaf } from "lucide-react";
 
 /** Fields duplicated from a saved tree — excludes identity / time-specific values. */
-function buildPrefill(tree: Tree): TreePrefillData {
+export function buildTreePrefill(tree: Tree): TreePrefillData {
   return {
     species: tree.species ?? undefined,
     climate:  tree.climate  ?? undefined,
@@ -24,13 +24,27 @@ export default function NewTreePage() {
   const [formKey, setFormKey] = useState(0);
   const [prefillData, setPrefillData] = useState<TreePrefillData | undefined>(undefined);
 
+  useEffect(() => {
+    const storedPrefill = sessionStorage.getItem("bonsai:clonePrefill");
+    if (!storedPrefill) return;
+
+    sessionStorage.removeItem("bonsai:clonePrefill");
+
+    try {
+      setPrefillData(JSON.parse(storedPrefill) as TreePrefillData);
+      setFormKey((k) => k + 1);
+    } catch {
+      // Ignore invalid one-time prefill data and keep the blank new-tree form.
+    }
+  }, []);
+
   const handlePlantAnother = useCallback(() => {
     setPrefillData(undefined);
     setFormKey((k) => k + 1);
   }, []);
 
   const handleDuplicate = useCallback((savedTree: Tree) => {
-    setPrefillData(buildPrefill(savedTree));
+    setPrefillData(buildTreePrefill(savedTree));
     setFormKey((k) => k + 1);
   }, []);
 

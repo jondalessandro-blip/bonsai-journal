@@ -232,6 +232,8 @@ export function BonsaiStylePicker({
           <span className="truncate">
             {selected.romanized} — {selected.english}
           </span>
+        ) : value ? (
+          <span className="truncate">{value}</span>
         ) : (
           <SelectValue placeholder={placeholder} />
         )}
@@ -245,6 +247,10 @@ export function BonsaiStylePicker({
         <SelectItem value={CLEAR_VALUE} className="text-muted-foreground italic">
           — None —
         </SelectItem>
+
+        {value && !selected && (
+          <SelectItem value={value}>{value}</SelectItem>
+        )}
 
         {STYLE_GROUPS.map((group) => (
           <SelectGroup key={group.label}>

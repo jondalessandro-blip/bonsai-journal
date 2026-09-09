@@ -32,6 +32,20 @@ const TREE_STATUSES = [
   "Dead/Beyond Recovery",
 ] as const;
 
+const TREE_CLIMATES = [
+  "Hardy / Outdoor",
+  "Tropical & Subtropical",
+  "Hybrid/Other",
+] as const;
+
+const TREE_FOLIAGE_TYPES = [
+  "Deciduous",
+  "Conifer",
+  "Deciduous Conifer",
+  "Broadleaf Evergreen",
+  "Succulent / Desert",
+] as const;
+
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   species: z.string().optional(),
@@ -336,6 +350,9 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      {field.value && !TREE_STATUSES.some((status) => status === field.value) && (
+                        <SelectItem value={field.value}>{field.value}</SelectItem>
+                      )}
                       {TREE_STATUSES.map((s) => (
                         <SelectItem key={s} value={s}>{s}</SelectItem>
                       ))}
@@ -359,6 +376,9 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      {field.value && !BONSAI_STAGES.some((stage) => stage === field.value) && (
+                        <SelectItem value={field.value}>{field.value}</SelectItem>
+                      )}
                       {BONSAI_STAGES.map((s, i) => (
                         <SelectItem key={s} value={s}>
                           {i + 1}. {s}
@@ -384,9 +404,12 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Hardy / Outdoor">Hardy / Outdoor</SelectItem>
-                      <SelectItem value="Tropical & Subtropical">Tropical &amp; Subtropical</SelectItem>
-                      <SelectItem value="Hybrid/Other">Hybrid/Other</SelectItem>
+                      {field.value && !TREE_CLIMATES.some((climate) => climate === field.value) && (
+                        <SelectItem value={field.value}>{field.value}</SelectItem>
+                      )}
+                      {TREE_CLIMATES.map((climate) => (
+                        <SelectItem key={climate} value={climate}>{climate}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -422,11 +445,12 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Deciduous">Deciduous</SelectItem>
-                      <SelectItem value="Conifer">Conifer</SelectItem>
-                      <SelectItem value="Deciduous Conifer">Deciduous Conifer</SelectItem>
-                      <SelectItem value="Broadleaf Evergreen">Broadleaf Evergreen</SelectItem>
-                      <SelectItem value="Succulent / Desert">Succulent / Desert</SelectItem>
+                      {field.value && !TREE_FOLIAGE_TYPES.some((foliage) => foliage === field.value) && (
+                        <SelectItem value={field.value}>{field.value}</SelectItem>
+                      )}
+                      {TREE_FOLIAGE_TYPES.map((foliage) => (
+                        <SelectItem key={foliage} value={foliage}>{foliage}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

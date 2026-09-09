@@ -1,0 +1,28 @@
+Good catch — yes, for consistency they should match exactly. The current labels on the new-record page are **"Plant Another Tree"** and **"Add Duplicate Tree"** (not "Add Another Tree" / "Clone Tree" — those were just my shorthand for describing them to you). Using the same labels in both places means the buttons look and behave identically no matter which page you're on, and it avoids the agent (or a future you) wondering if "Clone Tree" and "Add Duplicate Tree" are two different features.
+
+Here's the corrected prompt — same logic as before, just the button labels fixed:
+
+---
+
+```
+In the bonsai-journal repo (dev branch), add two action buttons to the tree detail page (client/src/pages/TreeDetailPage.tsx), in the top action row next to the existing "Edit" and delete buttons: "Plant Another Tree" and "Add Duplicate Tree" — using the exact same labels as the buttons already shown on the new-tree form (in TreeForm.tsx), so the wording is consistent across the app.
+
+1. In NewTreePage.tsx, export the existing `buildPrefill(tree)` function (rename the export if needed, e.g. `buildTreePrefill`) so it can be imported and reused from other pages, instead of being a private local function.
+
+2. In TreeDetailPage.tsx, add two buttons in the top action row, matching the existing Button styling/size used for "Edit":
+
+   a. "Plant Another Tree" — uses the Sprout icon from lucide-react (same icon as in TreeForm.tsx). On click, simply navigate to /trees/new using the existing `setLocation` from wouter (blank form, no prefill — same destination as the "Add Tree" link already on the Collection page).
+
+   b. "Add Duplicate Tree" — uses the Copy icon from lucide-react (same icon as in TreeForm.tsx). On click:
+      - Call the shared `buildTreePrefill(tree)` helper using the currently loaded tree.
+      - Store the resulting object as JSON in sessionStorage under the key "bonsai:clonePrefill".
+      - Navigate to /trees/new using `setLocation`.
+
+3. In NewTreePage.tsx, on mount (inside a useEffect that runs once), check sessionStorage for the "bonsai:clonePrefill" key:
+   - If present, parse it, set it as the initial `prefillData` state (so the form opens pre-filled and the page shows the existing "Add Duplicate Tree" heading/description, same as the current in-page duplicate flow), and then remove the key from sessionStorage immediately after reading it so a page refresh doesn't reapply stale data.
+   - If not present, keep the current default behavior (blank "Plant a New Seed" form).
+
+Do not change the existing in-page "Plant Another Tree" / "Add Duplicate Tree" buttons inside TreeForm.tsx (the ones shown inside the Edit dialog's form) — leave those exactly as they are. The two new buttons on the detail page are separate entry points into the same /trees/new flow, placed outside the Edit dialog so they're visible whether the user is just viewing the tree or has the edit dialog open.
+
+After making the change, confirm by actually navigating to an existing tree's detail page in the browser: click "Plant Another Tree" and verify /trees/new loads blank; then go back, click "Add Duplicate Tree" and verify /trees/new loads pre-populated with that tree's species/status/stage/climate/foliage/style/notes/tags — not just by reviewing the code.
+```
