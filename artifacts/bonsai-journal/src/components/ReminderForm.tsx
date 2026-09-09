@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateTreeReminder, useUpdateTreeReminder, useCreateTreeLog, useDeleteTreeReminder } from "@workspace/api-client-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -220,7 +221,11 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
             <FormItem>
               <FormLabel>Notes (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Specific instructions..." {...field} />
+                <Textarea
+                  className="min-h-[120px]"
+                  placeholder="Specific instructions..."
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

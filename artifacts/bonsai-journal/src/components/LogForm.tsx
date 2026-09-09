@@ -221,7 +221,11 @@ export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
             <FormItem>
               <FormLabel>Notes (Optional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="What was done? How did it respond?" {...field} />
+                <Textarea
+                  className="min-h-[120px]"
+                  placeholder="What was done? How did it respond?"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
