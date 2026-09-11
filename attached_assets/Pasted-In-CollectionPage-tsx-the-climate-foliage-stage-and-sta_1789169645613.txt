@@ -1,0 +1,56 @@
+In CollectionPage.tsx, the climate, foliage, stage, and status filters are currently single-value Select dropdowns. I want to convert all four into multi-select popovers, matching the existing tags popover pattern already in this file, each with an independent Include and Exclude mode toggle. I also need TreeDetailPage.tsx's filter-parsing logic updated to match, since the backend already expects these as arrays, plus optional Exclude variants named climateExclude, foliageExclude, stageExclude, statusExclude.
+
+PART 1, CollectionPage.tsx
+
+Step 1: Remove the import of Select, SelectContent, SelectItem, SelectTrigger, SelectValue, since they will no longer be used.
+
+Step 2: Replace the four constants named CLIMATE_TRIGGER, FOLIAGE_TRIGGER, STAGE_TRIGGER, and STATUS_TRIGGER with plain option-value arrays. Keep the existing CLIMATE_LABELS, FOLIAGE_LABELS, STAGE_LABELS, and STATUS_LABELS constants exactly as they are, since those are still used for display.
+
+const CLIMATE_OPTIONS = ["Hardy / Outdoor", "Tropical & Subtropical", "Hybrid/Other"];
+const FOLIAGE_OPTIONS = ["Deciduous", "Conifer", "Deciduous Conifer", "Broadleaf Evergreen", "Succulent / Desert"];
+const STAGE_OPTIONS = ["Establishment", "Trunk Development", "Primary Branch Development", "Ramification & Refinement"];
+const STAGE_ITEM_LABELS: Record<string, string> = { "Establishment": "1. Establishment", "Trunk Development": "2. Trunk Development", "Primary Branch Development": "3. Primary Branch Development", "Ramification & Refinement": "4. Ramification & Refinement" };
+const STATUS_OPTIONS = ["Thriving", "Dormant", "Stressed/In Distress", "Sick", "Dead/Beyond Recovery"];
+
+Step 3: Add this type and helper function above the component:
+
+type FilterState = { values: string[]; mode: "include" | "exclude" };
+
+function deriveFilterState(params: URLSearchParams, field: string): FilterState { const excludeRaw = params.get(field + "Exclude"); if (excludeRaw) return { values: excludeRaw.split(","), mode: "exclude" }; const includeRaw = params.get(field); if (includeRaw) return { values: includeRaw.split(","), mode: "include" }; return { values: [], mode: "include" }; }
+
+Step 4: Replace the four existing single-value state lines for climate, foliage, stage, and status (the ones using useState of type string, initialized to "all" or from a single URL param) with these six lines:
+
+const [climateFilter, setClimateFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "climate"));
+const [foliageFilter, setFoliageFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "foliage"));
+const [stageFilter, setStageFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "stage"));
+const [statusFilter, setStatusFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "status"));
+const [climateOpen, setClimateOpen] = useState(false);
+const [foliageOpen, setFoliageOpen] = useState(false);
+const [stageOpen, setStageOpen] = useState(false);
+const [statusOpen, setStatusOpen] = useState(false);
+
+Step 5: Add this helper function near the existing toggleTag function:
+
+function toggleFilterValue(setter: React.Dispatch<React.SetStateAction<FilterState>>, value: string) { setter((prev) => ({ ...prev, values: prev.values.includes(value) ? prev.values.filter((v) => v !== value) : [...prev.values, value] })); }
+
+Step 6: Replace the URL-sync useEffect (the one that builds a URLSearchParams from debouncedSearch, climate, foliage, stage, status, and selectedTags, then calls setLocation) with this version:
+
+useEffect(() => { const params = new URLSearchParams(); if (debouncedSearch) params.set("search", debouncedSearch); const applyFilter = (field: string, filter: FilterState) => { if (filter.values.length === 0) return; params.set(filter.mode === "exclude" ? field + "Exclude" : field, filter.values.join(",")); }; applyFilter("climate", climateFilter); applyFilter("foliage", foliageFilter); applyFilter("stage", stageFilter); applyFilter("status", statusFilter); if (selectedTags.length > 0) params.set("tags", selectedTags.join(",")); const qs = params.toString(); setLocation(qs ? "/?" + qs : "/", { replace: false }); }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
+
+Step 7: Replace hasActiveFilters and activeFilterCount so they reference climateFilter.values.length, foliageFilter.values.length, stageFilter.values.length, and statusFilter.values.length (each greater than zero) instead of the old climate !== "all" style checks.
+
+Step 8: Replace clearAllFilters so it resets each of climateFilter, foliageFilter, stageFilter, and statusFilter back to { values: [], mode: "include" }, in addition to resetting search and selectedTags as before.
+
+Step 9: Replace the queryParams useMemo (the object passed into listTrees) so that for each of climate, foliage, stage, and status, it sends the plain field name when that filter's mode is "include" and has values, or the field name plus "Exclude" when the mode is "exclude" and has values, otherwise undefined. For example, climate should be climateFilter.mode === "include" && climateFilter.values.length > 0 ? climateFilter.values : undefined, and climateExclude should be climateFilter.mode === "exclude" && climateFilter.values.length > 0 ? climateFilter.values : undefined. Apply the same pattern for foliage/foliageExclude, stage/stageExclude, and status/statusExclude.
+
+Step 10: Replace the navFilterQuery useMemo with the same applyFilter-based approach used in Step 6's useEffect (building a URLSearchParams from debouncedSearch, the four FilterState objects via the same applyFilter helper logic, and selectedTags), returning params.toString() instead of calling setLocation.
+
+Step 11: In the collapsible filter panel, replace the four Select-based dropdowns for climate, foliage, stage, and status with popovers matching the structure of the existing tags popover in this same file (Popover, PopoverTrigger with a Button showing the filter name and a count badge when active, PopoverContent with a checkbox-style list). Each popover's content should include, above the option list, a small two-button Include and Exclude mode toggle that calls setClimateFilter (or the equivalent for that field) to update the mode field, and the option list should call toggleFilterValue to add or remove values. Use CLIMATE_OPTIONS with CLIMATE_LABELS for display text in the climate popover, FOLIAGE_OPTIONS with FOLIAGE_LABELS for foliage, STAGE_OPTIONS with STAGE_ITEM_LABELS for stage specifically (so the numbered prefixes still show), and STATUS_OPTIONS with STATUS_LABELS for status. When a filter's mode is exclude, the trigger button's label should show "Not: " followed by the filter name instead of just the filter name.
+
+Step 12: Replace the four active-filter chip blocks for climate, foliage, stage, and status (the ones that currently check for a single value not equal to "all") with a version that renders one chip per selected value in that filter's values array, using each field's own LABELS map for the chip text, prefixed with "Not " when that filter's mode is "exclude", with an X button that calls toggleFilterValue to remove just that one value.
+
+PART 2, TreeDetailPage.tsx
+
+Replace the navFilters block (the one built from useSearch and URLSearchParams, currently returning search, climate, foliage, stage, status, and tags as single values or a plain array for tags) with a version that parses climate, climateExclude, foliage, foliageExclude, stage, stageExclude, status, statusExclude, and tags all as comma-split arrays (or undefined if the URL param is absent), using a small local helper function that reads a URLSearchParams key and splits it on commas if present.
+
+Do not change any other logic, components, or files. After making these changes, commit the changes on the dev branch, no need to push since I will push manually, then run git log -1 and paste that exact terminal output for verification.
