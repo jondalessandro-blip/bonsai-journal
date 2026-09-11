@@ -1,0 +1,17 @@
+This app has a real OpenAPI spec at lib/api-spec/openapi.yaml, which generates Zod schemas (lib/api-zod) and an API client (lib/api-client-react) via orval codegen. The generated files must never be hand-edited — always edit the spec and regenerate.
+
+Currently, the GET /trees endpoint's climate, foliage, stage, and status query params each accept a single string value (exact match). I want each of them to support multiple values (OR logic — a tree matches if its value is any of the selected ones), plus an independent "exclude" mode per filter (a tree matches if its value is NONE of the excluded ones).
+
+Please make these changes:
+
+1. In lib/api-spec/openapi.yaml, under the GET /trees operation, change the existing `climate`, `foliage`, `stage`, and `status` query parameters from `schema: { type: string }` to array-style params matching how the existing `tags` parameter is defined (`schema: { type: array, items: { type: string } }`, `style: form`, `explode: false`).
+
+2. Add four new query parameters to the same operation: `climateExclude`, `foliageExclude`, `stageExclude`, `statusExclude` — each defined the same array style as above, with a description noting it's the list of values to exclude (NOT IN logic) for that field.
+
+3. From the repo root, run `pnpm --filter @workspace/api-spec run codegen` to regenerate the Zod schemas and API client from the updated spec. Confirm this completes without errors.
+
+4. In artifacts/api-server/src/routes/trees.ts, in the GET /trees handler:
+   a. Add `inArray`, `notInArray`, and `isNull` to the existing drizzle-orm import.
+   b. The handler already normalizes `tags` from a comma-joined string into an array before schema validation (in the `rawQuery` block). Apply that exact same normalization to `climate`, `foliage`, `stage`, `status`, `climateExclude`, `foliageExclude`, `stageExclude`, and `statusExclude`.
+   c. Update the destructuring of `query.data` to pull these eight fields (they'll now be `string[] | undefined`), and build a trimmed, non-empty array for each (following the same pattern already used for `tagsList`).
+   d. Replace the current four conditions:

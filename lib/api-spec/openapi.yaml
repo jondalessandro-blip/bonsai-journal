@@ -101,16 +101,64 @@ paths:
           schema: { type: string }
         - name: climate
           in: query
-          schema: { type: string }
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
         - name: foliage
           in: query
-          schema: { type: string }
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
         - name: stage
           in: query
-          schema: { type: string }
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
         - name: status
           in: query
-          schema: { type: string }
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - name: climateExclude
+          in: query
+          description: List of climate values to exclude (NOT IN logic).
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - name: foliageExclude
+          in: query
+          description: List of foliage values to exclude (NOT IN logic).
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - name: stageExclude
+          in: query
+          description: List of stage values to exclude (NOT IN logic).
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - name: statusExclude
+          in: query
+          description: List of status values to exclude (NOT IN logic).
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
         - name: tag
           in: query
           schema: { type: string }

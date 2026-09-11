@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, asc, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, notInArray, or, sql } from "drizzle-orm";
 import { db, treesTable, careLogsTable, careRemindersTable, treePhotosTable } from "@workspace/db";
 import {
   ListTreesQueryParams,
@@ -59,8 +59,20 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
   // Express only produces an actual array when the same query key repeats, so normalize
   // a string value into an array here before schema validation.
   const rawQuery: Record<string, unknown> = { ...req.query };
-  if (typeof rawQuery.tags === "string") {
-    rawQuery.tags = rawQuery.tags.split(",").map(t => t.trim()).filter(Boolean);
+  for (const field of [
+    "tags",
+    "climate",
+    "foliage",
+    "stage",
+    "status",
+    "climateExclude",
+    "foliageExclude",
+    "stageExclude",
+    "statusExclude",
+  ]) {
+    if (typeof rawQuery[field] === "string") {
+      rawQuery[field] = rawQuery[field].split(",").map(t => t.trim()).filter(Boolean);
+    }
   }
 
   const query = ListTreesQueryParams.safeParse(rawQuery);
@@ -69,7 +81,21 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const { search, climate, foliage, stage, status, tag, tags: tagsParam, limit, offset } = query.data;
+  const {
+    search,
+    climate,
+    foliage,
+    stage,
+    status,
+    climateExclude,
+    foliageExclude,
+    stageExclude,
+    statusExclude,
+    tag,
+    tags: tagsParam,
+    limit,
+    offset,
+  } = query.data;
 
   // `tags` is now a string[] from the generated query schema.
   // `tag` is a single-value legacy alias; merge both into one list.
@@ -77,6 +103,14 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
     ...(tagsParam ?? []),
     ...(tag ? [tag] : []),
   ].map(t => t.trim()).filter(Boolean);
+  const climateList = (climate ?? []).map(value => value.trim()).filter(Boolean);
+  const foliageList = (foliage ?? []).map(value => value.trim()).filter(Boolean);
+  const stageList = (stage ?? []).map(value => value.trim()).filter(Boolean);
+  const statusList = (status ?? []).map(value => value.trim()).filter(Boolean);
+  const climateExcludeList = (climateExclude ?? []).map(value => value.trim()).filter(Boolean);
+  const foliageExcludeList = (foliageExclude ?? []).map(value => value.trim()).filter(Boolean);
+  const stageExcludeList = (stageExclude ?? []).map(value => value.trim()).filter(Boolean);
+  const statusExcludeList = (statusExclude ?? []).map(value => value.trim()).filter(Boolean);
 
   const pageSize = Math.min(limit ?? 48, 200);
   const pageOffset = offset ?? 0;
@@ -91,10 +125,22 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
       )!,
     );
   }
-  if (climate) conditions.push(eq(treesTable.climate, climate));
-  if (foliage) conditions.push(eq(treesTable.foliage, foliage));
-  if (stage) conditions.push(eq(treesTable.stage, stage));
-  if (status) conditions.push(eq(treesTable.status, status));
+  if (climateList.length > 0) conditions.push(inArray(treesTable.climate, climateList));
+  if (climateExcludeList.length > 0) {
+    conditions.push(or(isNull(treesTable.climate), notInArray(treesTable.climate, climateExcludeList))!);
+  }
+  if (foliageList.length > 0) conditions.push(inArray(treesTable.foliage, foliageList));
+  if (foliageExcludeList.length > 0) {
+    conditions.push(or(isNull(treesTable.foliage), notInArray(treesTable.foliage, foliageExcludeList))!);
+  }
+  if (stageList.length > 0) conditions.push(inArray(treesTable.stage, stageList));
+  if (stageExcludeList.length > 0) {
+    conditions.push(or(isNull(treesTable.stage), notInArray(treesTable.stage, stageExcludeList))!);
+  }
+  if (statusList.length > 0) conditions.push(inArray(treesTable.status, statusList));
+  if (statusExcludeList.length > 0) {
+    conditions.push(or(isNull(treesTable.status), notInArray(treesTable.status, statusExcludeList))!);
+  }
   if (tagsList.length > 0) {
     conditions.push(and(...tagsList.map(t =>
       sql`EXISTS (SELECT 1 FROM unnest(${treesTable.tags}) AS _t WHERE _t ILIKE ${t})`

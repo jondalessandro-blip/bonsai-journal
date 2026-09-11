@@ -8,10 +8,26 @@
 
 export type ListTreesParams = {
 search?: string;
-climate?: string;
-foliage?: string;
-stage?: string;
-status?: string;
+climate?: string[];
+foliage?: string[];
+stage?: string[];
+status?: string[];
+/**
+ * List of climate values to exclude (NOT IN logic).
+ */
+climateExclude?: string[];
+/**
+ * List of foliage values to exclude (NOT IN logic).
+ */
+foliageExclude?: string[];
+/**
+ * List of stage values to exclude (NOT IN logic).
+ */
+stageExclude?: string[];
+/**
+ * List of status values to exclude (NOT IN logic).
+ */
+statusExclude?: string[];
 tag?: string;
 /**
  * Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder.

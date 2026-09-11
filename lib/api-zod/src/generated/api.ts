@@ -60,10 +60,14 @@ export const HealthCheckResponse = zod.object({
  */
 export const ListTreesQueryParams = zod.object({
   "search": zod.coerce.string().optional(),
-  "climate": zod.coerce.string().optional(),
-  "foliage": zod.coerce.string().optional(),
-  "stage": zod.coerce.string().optional(),
-  "status": zod.coerce.string().optional(),
+  "climate": zod.array(zod.coerce.string()).optional(),
+  "foliage": zod.array(zod.coerce.string()).optional(),
+  "stage": zod.array(zod.coerce.string()).optional(),
+  "status": zod.array(zod.coerce.string()).optional(),
+  "climateExclude": zod.array(zod.coerce.string()).optional().describe('List of climate values to exclude (NOT IN logic).'),
+  "foliageExclude": zod.array(zod.coerce.string()).optional().describe('List of foliage values to exclude (NOT IN logic).'),
+  "stageExclude": zod.array(zod.coerce.string()).optional().describe('List of stage values to exclude (NOT IN logic).'),
+  "statusExclude": zod.array(zod.coerce.string()).optional().describe('List of status values to exclude (NOT IN logic).'),
   "tag": zod.coerce.string().optional(),
   "tags": zod.array(zod.coerce.string()).optional().describe('Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder.'),
   "limit": zod.coerce.number().optional(),
