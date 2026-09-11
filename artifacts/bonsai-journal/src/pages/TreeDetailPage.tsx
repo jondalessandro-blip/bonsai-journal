@@ -1,9 +1,9 @@
-import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTreeReminder, useDeleteTreeLog, useDeleteTreeReminder } from "@workspace/api-client-react";
-import { useParams, useLocation, Link } from "wouter";
+import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTreeReminder, useDeleteTreeLog, useDeleteTreeReminder, listTrees } from "@workspace/api-client-react";
+import { useParams, useLocation, Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText, Activity, Copy, Sprout } from "lucide-react";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { TreeForm, type TreeFormHandle } from "@/components/TreeForm";
@@ -12,15 +12,48 @@ import { ReminderForm } from "@/components/ReminderForm";
 import { ProgressionGallery } from "@/components/ProgressionGallery";
 import { CoverPhotoHero } from "@/components/CoverPhotoHero";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { buildTreePrefill } from "@/pages/NewTreePage";
 
 export default function TreeDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const searchString = useSearch();
+
+  const navFilters = (() => {
+    const params = new URLSearchParams(searchString);
+    const tags = params.get("tags");
+    return {
+      search: params.get("search") ?? undefined,
+      climate: params.get("climate") ?? undefined,
+      foliage: params.get("foliage") ?? undefined,
+      stage: params.get("stage") ?? undefined,
+      status: params.get("status") ?? undefined,
+      tags: tags ? tags.split(",") : undefined,
+    };
+  })();
+
+  const { data: navTrees } = useQuery({
+    queryKey: ["/api/trees/nav", searchString],
+    queryFn: () => listTrees({ ...navFilters, limit: 200 }),
+    staleTime: 60_000,
+  });
+
+  const navIds = navTrees?.map((t) => t.id) ?? [];
+  const currentNavIndex = id ? navIds.indexOf(id) : -1;
+  const prevTreeId = currentNavIndex > 0 ? navIds[currentNavIndex - 1] : null;
+  const nextTreeId =
+    currentNavIndex >= 0 && currentNavIndex < navIds.length - 1
+      ? navIds[currentNavIndex + 1]
+      : null;
+
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+
+  const goToTree = (treeId: string) => {
+    setLocation(`/trees/${treeId}${searchString ? `?${searchString}` : ""}`);
+  };
   
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isEditFormDirty, setIsEditFormDirty] = useState(false);
@@ -152,6 +185,26 @@ export default function TreeDetailPage() {
             Back to Collection
           </Button>
         </Link>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!prevTreeId}
+            onClick={() => prevTreeId && goToTree(prevTreeId)}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Previous
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!nextTreeId}
+            onClick={() => nextTreeId && goToTree(nextTreeId)}
+          >
+            Next
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
       </div>
 
       {/* Cover photo hero — repositionable banner */}
