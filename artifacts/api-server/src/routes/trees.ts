@@ -54,7 +54,16 @@ async function getOwnedTree(
 
 router.get("/trees", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthedRequest).userId;
-  const query = ListTreesQueryParams.safeParse(req.query);
+
+  // The frontend sends `tags` as a single comma-joined string (e.g. "air layer,shohin").
+  // Express only produces an actual array when the same query key repeats, so normalize
+  // a string value into an array here before schema validation.
+  const rawQuery: Record<string, unknown> = { ...req.query };
+  if (typeof rawQuery.tags === "string") {
+    rawQuery.tags = rawQuery.tags.split(",").map(t => t.trim()).filter(Boolean);
+  }
+
+  const query = ListTreesQueryParams.safeParse(rawQuery);
   if (!query.success) {
     res.status(400).json({ error: query.error.message });
     return;
