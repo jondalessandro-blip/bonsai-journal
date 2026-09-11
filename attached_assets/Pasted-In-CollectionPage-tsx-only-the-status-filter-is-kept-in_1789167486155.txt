@@ -1,0 +1,38 @@
+In CollectionPage.tsx, only the `status` filter is kept in sync with the URL (so it can survive navigation/back-forward); search, climate, foliage, stage, and tags are plain component state with no URL involvement. Meanwhile, the "Back to Collection" link on the tree detail page links to a bare "/" with no query string, so today even `status` gets wiped when a user navigates back from a tree detail page. I want ALL filters to persist through that back-navigation.
+
+Please make these changes:
+
+1. In CollectionPage.tsx, replace the current initialization block:
+```tsx
+  // Derive initial status from URL on first render
+  const urlStatus = useMemo(() => {
+    const params = new URLSearchParams(searchString);
+    return params.get("status") ?? "all";
+  }, [searchString]);
+
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [climate, setClimate] = useState<string>("all");
+  const [foliage, setFoliage] = useState<string>("all");
+  const [stage, setStage] = useState<string>("all");
+  const [status, setStatus] = useState<string>(urlStatus);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+```
+with a version that derives ALL five filters from the URL on first render (using lazy useState initializers, each reading from `searchString` via `URLSearchParams`, matching the param names already used elsewhere in this file: `search`, `climate`, `foliage`, `stage`, `status`, `tags` — where `tags` is comma-joined and should be split into an array). `debouncedSearch` should initialize to the same initial value as `search`.
+
+2. Remove the existing `handleStatusChange` callback and the "Keep status state in sync with URL" useEffect entirely. Change the status `<Select>` to use `onValueChange={setStatus}` directly, same as the climate/foliage/stage selects.
+
+3. Add ONE new useEffect (after all the filter state declarations) that watches `[debouncedSearch, climate, foliage, stage, status, selectedTags]` and rewrites the URL to reflect current filter state on every change: build a URLSearchParams object, setting `search`/`climate`/`foliage`/`stage`/`status` only when not empty/"all", and `tags` as a comma-joined string when `selectedTags` is non-empty, then call `setLocation(qs ? \`/?${qs}\` : "/", { replace: false })`. This replaces the old status-only sync logic with one that covers every filter.
+
+4. In `clearAllFilters`, remove the manual `setLocation("/", { replace: false })` call at the end — the new useEffect from step 3 will handle clearing the URL automatically once all the filter state setters run. Also add `setStatus("all")` to this function, since previously it wasn't being reset here.
+
+5. In TreeDetailPage.tsx, change the "Back to Collection" link from:
+```tsx
+<Link href="/">
+```
+to carry the current filter context (the same `searchString` already used for Previous/Next navigation) back to the collection page:
+```tsx
+<Link href={searchString ? `/?${searchString}` : "/"}>
+```
+
+Do not change any other filtering logic, the API calls, or component structure. After making these changes, commit and push to the dev branch, then run `git fetch origin dev && git log origin/dev -1` and paste that exact terminal output for verification.
