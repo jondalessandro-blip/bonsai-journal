@@ -421,6 +421,17 @@ export default function CollectionPage() {
                 )}
               </PopoverContent>
             </Popover>
+
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors self-center"
+              >
+                <FilterX className="w-3 h-3" />
+                Clear all
+              </button>
+            )}
           </div>
         )}
 
