@@ -1,0 +1,75 @@
+In TreeDetailPage.tsx, I want to add Previous/Next navigation buttons that respect the filter context carried in the URL (set up by a prior change to CollectionPage.tsx that appends filter query params like ?foliage=Conifer when navigating to a tree).
+
+Please make these changes to TreeDetailPage.tsx only:
+
+1. Add `useSearch` to the existing wouter import (currently `import { useParams, useLocation, Link } from "wouter";`).
+
+2. Add `ChevronLeft, ChevronRight` to the existing lucide-react icon import.
+
+3. Add `useQuery` to the existing `@tanstack/react-query` import (currently only `useQueryClient` is imported).
+
+4. Add `listTrees` to the existing `@workspace/api-client-react` import (the same raw fetch function already used in CollectionPage.tsx's useInfiniteQuery, not a generated hook).
+
+5. Inside the component, right after `const { id } = useParams<{ id: string }>();`, add:
+
+```tsx
+const searchString = useSearch();
+
+const navFilters = (() => {
+  const params = new URLSearchParams(searchString);
+  const tags = params.get("tags");
+  return {
+    search: params.get("search") ?? undefined,
+    climate: params.get("climate") ?? undefined,
+    foliage: params.get("foliage") ?? undefined,
+    stage: params.get("stage") ?? undefined,
+    status: params.get("status") ?? undefined,
+    tags: tags ? tags.split(",") : undefined,
+  };
+})();
+
+const { data: navTrees } = useQuery({
+  queryKey: ["/api/trees/nav", searchString],
+  queryFn: () => listTrees({ ...navFilters, limit: 200 }),
+  staleTime: 60_000,
+});
+
+const navIds = navTrees?.map((t) => t.id) ?? [];
+const currentNavIndex = id ? navIds.indexOf(id) : -1;
+const prevTreeId = currentNavIndex > 0 ? navIds[currentNavIndex - 1] : null;
+const nextTreeId =
+  currentNavIndex >= 0 && currentNavIndex < navIds.length - 1
+    ? navIds[currentNavIndex + 1]
+    : null;
+
+const goToTree = (treeId: string) => {
+  setLocation(`/trees/${treeId}${searchString ? `?${searchString}` : ""}`);
+};
+```
+
+6. In the "Top bar" section (the `<div className="flex justify-between items-center">` that currently contains only the "Back to Collection" Link), add a second child div to the right of that Link containing the Previous/Next buttons:
+
+```tsx
+<div className="flex gap-2">
+  <Button
+    variant="ghost"
+    size="sm"
+    disabled={!prevTreeId}
+    onClick={() => prevTreeId && goToTree(prevTreeId)}
+  >
+    <ChevronLeft className="w-4 h-4 mr-1" />
+    Previous
+  </Button>
+  <Button
+    variant="ghost"
+    size="sm"
+    disabled={!nextTreeId}
+    onClick={() => nextTreeId && goToTree(nextTreeId)}
+  >
+    Next
+    <ChevronRight className="w-4 h-4 ml-1" />
+  </Button>
+</div>
+```
+
+Do not change any other logic, imports, or components. After making the changes, commit and push to the dev branch, then run `git fetch origin dev && git log origin/dev -1` and paste that exact terminal output — I need to independently verify the commit is actually on origin/dev before treating this as done.
