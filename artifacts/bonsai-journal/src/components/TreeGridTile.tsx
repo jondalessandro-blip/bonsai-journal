@@ -3,14 +3,22 @@ import { useLocation } from "wouter";
 import type { Tree } from "@workspace/api-client-react";
 import { Leaf } from "lucide-react";
 
+interface TreeGridTileProps {
+  tree: Tree;
+  navContext?: string;
+}
+
 /** 3-column grid tile used on mobile screens only. */
-export const TreeGridTile = memo(function TreeGridTile({ tree }: { tree: Tree }) {
+export const TreeGridTile = memo(function TreeGridTile({
+  tree,
+  navContext = "",
+}: TreeGridTileProps) {
   const [, setLocation] = useLocation();
 
   return (
     <button
       className="flex flex-col items-stretch text-left active:opacity-70 transition-opacity"
-      onClick={() => setLocation(`/trees/${tree.id}`)}
+      onClick={() => setLocation(`/trees/${tree.id}${navContext ? `?${navContext}` : ""}`)}
     >
       {/* Square thumbnail */}
       <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-muted border border-border/40">

@@ -163,6 +163,19 @@ export default function CollectionPage() {
     limit: PAGE_SIZE,
   }), [debouncedSearch, climate, foliage, stage, status, selectedTags]);
 
+  const navFilterQuery = useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (climate !== "all") params.set("climate", climate);
+    if (foliage !== "all") params.set("foliage", foliage);
+    if (stage !== "all") params.set("stage", stage);
+    if (status !== "all") params.set("status", status);
+    if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+
+    return params.toString();
+  }, [debouncedSearch, climate, foliage, stage, status, selectedTags]);
+
   const {
     data,
     isLoading,
@@ -537,12 +550,17 @@ export default function CollectionPage() {
         <>
           <div className="sm:hidden grid grid-cols-3 gap-3">
             {trees.map(tree => (
-              <TreeGridTile key={tree.id} tree={tree} />
+              <TreeGridTile key={tree.id} tree={tree} navContext={navFilterQuery} />
             ))}
           </div>
           <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {trees.map(tree => (
-              <TreeCard key={tree.id} tree={tree} searchQuery={searchQuery} />
+              <TreeCard
+                key={tree.id}
+                tree={tree}
+                searchQuery={searchQuery}
+                navContext={navFilterQuery}
+              />
             ))}
           </div>
         </>

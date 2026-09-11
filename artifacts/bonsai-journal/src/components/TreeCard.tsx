@@ -9,9 +9,14 @@ import { format, parseISO } from "date-fns";
 interface TreeCardProps {
   tree: Tree;
   searchQuery?: string;
+  navContext?: string;
 }
 
-export const TreeCard = memo(function TreeCard({ tree, searchQuery = "" }: TreeCardProps) {
+export const TreeCard = memo(function TreeCard({
+  tree,
+  searchQuery = "",
+  navContext = "",
+}: TreeCardProps) {
   const [, setLocation] = useLocation();
 
   const visibleTags = tree.tags.slice(0, 2);
@@ -23,7 +28,7 @@ export const TreeCard = memo(function TreeCard({ tree, searchQuery = "" }: TreeC
   return (
     <Card
       className="group overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300 border-border/50 hover:border-primary/30"
-      onClick={() => setLocation(`/trees/${tree.id}`)}
+      onClick={() => setLocation(`/trees/${tree.id}${navContext ? `?${navContext}` : ""}`)}
     >
       <div className="aspect-[4/3] w-full overflow-hidden bg-muted relative">
         {(tree.coverThumb ?? tree.photoUrl) ? (
