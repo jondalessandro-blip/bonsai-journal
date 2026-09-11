@@ -1,0 +1,287 @@
+In CollectionPage.tsx, the climate, foliage, stage, and status filters are currently single-value <Select> dropdowns. I want to convert all four into multi-select popovers (matching the existing tags popover pattern already in this file), each with an independent Include/Exclude mode toggle. I also need TreeDetailPage.tsx's filter-parsing logic updated to match, since the backend (already updated) now expects these as arrays, plus optional "Exclude" variants (climateExclude, foliageExclude, stageExclude, statusExclude).
+
+PART 1 — CollectionPage.tsx
+
+1. Remove the import of Select, SelectContent, SelectItem, SelectTrigger, SelectValue (no longer used).
+
+2. Replace the four CLIMATE_TRIGGER / FOLIAGE_TRIGGER / STAGE_TRIGGER / STATUS_TRIGGER constants with plain option-value arrays (keep the existing CLIMATE_LABELS / FOLIAGE_LABELS / STAGE_LABELS / STATUS_LABELS constants as they are — still used for display):
+
+const CLIMATE_OPTIONS = ["Hardy / Outdoor", "Tropical & Subtropical", "Hybrid/Other"];
+const FOLIAGE_OPTIONS = ["Deciduous", "Conifer", "Deciduous Conifer", "Broadleaf Evergreen", "Succulent / Desert"];
+const STAGE_OPTIONS = ["Establishment", "Trunk Development", "Primary Branch Development", "Ramification & Refinement"];
+const STAGE_ITEM_LABELS: Record<string, string> = {
+  "Establishment": "1. Establishment",
+  "Trunk Development": "2. Trunk Development",
+  "Primary Branch Development": "3. Primary Branch Development",
+  "Ramification & Refinement": "4. Ramification & Refinement",
+};
+const STATUS_OPTIONS = ["Thriving", "Dormant", "Stressed/In Distress", "Sick", "Dead/Beyond Recovery"];
+
+3. Add this type above the component:
+
+type FilterState = { values: string[]; mode: "include" | "exclude" };
+
+function deriveFilterState(params: URLSearchParams, field: string): FilterState {
+  const excludeRaw = params.get(`${field}Exclude`);
+  if (excludeRaw) return { values: excludeRaw.split(","), mode: "exclude" };
+  const includeRaw = params.get(field);
+  if (includeRaw) return { values: includeRaw.split(","), mode: "include" };
+  return { values: [], mode: "include" };
+}
+
+4. Replace the four existing single-value state lines:
+const [climate, setClimate] = useState<string>(() => new URLSearchParams(searchString).get("climate") ?? "all");
+const [foliage, setFoliage] = useState<string>(() => new URLSearchParams(searchString).get("foliage") ?? "all");
+const [stage, setStage] = useState<string>(() => new URLSearchParams(searchString).get("stage") ?? "all");
+const [status, setStatus] = useState<string>(() => new URLSearchParams(searchString).get("status") ?? "all");
+
+with:
+const [climateFilter, setClimateFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "climate"));
+const [foliageFilter, setFoliageFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "foliage"));
+const [stageFilter, setStageFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "stage"));
+const [statusFilter, setStatusFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "status"));
+const [climateOpen, setClimateOpen] = useState(false);
+const [foliageOpen, setFoliageOpen] = useState(false);
+const [stageOpen, setStageOpen] = useState(false);
+const [statusOpen, setStatusOpen] = useState(false);
+
+5. Add this helper function near toggleTag:
+
+function toggleFilterValue(setter: React.Dispatch<React.SetStateAction<FilterState>>, value: string) {
+  setter((prev) => ({
+    ...prev,
+    values: prev.values.includes(value) ? prev.values.filter((v) => v !== value) : [...prev.values, value],
+  }));
+}
+
+6. Replace the URL-sync useEffect:
+useEffect(() => {
+  const params = new URLSearchParams();
+  if (debouncedSearch) params.set("search", debouncedSearch);
+  if (climate !== "all") params.set("climate", climate);
+  if (foliage !== "all") params.set("foliage", foliage);
+  if (stage !== "all") params.set("stage", stage);
+  if (status !== "all") params.set("status", status);
+  if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+  const qs = params.toString();
+  setLocation(qs ? `/?${qs}` : "/", { replace: false });
+}, [debouncedSearch, climate, foliage, stage, status, selectedTags]);
+
+with:
+useEffect(() => {
+  const params = new URLSearchParams();
+  if (debouncedSearch) params.set("search", debouncedSearch);
+  const applyFilter = (field: string, filter: FilterState) => {
+    if (filter.values.length === 0) return;
+    params.set(filter.mode === "exclude" ? `${field}Exclude` : field, filter.values.join(","));
+  };
+  applyFilter("climate", climateFilter);
+  applyFilter("foliage", foliageFilter);
+  applyFilter("stage", stageFilter);
+  applyFilter("status", statusFilter);
+  if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+  const qs = params.toString();
+  setLocation(qs ? `/?${qs}` : "/", { replace: false });
+}, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
+
+7. Replace hasActiveFilters and activeFilterCount:
+const hasActiveFilters =
+  search !== "" ||
+  climateFilter.values.length > 0 ||
+  foliageFilter.values.length > 0 ||
+  stageFilter.values.length > 0 ||
+  statusFilter.values.length > 0 ||
+  selectedTags.length > 0;
+
+const activeFilterCount =
+  (climateFilter.values.length > 0 ? 1 : 0) +
+  (foliageFilter.values.length > 0 ? 1 : 0) +
+  (stageFilter.values.length > 0 ? 1 : 0) +
+  (statusFilter.values.length > 0 ? 1 : 0) +
+  selectedTags.length;
+
+8. Replace clearAllFilters:
+const clearAllFilters = useCallback(() => {
+  setSearch("");
+  setClimateFilter({ values: [], mode: "include" });
+  setFoliageFilter({ values: [], mode: "include" });
+  setStageFilter({ values: [], mode: "include" });
+  setStatusFilter({ values: [], mode: "include" });
+  setSelectedTags([]);
+}, []);
+
+9. Replace the queryParams useMemo:
+const queryParams = useMemo(() => ({
+  search: debouncedSearch || undefined,
+  climate: climate !== "all" ? climate : undefined,
+  foliage: foliage !== "all" ? foliage : undefined,
+  stage: stage !== "all" ? stage : undefined,
+  status: status !== "all" ? status : undefined,
+  tags: selectedTags.length > 0 ? selectedTags : undefined,
+  limit: PAGE_SIZE,
+}), [debouncedSearch, climate, foliage, stage, status, selectedTags]);
+
+with:
+const queryParams = useMemo(() => ({
+  search: debouncedSearch || undefined,
+  climate: climateFilter.mode === "include" && climateFilter.values.length > 0 ? climateFilter.values : undefined,
+  climateExclude: climateFilter.mode === "exclude" && climateFilter.values.length > 0 ? climateFilter.values : undefined,
+  foliage: foliageFilter.mode === "include" && foliageFilter.values.length > 0 ? foliageFilter.values : undefined,
+  foliageExclude: foliageFilter.mode === "exclude" && foliageFilter.values.length > 0 ? foliageFilter.values : undefined,
+  stage: stageFilter.mode === "include" && stageFilter.values.length > 0 ? stageFilter.values : undefined,
+  stageExclude: stageFilter.mode === "exclude" && stageFilter.values.length > 0 ? stageFilter.values : undefined,
+  status: statusFilter.mode === "include" && statusFilter.values.length > 0 ? statusFilter.values : undefined,
+  statusExclude: statusFilter.mode === "exclude" && statusFilter.values.length > 0 ? statusFilter.values : undefined,
+  tags: selectedTags.length > 0 ? selectedTags : undefined,
+  limit: PAGE_SIZE,
+}), [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
+
+10. Replace the navFilterQuery useMemo:
+const navFilterQuery = useMemo(() => {
+  const params = new URLSearchParams();
+  if (debouncedSearch) params.set("search", debouncedSearch);
+  if (climate !== "all") params.set("climate", climate);
+  if (foliage !== "all") params.set("foliage", foliage);
+  if (stage !== "all") params.set("stage", stage);
+  if (status !== "all") params.set("status", status);
+  if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+  return params.toString();
+}, [debouncedSearch, climate, foliage, stage, status, selectedTags]);
+
+with:
+const navFilterQuery = useMemo(() => {
+  const params = new URLSearchParams();
+  if (debouncedSearch) params.set("search", debouncedSearch);
+  const applyFilter = (field: string, filter: FilterState) => {
+    if (filter.values.length === 0) return;
+    params.set(filter.mode === "exclude" ? `${field}Exclude` : field, filter.values.join(","));
+  };
+  applyFilter("climate", climateFilter);
+  applyFilter("foliage", foliageFilter);
+  applyFilter("stage", stageFilter);
+  applyFilter("status", statusFilter);
+  if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+  return params.toString();
+}, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
+
+11. In the collapsible filter panel, replace the four <Select>...</Select> blocks (climate, foliage, stage, status) with four Popovers. Here is the full block for climate — replicate the exact same structure for foliage, stage, and status using the substitutions listed after it:
+
+<Popover open={climateOpen} onOpenChange={setClimateOpen}>
+  <PopoverTrigger asChild>
+    <Button
+      variant="outline"
+      className="w-full sm:w-auto bg-background border-none shadow-none focus:ring-1 h-9 px-3 font-normal text-sm justify-start gap-1.5 min-w-[120px]"
+    >
+      {climateFilter.values.length > 0 ? (
+        <span className="flex items-center gap-1">
+          {climateFilter.mode === "exclude" ? "Not: Climate" : "Climate"}
+          <span className="bg-primary text-primary-foreground text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+            {climateFilter.values.length}
+          </span>
+        </span>
+      ) : (
+        <span className="text-muted-foreground">All Climates</span>
+      )}
+    </Button>
+  </PopoverTrigger>
+  <PopoverContent className="w-56 p-2" align="start">
+    <div className="flex gap-1 mb-2 p-0.5 bg-muted rounded-md">
+      <button
+        type="button"
+        onClick={() => setClimateFilter((prev) => ({ ...prev, mode: "include" }))}
+        className={`flex-1 text-xs font-medium rounded py-1 transition-colors ${climateFilter.mode === "include" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+      >
+        Include
+      </button>
+      <button
+        type="button"
+        onClick={() => setClimateFilter((prev) => ({ ...prev, mode: "exclude" }))}
+        className={`flex-1 text-xs font-medium rounded py-1 transition-colors ${climateFilter.mode === "exclude" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+      >
+        Exclude
+      </button>
+    </div>
+    <div className="space-y-0.5 max-h-60 overflow-y-auto">
+      {CLIMATE_OPTIONS.map((option) => (
+        <button
+          key={option}
+          onClick={() => toggleFilterValue(setClimateFilter, option)}
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-muted text-sm transition-colors text-left"
+        >
+          <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${climateFilter.values.includes(option) ? "bg-primary border-primary" : "border-input"}`}>
+            {climateFilter.values.includes(option) && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
+          </div>
+          <span>{CLIMATE_LABELS[option] ?? option}</span>
+        </button>
+      ))}
+    </div>
+    {climateFilter.values.length > 0 && (
+      <button
+        onClick={() => setClimateFilter({ values: [], mode: "include" })}
+        className="w-full mt-1.5 pt-1.5 border-t text-xs text-muted-foreground hover:text-foreground text-center transition-colors"
+      >
+        Clear climate filter
+      </button>
+    )}
+  </PopoverContent>
+</Popover>
+
+Substitutions for the other three (same exact structure, only these tokens change):
+- Foliage: climateOpen→foliageOpen, setClimateOpen→setFoliageOpen, climateFilter→foliageFilter, setClimateFilter→setFoliageFilter, "Climate"→"Foliage", "All Climates"→"All Foliage", CLIMATE_OPTIONS→FOLIAGE_OPTIONS, CLIMATE_LABELS→FOLIAGE_LABELS, "Clear climate filter"→"Clear foliage filter"
+- Stage: same pattern with stageOpen/setStageOpen/stageFilter/setStageFilter, "Stage"/"All Stages", STAGE_OPTIONS, but use STAGE_ITEM_LABELS (not STAGE_LABELS) for the option display text inside the popover list, "Clear stage filter"
+- Status: same pattern with statusOpen/setStatusOpen/statusFilter/setStatusFilter, "Status"/"All Statuses", STATUS_OPTIONS, STATUS_LABELS, "Clear status filter"
+
+12. Replace the four active-filter chip blocks (the ones checking `climate !== "all"`, `foliage !== "all"`, `stage !== "all"`, `status !== "all"`) with multi-value versions. Here is the climate one — replicate for the other three with the same substitutions as step 11 (using each field's own LABELS map, not STAGE_ITEM_LABELS, for chips):
+
+{climateFilter.values.map((value) => (
+  <span key={`climate-${value}`} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium rounded-full px-2.5 py-0.5">
+    {climateFilter.mode === "exclude" ? `Not ${CLIMATE_LABELS[value] ?? value}` : (CLIMATE_LABELS[value] ?? value)}
+    <button
+      type="button"
+      aria-label={`Remove ${CLIMATE_LABELS[value] ?? value} filter`}
+      onClick={() => toggleFilterValue(setClimateFilter, value)}
+      className="hover:text-primary/70 transition-colors ml-0.5"
+    >
+      <X className="w-3 h-3" />
+    </button>
+  </span>
+))}
+
+PART 2 — TreeDetailPage.tsx
+
+Replace the navFilters block:
+const navFilters = (() => {
+  const params = new URLSearchParams(searchString);
+  const tags = params.get("tags");
+  return {
+    search: params.get("search") ?? undefined,
+    climate: params.get("climate") ?? undefined,
+    foliage: params.get("foliage") ?? undefined,
+    stage: params.get("stage") ?? undefined,
+    status: params.get("status") ?? undefined,
+    tags: tags ? tags.split(",") : undefined,
+  };
+})();
+
+with:
+const navFilters = (() => {
+  const params = new URLSearchParams(searchString);
+  const parseList = (key: string) => {
+    const raw = params.get(key);
+    return raw ? raw.split(",") : undefined;
+  };
+  return {
+    search: params.get("search") ?? undefined,
+    climate: parseList("climate"),
+    climateExclude: parseList("climateExclude"),
+    foliage: parseList("foliage"),
+    foliageExclude: parseList("foliageExclude"),
+    stage: parseList("stage"),
+    stageExclude: parseList("stageExclude"),
+    status: parseList("status"),
+    statusExclude: parseList("statusExclude"),
+    tags: parseList("tags"),
+  };
+})();
+
+Do not change any other logic, components, or files. After making these changes, commit the changes on the dev branch (no need to push — I'll push manually), then run git log -1 and paste that exact terminal output for verification.
