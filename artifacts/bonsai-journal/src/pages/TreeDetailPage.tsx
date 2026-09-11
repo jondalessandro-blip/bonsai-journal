@@ -179,7 +179,7 @@ export default function TreeDetailPage() {
     <div className="space-y-8 pb-20 animate-in fade-in duration-500">
       {/* Top bar */}
       <div className="flex justify-between items-center">
-        <Link href="/">
+        <Link href={searchString ? `/?${searchString}` : "/"}>
           <Button variant="ghost" size="sm" className="-ml-4 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Collection

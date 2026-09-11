@@ -78,43 +78,34 @@ export default function CollectionPage() {
   const searchString = useSearch();
   const [, setLocation] = useLocation();
 
-  // Derive initial status from URL on first render
-  const urlStatus = useMemo(() => {
-    const params = new URLSearchParams(searchString);
-    return params.get("status") ?? "all";
-  }, [searchString]);
-
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [climate, setClimate] = useState<string>("all");
-  const [foliage, setFoliage] = useState<string>("all");
-  const [stage, setStage] = useState<string>("all");
-  const [status, setStatus] = useState<string>(urlStatus);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [search, setSearch] = useState(() => new URLSearchParams(searchString).get("search") ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(() => new URLSearchParams(searchString).get("search") ?? "");
+  const [climate, setClimate] = useState<string>(() => new URLSearchParams(searchString).get("climate") ?? "all");
+  const [foliage, setFoliage] = useState<string>(() => new URLSearchParams(searchString).get("foliage") ?? "all");
+  const [stage, setStage] = useState<string>(() => new URLSearchParams(searchString).get("stage") ?? "all");
+  const [status, setStatus] = useState<string>(() => new URLSearchParams(searchString).get("status") ?? "all");
+  const [selectedTags, setSelectedTags] = useState<string[]>(() => {
+    const tags = new URLSearchParams(searchString).get("tags");
+    return tags ? tags.split(",") : [];
+  });
   const [tagsOpen, setTagsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (climate !== "all") params.set("climate", climate);
+    if (foliage !== "all") params.set("foliage", foliage);
+    if (stage !== "all") params.set("stage", stage);
+    if (status !== "all") params.set("status", status);
+    if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+    const qs = params.toString();
+    setLocation(qs ? `/?${qs}` : "/", { replace: false });
+  }, [debouncedSearch, climate, foliage, stage, status, selectedTags]);
 
   // Master tag list — seeded with DEFAULT_TAGS so they appear in the filter even before
   // any tree uses them; only ever grows so the popover stays complete while a filter is active
   const [knownTags, setKnownTags] = useState<string[]>([...DEFAULT_TAGS].sort());
-
-  // Keep status state in sync with URL (handles browser back/forward)
-  useEffect(() => {
-    setStatus(urlStatus);
-  }, [urlStatus]);
-
-  // Update URL when status filter changes
-  const handleStatusChange = useCallback((value: string) => {
-    setStatus(value);
-    const params = new URLSearchParams(searchString);
-    if (value === "all") {
-      params.delete("status");
-    } else {
-      params.set("status", value);
-    }
-    const qs = params.toString();
-    setLocation(qs ? `/?${qs}` : "/", { replace: false });
-  }, [searchString, setLocation]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -136,15 +127,15 @@ export default function CollectionPage() {
     (status !== "all" ? 1 : 0) +
     selectedTags.length;
 
-  // Reset every filter and the URL status param in one action
+  // Reset every filter
   const clearAllFilters = useCallback(() => {
     setSearch("");
     setClimate("all");
     setFoliage("all");
     setStage("all");
+    setStatus("all");
     setSelectedTags([]);
-    setLocation("/", { replace: false }); // drops ?status=… — effect syncs status state
-  }, [setLocation]);
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -366,7 +357,7 @@ export default function CollectionPage() {
                 <SelectItem value="Ramification & Refinement">4. Ramification & Refinement</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={status} onValueChange={handleStatusChange}>
+            <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1" title={STATUS_TRIGGER[status] ?? status}>
                 <SelectValue className="truncate" placeholder="Status" />
               </SelectTrigger>
@@ -496,7 +487,7 @@ export default function CollectionPage() {
                 <button
                   type="button"
                   aria-label={`Remove ${STATUS_LABELS[status] ?? status} filter`}
-                  onClick={() => handleStatusChange("all")}
+                  onClick={() => setStatus("all")}
                   className="hover:text-primary/70 transition-colors ml-0.5"
                 >
                   <X className="w-3 h-3" />
