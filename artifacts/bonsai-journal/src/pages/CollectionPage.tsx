@@ -4,7 +4,6 @@ import { TreeCard } from "@/components/TreeCard";
 import { TreeGridTile } from "@/components/TreeGridTile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
 import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown } from "lucide-react";
@@ -43,36 +42,26 @@ const STATUS_LABELS: Record<string, string> = {
   "Dead/Beyond Recovery": "Dead/Beyond Recovery",
 };
 
-// Full trigger display text (mirrors SelectItem text content, for title tooltip)
-const CLIMATE_TRIGGER: Record<string, string> = {
-  "all": "All Climates",
-  "Hardy / Outdoor": "Hardy / Outdoor",
-  "Tropical & Subtropical": "Tropical & Subtropical",
-  "Hybrid/Other": "Hybrid/Other",
-};
-const FOLIAGE_TRIGGER: Record<string, string> = {
-  "all": "All Foliage",
-  "Deciduous": "Deciduous",
-  "Conifer": "Conifer",
-  "Deciduous Conifer": "Deciduous Conifer",
-  "Broadleaf Evergreen": "Broadleaf Evergreen",
-  "Succulent / Desert": "Succulent / Desert",
-};
-const STAGE_TRIGGER: Record<string, string> = {
-  "all": "All Stages",
+const CLIMATE_OPTIONS = ["Hardy / Outdoor", "Tropical & Subtropical", "Hybrid/Other"];
+const FOLIAGE_OPTIONS = ["Deciduous", "Conifer", "Deciduous Conifer", "Broadleaf Evergreen", "Succulent / Desert"];
+const STAGE_OPTIONS = ["Establishment", "Trunk Development", "Primary Branch Development", "Ramification & Refinement"];
+const STAGE_ITEM_LABELS: Record<string, string> = {
   "Establishment": "1. Establishment",
   "Trunk Development": "2. Trunk Development",
   "Primary Branch Development": "3. Primary Branch Development",
   "Ramification & Refinement": "4. Ramification & Refinement",
 };
-const STATUS_TRIGGER: Record<string, string> = {
-  "all": "All Statuses",
-  "Thriving": "Thriving",
-  "Dormant": "Dormant",
-  "Stressed/In Distress": "Stressed/In Distress",
-  "Sick": "Sick",
-  "Dead/Beyond Recovery": "Dead/Beyond Recovery",
-};
+const STATUS_OPTIONS = ["Thriving", "Dormant", "Stressed/In Distress", "Sick", "Dead/Beyond Recovery"];
+
+type FilterState = { values: string[]; mode: "include" | "exclude" };
+
+function deriveFilterState(params: URLSearchParams, field: string): FilterState {
+  const excludeRaw = params.get(field + "Exclude");
+  if (excludeRaw) return { values: excludeRaw.split(","), mode: "exclude" };
+  const includeRaw = params.get(field);
+  if (includeRaw) return { values: includeRaw.split(","), mode: "include" };
+  return { values: [], mode: "include" };
+}
 
 export default function CollectionPage() {
   const searchString = useSearch();
@@ -80,10 +69,14 @@ export default function CollectionPage() {
 
   const [search, setSearch] = useState(() => new URLSearchParams(searchString).get("search") ?? "");
   const [debouncedSearch, setDebouncedSearch] = useState(() => new URLSearchParams(searchString).get("search") ?? "");
-  const [climate, setClimate] = useState<string>(() => new URLSearchParams(searchString).get("climate") ?? "all");
-  const [foliage, setFoliage] = useState<string>(() => new URLSearchParams(searchString).get("foliage") ?? "all");
-  const [stage, setStage] = useState<string>(() => new URLSearchParams(searchString).get("stage") ?? "all");
-  const [status, setStatus] = useState<string>(() => new URLSearchParams(searchString).get("status") ?? "all");
+  const [climateFilter, setClimateFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "climate"));
+  const [foliageFilter, setFoliageFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "foliage"));
+  const [stageFilter, setStageFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "stage"));
+  const [statusFilter, setStatusFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "status"));
+  const [climateOpen, setClimateOpen] = useState(false);
+  const [foliageOpen, setFoliageOpen] = useState(false);
+  const [stageOpen, setStageOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>(() => {
     const tags = new URLSearchParams(searchString).get("tags");
     return tags ? tags.split(",") : [];
@@ -94,14 +87,18 @@ export default function CollectionPage() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (debouncedSearch) params.set("search", debouncedSearch);
-    if (climate !== "all") params.set("climate", climate);
-    if (foliage !== "all") params.set("foliage", foliage);
-    if (stage !== "all") params.set("stage", stage);
-    if (status !== "all") params.set("status", status);
+    const applyFilter = (field: string, filter: FilterState) => {
+      if (filter.values.length === 0) return;
+      params.set(filter.mode === "exclude" ? field + "Exclude" : field, filter.values.join(","));
+    };
+    applyFilter("climate", climateFilter);
+    applyFilter("foliage", foliageFilter);
+    applyFilter("stage", stageFilter);
+    applyFilter("status", statusFilter);
     if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
     const qs = params.toString();
-    setLocation(qs ? `/?${qs}` : "/", { replace: false });
-  }, [debouncedSearch, climate, foliage, stage, status, selectedTags]);
+    setLocation(qs ? "/?" + qs : "/", { replace: false });
+  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
 
   // Master tag list — seeded with DEFAULT_TAGS so they appear in the filter even before
   // any tree uses them; only ever grows so the popover stays complete while a filter is active
@@ -113,27 +110,27 @@ export default function CollectionPage() {
   // True whenever any filter or search is active
   const hasActiveFilters =
     search !== "" ||
-    climate !== "all" ||
-    foliage !== "all" ||
-    stage !== "all" ||
-    status !== "all" ||
+    climateFilter.values.length > 0 ||
+    foliageFilter.values.length > 0 ||
+    stageFilter.values.length > 0 ||
+    statusFilter.values.length > 0 ||
     selectedTags.length > 0;
 
   // Count of active panel filters only (excludes search — always visible)
   const activeFilterCount =
-    (climate !== "all" ? 1 : 0) +
-    (foliage !== "all" ? 1 : 0) +
-    (stage !== "all" ? 1 : 0) +
-    (status !== "all" ? 1 : 0) +
+    (climateFilter.values.length > 0 ? 1 : 0) +
+    (foliageFilter.values.length > 0 ? 1 : 0) +
+    (stageFilter.values.length > 0 ? 1 : 0) +
+    (statusFilter.values.length > 0 ? 1 : 0) +
     selectedTags.length;
 
   // Reset every filter
   const clearAllFilters = useCallback(() => {
     setSearch("");
-    setClimate("all");
-    setFoliage("all");
-    setStage("all");
-    setStatus("all");
+    setClimateFilter({ values: [], mode: "include" });
+    setFoliageFilter({ values: [], mode: "include" });
+    setStageFilter({ values: [], mode: "include" });
+    setStatusFilter({ values: [], mode: "include" });
     setSelectedTags([]);
   }, []);
 
@@ -230,6 +227,18 @@ export default function CollectionPage() {
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   }, []);
+
+  function toggleFilterValue(
+    setter: React.Dispatch<React.SetStateAction<FilterState>>,
+    value: string
+  ) {
+    setter((prev) => ({
+      ...prev,
+      values: prev.values.includes(value)
+        ? prev.values.filter((v) => v !== value)
+        : [...prev.values, value],
+    }));
+  }
 
   const searchQuery = debouncedSearch.toLowerCase();
   const totalLoaded = trees.length;
