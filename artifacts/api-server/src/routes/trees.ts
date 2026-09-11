@@ -87,7 +87,9 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
   if (stage) conditions.push(eq(treesTable.stage, stage));
   if (status) conditions.push(eq(treesTable.status, status));
   if (tagsList.length > 0) {
-    conditions.push(and(...tagsList.map(t => sql`${t} = ANY(${treesTable.tags})`))!);
+    conditions.push(and(...tagsList.map(t =>
+      sql`EXISTS (SELECT 1 FROM unnest(${treesTable.tags}) AS _t WHERE _t ILIKE ${t})`
+    ))!);
   }
 
   const trees = await db
