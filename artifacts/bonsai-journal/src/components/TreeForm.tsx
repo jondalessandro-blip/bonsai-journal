@@ -55,7 +55,6 @@ const formSchema = z.object({
   style: z.string().optional(),
   stage: z.string().optional(),
   status: z.string().optional(),
-  statusChangeDate: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -107,7 +106,6 @@ function buildDefaultValues(
     style:        initialData?.style        ?? prefillData?.style                ?? "",
     stage:        initialData?.stage        ?? prefillData?.stage                ?? "",
     status:       initialData?.status       ?? prefillData?.status               ?? "",
-    statusChangeDate: new Date().toISOString().slice(0, 10),
     notes:        initialData?.notes        ?? prefillData?.notes                ?? "",
   };
 }
@@ -191,10 +189,6 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
       ...Object.fromEntries(Object.entries(values).filter(([, v]) => v !== "")),
       tags,
     } as FormValues & { tags: string[] };
-
-    if (!isEdit || values.status === initialData?.status) {
-      delete clean.statusChangeDate;
-    }
 
     if (isEdit) {
       updateTree.mutate(
@@ -368,22 +362,6 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                 </FormItem>
               )}
             />
-
-            {isEdit && watched.status && watched.status !== initialData?.status && (
-              <FormField
-                control={form.control}
-                name="statusChangeDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status Change Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             <FormField
               control={form.control}

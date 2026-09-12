@@ -194,7 +194,6 @@ export const UpdateTreeBody = zod.object({
   "style": zod.string().optional(),
   "stage": zod.string().optional(),
   "status": zod.string().optional(),
-  "statusChangeDate": zod.string().optional().describe('Effective date for a status change. This is not persisted on the tree record itself; it is only used to timestamp the resulting care log entry.'),
   "tags": zod.array(zod.string()).optional(),
   "notes": zod.string().optional(),
   "photoUrl": zod.string().optional(),

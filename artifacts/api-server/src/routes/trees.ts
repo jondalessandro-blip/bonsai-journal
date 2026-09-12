@@ -234,7 +234,6 @@ router.patch("/trees/:id", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const { statusChangeDate, ...treeUpdate } = parsed.data;
   let tree: typeof treesTable.$inferSelect | undefined;
 
   await db.transaction(async (tx) => {
@@ -248,14 +247,14 @@ router.patch("/trees/:id", requireAuth, async (req, res): Promise<void> => {
 
     const [updated] = await tx
       .update(treesTable)
-      .set(treeUpdate)
+      .set(parsed.data)
       .where(and(eq(treesTable.id, params.data.id), eq(treesTable.userId, userId)))
       .returning();
 
     if (!updated) return;
     tree = updated;
 
-    const newStatus = treeUpdate.status;
+    const newStatus = parsed.data.status;
     if (newStatus !== undefined && newStatus !== existing.status) {
       const today = new Date().toISOString().slice(0, 10);
       const oldLabel = existing.status ?? "Unknown";
@@ -263,7 +262,7 @@ router.patch("/trees/:id", requireAuth, async (req, res): Promise<void> => {
       await tx.insert(careLogsTable).values({
         treeId: updated.id,
         type: "Status Change",
-        date: statusChangeDate ?? today,
+        date: today,
         notes: `${oldLabel} → ${newLabel}`,
       });
     }

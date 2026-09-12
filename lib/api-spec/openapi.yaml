@@ -722,9 +722,6 @@ components:
           type: string
         status:
           type: string
-        statusChangeDate:
-          type: string
-          description: Effective date for a status change. This is not persisted on the tree record itself; it is only used to timestamp the resulting care log entry.
         tags:
           type: array
           items: { type: string }
