@@ -23,14 +23,21 @@ export default function TreeDetailPage() {
 
   const navFilters = (() => {
     const params = new URLSearchParams(searchString);
-    const tags = params.get("tags");
+    const getArrayParam = (key: string) => {
+      const value = params.get(key);
+      return value ? value.split(",") : undefined;
+    };
     return {
       search: params.get("search") ?? undefined,
-      climate: params.get("climate") ?? undefined,
-      foliage: params.get("foliage") ?? undefined,
-      stage: params.get("stage") ?? undefined,
-      status: params.get("status") ?? undefined,
-      tags: tags ? tags.split(",") : undefined,
+      climate: getArrayParam("climate"),
+      climateExclude: getArrayParam("climateExclude"),
+      foliage: getArrayParam("foliage"),
+      foliageExclude: getArrayParam("foliageExclude"),
+      stage: getArrayParam("stage"),
+      stageExclude: getArrayParam("stageExclude"),
+      status: getArrayParam("status"),
+      statusExclude: getArrayParam("statusExclude"),
+      tags: getArrayParam("tags"),
     };
   })();
 

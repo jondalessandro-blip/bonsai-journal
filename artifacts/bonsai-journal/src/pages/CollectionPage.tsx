@@ -143,26 +143,32 @@ export default function CollectionPage() {
   // Build query params — all filtering is now server-side
   const queryParams = useMemo(() => ({
     search: debouncedSearch || undefined,
-    climate: climate !== "all" ? climate : undefined,
-    foliage: foliage !== "all" ? foliage : undefined,
-    stage: stage !== "all" ? stage : undefined,
-    status: status !== "all" ? status : undefined,
+    climate: climateFilter.mode === "include" && climateFilter.values.length > 0 ? climateFilter.values : undefined,
+    climateExclude: climateFilter.mode === "exclude" && climateFilter.values.length > 0 ? climateFilter.values : undefined,
+    foliage: foliageFilter.mode === "include" && foliageFilter.values.length > 0 ? foliageFilter.values : undefined,
+    foliageExclude: foliageFilter.mode === "exclude" && foliageFilter.values.length > 0 ? foliageFilter.values : undefined,
+    stage: stageFilter.mode === "include" && stageFilter.values.length > 0 ? stageFilter.values : undefined,
+    stageExclude: stageFilter.mode === "exclude" && stageFilter.values.length > 0 ? stageFilter.values : undefined,
+    status: statusFilter.mode === "include" && statusFilter.values.length > 0 ? statusFilter.values : undefined,
+    statusExclude: statusFilter.mode === "exclude" && statusFilter.values.length > 0 ? statusFilter.values : undefined,
     tags: selectedTags.length > 0 ? selectedTags : undefined,
     limit: PAGE_SIZE,
-  }), [debouncedSearch, climate, foliage, stage, status, selectedTags]);
+  }), [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
 
   const navFilterQuery = useMemo(() => {
     const params = new URLSearchParams();
-
     if (debouncedSearch) params.set("search", debouncedSearch);
-    if (climate !== "all") params.set("climate", climate);
-    if (foliage !== "all") params.set("foliage", foliage);
-    if (stage !== "all") params.set("stage", stage);
-    if (status !== "all") params.set("status", status);
+    const applyFilter = (field: string, filter: FilterState) => {
+      if (filter.values.length === 0) return;
+      params.set(filter.mode === "exclude" ? field + "Exclude" : field, filter.values.join(","));
+    };
+    applyFilter("climate", climateFilter);
+    applyFilter("foliage", foliageFilter);
+    applyFilter("stage", stageFilter);
+    applyFilter("status", statusFilter);
     if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
-
     return params.toString();
-  }, [debouncedSearch, climate, foliage, stage, status, selectedTags]);
+  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
 
   const {
     data,
@@ -330,55 +336,63 @@ export default function CollectionPage() {
         {/* Collapsible filter panel */}
         {filtersOpen && (
           <div className="flex gap-2 w-full flex-wrap animate-in fade-in duration-200">
-            <Select value={climate} onValueChange={setClimate}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1" title={CLIMATE_TRIGGER[climate] ?? climate}>
-                <SelectValue className="truncate" placeholder="Climate" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Climates</SelectItem>
-                <SelectItem value="Hardy / Outdoor">Hardy / Outdoor</SelectItem>
-                <SelectItem value="Tropical & Subtropical">Tropical & Subtropical</SelectItem>
-                <SelectItem value="Hybrid/Other">Hybrid/Other</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={foliage} onValueChange={setFoliage}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1" title={FOLIAGE_TRIGGER[foliage] ?? foliage}>
-                <SelectValue className="truncate" placeholder="Foliage" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Foliage</SelectItem>
-                <SelectItem value="Deciduous">Deciduous</SelectItem>
-                <SelectItem value="Conifer">Conifer</SelectItem>
-                <SelectItem value="Deciduous Conifer">Deciduous Conifer</SelectItem>
-                <SelectItem value="Broadleaf Evergreen">Broadleaf Evergreen</SelectItem>
-                <SelectItem value="Succulent / Desert">Succulent / Desert</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={stage} onValueChange={setStage}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1" title={STAGE_TRIGGER[stage] ?? stage}>
-                <SelectValue className="truncate" placeholder="Stage" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Stages</SelectItem>
-                <SelectItem value="Establishment">1. Establishment</SelectItem>
-                <SelectItem value="Trunk Development">2. Trunk Development</SelectItem>
-                <SelectItem value="Primary Branch Development">3. Primary Branch Development</SelectItem>
-                <SelectItem value="Ramification & Refinement">4. Ramification & Refinement</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-none shadow-none focus:ring-1" title={STATUS_TRIGGER[status] ?? status}>
-                <SelectValue className="truncate" placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Thriving">Thriving</SelectItem>
-                <SelectItem value="Dormant">Dormant</SelectItem>
-                <SelectItem value="Stressed/In Distress">Stressed/In Distress</SelectItem>
-                <SelectItem value="Sick">Sick</SelectItem>
-                <SelectItem value="Dead/Beyond Recovery">Dead/Beyond Recovery</SelectItem>
-              </SelectContent>
-            </Select>
+            {([
+              ["Climate", "All Climates", climateFilter, setClimateFilter, climateOpen, setClimateOpen, CLIMATE_OPTIONS, CLIMATE_LABELS],
+              ["Foliage", "All Foliage", foliageFilter, setFoliageFilter, foliageOpen, setFoliageOpen, FOLIAGE_OPTIONS, FOLIAGE_LABELS],
+              ["Stage", "All Stages", stageFilter, setStageFilter, stageOpen, setStageOpen, STAGE_OPTIONS, STAGE_ITEM_LABELS],
+              ["Status", "All Statuses", statusFilter, setStatusFilter, statusOpen, setStatusOpen, STATUS_OPTIONS, STATUS_LABELS],
+            ] as const).map(([name, emptyLabel, filter, setter, open, setOpen, options, labels]) => (
+              <Popover key={name} open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="bg-background border-none shadow-none focus:ring-1 h-9 px-3 font-normal text-sm justify-start gap-1.5 min-w-[150px]"
+                  >
+                    {filter.values.length > 0 ? (
+                      <span className="flex items-center gap-1">
+                        {filter.mode === "exclude" ? `Not: ${name}` : name}
+                        <span className="bg-primary text-primary-foreground text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                          {filter.values.length}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">{emptyLabel}</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-2" align="start">
+                  <div className="flex gap-1 mb-2 pb-2 border-b">
+                    {(["include", "exclude"] as const).map((mode) => (
+                      <Button
+                        key={mode}
+                        type="button"
+                        size="sm"
+                        variant={filter.mode === mode ? "default" : "ghost"}
+                        className="h-7 flex-1 text-xs capitalize"
+                        onClick={() => setter((prev) => ({ ...prev, mode }))}
+                      >
+                        {mode}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="space-y-0.5 max-h-60 overflow-y-auto">
+                    {options.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => toggleFilterValue(setter, option)}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-muted text-sm transition-colors text-left"
+                      >
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${filter.values.includes(option) ? "bg-primary border-primary" : "border-input"}`}>
+                          {filter.values.includes(option) && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
+                        </div>
+                        <span>{labels[option] ?? option}</span>
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            ))}
 
             {/* Tags multi-select */}
             <Popover open={tagsOpen} onOpenChange={setTagsOpen}>
@@ -451,57 +465,25 @@ export default function CollectionPage() {
         {/* Active-filter chips — shown when panel is collapsed and filters are active */}
         {showChips && (
           <div className="flex flex-wrap gap-1.5 animate-in fade-in duration-200">
-            {climate !== "all" && (
-              <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium rounded-full px-2.5 py-0.5">
-                {CLIMATE_LABELS[climate] ?? climate}
-                <button
-                  type="button"
-                  aria-label={`Remove ${CLIMATE_LABELS[climate] ?? climate} filter`}
-                  onClick={() => setClimate("all")}
-                  className="hover:text-primary/70 transition-colors ml-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {foliage !== "all" && (
-              <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium rounded-full px-2.5 py-0.5">
-                {FOLIAGE_LABELS[foliage] ?? foliage}
-                <button
-                  type="button"
-                  aria-label={`Remove ${FOLIAGE_LABELS[foliage] ?? foliage} filter`}
-                  onClick={() => setFoliage("all")}
-                  className="hover:text-primary/70 transition-colors ml-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {stage !== "all" && (
-              <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium rounded-full px-2.5 py-0.5">
-                {STAGE_LABELS[stage] ?? stage}
-                <button
-                  type="button"
-                  aria-label={`Remove ${STAGE_LABELS[stage] ?? stage} filter`}
-                  onClick={() => setStage("all")}
-                  className="hover:text-primary/70 transition-colors ml-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {status !== "all" && (
-              <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium rounded-full px-2.5 py-0.5">
-                {STATUS_LABELS[status] ?? status}
-                <button
-                  type="button"
-                  aria-label={`Remove ${STATUS_LABELS[status] ?? status} filter`}
-                  onClick={() => setStatus("all")}
-                  className="hover:text-primary/70 transition-colors ml-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
+            {([
+              [climateFilter, setClimateFilter, CLIMATE_LABELS],
+              [foliageFilter, setFoliageFilter, FOLIAGE_LABELS],
+              [stageFilter, setStageFilter, STAGE_LABELS],
+              [statusFilter, setStatusFilter, STATUS_LABELS],
+            ] as const).flatMap(([filter, setter, labels]) =>
+              filter.values.map((value) => (
+                <span key={`${filter.mode}-${value}`} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium rounded-full px-2.5 py-0.5">
+                  {filter.mode === "exclude" ? "Not " : ""}{labels[value] ?? value}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${labels[value] ?? value} filter`}
+                    onClick={() => toggleFilterValue(setter, value)}
+                    className="hover:text-primary/70 transition-colors ml-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))
             )}
             {selectedTags.map((tag) => (
               <span key={tag} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium rounded-full px-2.5 py-0.5">
