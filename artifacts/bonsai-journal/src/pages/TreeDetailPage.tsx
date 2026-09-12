@@ -1,9 +1,9 @@
-import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTreeReminder, useDeleteTreeLog, useDeleteTreeReminder, listTrees } from "@workspace/api-client-react";
+import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTreeReminder, useUpdateTreeLog, useDeleteTreeLog, useDeleteTreeReminder, listTrees } from "@workspace/api-client-react";
 import { useParams, useLocation, Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, Check, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { TreeForm, type TreeFormHandle } from "@/components/TreeForm";
@@ -72,6 +72,8 @@ export default function TreeDetailPage() {
   const [careExpanded, setCareExpanded] = useState(false);
   const [editingLog, setEditingLog] = useState<{ id: string; type: string; date: string; notes?: string | null } | null>(null);
   const [editingReminder, setEditingReminder] = useState<{ id: string; type: string; dueDate: string; notes?: string | null } | null>(null);
+  const [editingStatusDateId, setEditingStatusDateId] = useState<string | null>(null);
+  const [editingStatusDateValue, setEditingStatusDateValue] = useState("");
   const [careFilter, setCareFilter] = useState<"all" | "completed" | "planned">("all");
 
   // Confirmation dialogs — replacing native confirm() to avoid browser "embedded page" prompt
@@ -114,6 +116,7 @@ export default function TreeDetailPage() {
 
   const deleteTree = useDeleteTree();
   const updateReminder = useUpdateTreeReminder();
+  const updateLog = useUpdateTreeLog();
   const deleteLog = useDeleteTreeLog();
   const deleteReminder = useDeleteTreeReminder();
 
@@ -165,6 +168,20 @@ export default function TreeDetailPage() {
         queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "logs"] });
       }
     });
+  };
+
+  const saveStatusDate = (event: { id: string; type: string; notes?: string | null }) => {
+    if (!editingStatusDateValue) return;
+    updateLog.mutate(
+      { id: tree.id, logId: event.id, data: { type: event.type, date: editingStatusDateValue, notes: event.notes ?? undefined } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "logs"] });
+          setEditingStatusDateId(null);
+        },
+      }
+    );
   };
 
   const handleDeleteReminder = (reminderId: string) => setPendingDeleteReminderId(reminderId);
@@ -494,9 +511,51 @@ export default function TreeDetailPage() {
                             {isStatusChange ? "Health Status Changed" : event.type} {isReminder && !isCompleted && "(Planned)"}
                           </span>
                           <div className="flex items-center gap-1">
-                            <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
-                              {format(date, 'MMM d, yyyy')}
-                            </time>
+                            {isStatusChange ? (
+                              editingStatusDateId === event.id ? (
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="date"
+                                    value={editingStatusDateValue}
+                                    onChange={(e) => setEditingStatusDateValue(e.target.value)}
+                                    className="min-w-0 text-xs border rounded px-1.5 py-0.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => saveStatusDate(event)}
+                                    disabled={updateLog.isPending}
+                                    className="p-1 rounded hover:bg-primary/10 text-primary transition-colors shrink-0"
+                                    aria-label="Save date"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingStatusDateId(null)}
+                                    disabled={updateLog.isPending}
+                                    className="p-1 rounded hover:bg-muted text-muted-foreground transition-colors shrink-0"
+                                    aria-label="Cancel"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  className="group/date flex items-center gap-1 text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded hover:text-foreground transition-colors"
+                                  onClick={() => {
+                                    setEditingStatusDateId(event.id);
+                                    setEditingStatusDateValue(event.date);
+                                  }}
+                                  title="Click to edit date"
+                                >
+                                  <time>{format(date, 'MMM d, yyyy')}</time>
+                                  <Pencil className="w-2.5 h-2.5 opacity-0 group-hover/date:opacity-50 transition-opacity shrink-0" />
+                                </button>
+                              )
+                            ) : (
+                              <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
+                                {format(date, 'MMM d, yyyy')}
+                              </time>
+                            )}
                             {!isStatusChange && (
                               <button
                                 onClick={() => isReminder
@@ -614,9 +673,51 @@ export default function TreeDetailPage() {
                               {isStatusChange ? "Health Status Changed" : event.type} {isReminder && !isCompleted && "(Planned)"}
                             </span>
                             <div className="flex items-center gap-1">
-                              <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
-                                {format(date, 'MMM d, yyyy')}
-                              </time>
+                              {isStatusChange ? (
+                                editingStatusDateId === event.id ? (
+                                  <div className="flex items-center gap-1">
+                                    <input
+                                      type="date"
+                                      value={editingStatusDateValue}
+                                      onChange={(e) => setEditingStatusDateValue(e.target.value)}
+                                      className="min-w-0 text-xs border rounded px-1.5 py-0.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                      autoFocus
+                                    />
+                                    <button
+                                      onClick={() => saveStatusDate(event)}
+                                      disabled={updateLog.isPending}
+                                      className="p-1 rounded hover:bg-primary/10 text-primary transition-colors shrink-0"
+                                      aria-label="Save date"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingStatusDateId(null)}
+                                      disabled={updateLog.isPending}
+                                      className="p-1 rounded hover:bg-muted text-muted-foreground transition-colors shrink-0"
+                                      aria-label="Cancel"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    className="group/date flex items-center gap-1 text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded hover:text-foreground transition-colors"
+                                    onClick={() => {
+                                      setEditingStatusDateId(event.id);
+                                      setEditingStatusDateValue(event.date);
+                                    }}
+                                    title="Click to edit date"
+                                  >
+                                    <time>{format(date, 'MMM d, yyyy')}</time>
+                                    <Pencil className="w-2.5 h-2.5 opacity-0 group-hover/date:opacity-50 transition-opacity shrink-0" />
+                                  </button>
+                                )
+                              ) : (
+                                <time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
+                                  {format(date, 'MMM d, yyyy')}
+                                </time>
+                              )}
                               {!isStatusChange && (
                                 <button
                                   onClick={() => isReminder
