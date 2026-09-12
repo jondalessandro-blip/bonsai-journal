@@ -17,6 +17,8 @@ export interface TreeUpdate {
   style?: string;
   stage?: string;
   status?: string;
+  /** Effective date for a status change. This is not persisted on the tree record itself; it is only used to timestamp the resulting care log entry. */
+  statusChangeDate?: string;
   tags?: string[];
   notes?: string;
   photoUrl?: string;
