@@ -1,0 +1,35 @@
+In artifacts/bonsai-journal/src/pages/TreeDetailPage.tsx, add an inline click-to-edit date control for "Status Change" timeline entries only, modeled directly on the existing date-edit pattern in ProgressionGallery.tsx (the pencil-icon-next-to-date pattern used for photos there).
+
+Add useUpdateTreeLog to the existing import from @workspace/api-client-react.
+
+Add Check to the existing lucide-react icon import list (the file already imports X, reuse that for the cancel icon — no need for a separate alias).
+
+Add two new state variables near the existing editingLog/editingReminder state: const [editingStatusDateId, setEditingStatusDateId] = useState<string | null>(null); and const [editingStatusDateValue, setEditingStatusDateValue] = useState("");
+
+Add const updateLog = useUpdateTreeLog(); near the existing deleteLog hook.
+
+Add a handler, following the same shape as confirmDoDeleteLog:
+
+const saveStatusDate = (event: { id: string; type: string; notes?: string | null }) => {
+  if (!editingStatusDateValue) return;
+  updateLog.mutate(
+    { id: tree.id, logId: event.id, data: { type: event.type, date: editingStatusDateValue, notes: event.notes ?? undefined } },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "logs"] });
+        setEditingStatusDateId(null);
+      },
+    }
+  );
+};
+
+This exact block appears twice in the file (the compact and expanded/fullscreen views of the care journal timeline):
+
+<time className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
+  {format(date, 'MMM d, yyyy')}
+</time>
+
+In both occurrences, when isStatusChange is true, replace that <time> with an inline editable version: if editingStatusDateId === event.id, render an <input type="date"> bound to editingStatusDateValue plus a Check button calling saveStatusDate(event) and an X button that calls setEditingStatusDateId(null), disabled while updateLog.isPending. Otherwise, render the existing <time> styling but wrapped in a clickable element with a Pencil icon that fades in on hover (same visual treatment as the photo date in ProgressionGallery.tsx), and clicking it calls setEditingStatusDateId(event.id); setEditingStatusDateValue(event.date);. For non-status-change events, leave the existing <time> completely untouched.
+
+Do not change the existing edit-pencil-hidden-for-status-change logic, the delete button, or anything else in these blocks. Give me the diff for TreeDetailPage.tsx and a real commit hash pushed to dev before telling me it's done.
