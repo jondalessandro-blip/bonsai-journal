@@ -238,12 +238,12 @@ export default function TreeDetailPage() {
       />
 
       {/* Name / species + actions — full-width row below the cover photo */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3">
         <div>
           <h1 className="text-3xl md:text-4xl font-serif text-foreground mb-1">{tree.name}</h1>
           {tree.species && <p className="text-lg md:text-xl italic text-muted-foreground">{tree.species}</p>}
         </div>
-        <div className="flex flex-wrap justify-end gap-2 shrink-0 pt-1">
+        <div className="flex flex-wrap justify-start gap-2">
           <UnsavedChangesDialog
             open={showEditGuard}
             onSaveAndLeave={() => {
