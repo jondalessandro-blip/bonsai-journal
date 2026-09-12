@@ -26,6 +26,7 @@ const BONSAI_STAGES = [
 
 const TREE_STATUSES = [
   "Thriving",
+  "Healthy",
   "Dormant",
   "Stressed/In Distress",
   "Sick",
