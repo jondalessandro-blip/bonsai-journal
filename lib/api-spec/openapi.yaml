@@ -730,7 +730,7 @@ components:
         photoUrl:
           type: string
         coverThumb:
-          type: string
+          type: ["string", "null"]
         coverPosition:
           type: object
           required: [x, y, zoom]

@@ -197,7 +197,7 @@ export const UpdateTreeBody = zod.object({
   "tags": zod.array(zod.string()).optional(),
   "notes": zod.string().optional(),
   "photoUrl": zod.string().optional(),
-  "coverThumb": zod.string().optional(),
+  "coverThumb": zod.string().nullish(),
   "coverPosition": zod.object({
   "x": zod.number(),
   "y": zod.number(),

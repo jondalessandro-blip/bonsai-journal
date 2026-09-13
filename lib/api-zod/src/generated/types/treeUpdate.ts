@@ -20,6 +20,7 @@ export interface TreeUpdate {
   tags?: string[];
   notes?: string;
   photoUrl?: string;
-  coverThumb?: string;
+  /** @nullable */
+  coverThumb?: string | null;
   coverPosition?: TreeUpdateCoverPosition;
 }
