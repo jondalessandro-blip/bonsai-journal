@@ -28,10 +28,11 @@ function loadPosition(treeId: string, serverPos: CoverPosition | null | undefine
 
 interface Props {
   treeId: string;
+  serverPhotoUrl?: string | null;
   serverCoverPosition?: { x: number; y: number; zoom: number } | null;
 }
 
-export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
+export function CoverPhotoHero({ treeId, serverPhotoUrl, serverCoverPosition }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const updateTree = useUpdateTree();
@@ -40,8 +41,11 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
     query: { queryKey: ["/api/trees", treeId, "photos"], enabled: !!treeId },
   });
 
-  // Most recent photo is the cover
-  const coverPhoto = photos.length > 0 ? photos[photos.length - 1] : null;
+  // Prefer the server-selected cover, falling back to the most recent photo
+  // for older trees or while the selected photo is not present in the list.
+  const coverPhoto =
+    photos.find((photo) => photo.photoUrl === serverPhotoUrl) ??
+    (photos.length > 0 ? photos[photos.length - 1] : null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [pos, setPos] = useState<CoverPosition>(() =>
@@ -101,8 +105,8 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
     setDraft(d => ({ ...d, ...preset }));
   };
 
-  // A new most-recent photo is a new cover and must not inherit the previous
-  // cover's focal point or zoom.
+  // A new designated cover must not inherit the previous cover's focal point
+  // or zoom.
   useEffect(() => {
     if (!coverPhoto) return;
     const coverUrl = coverPhoto.photoUrl;
@@ -117,7 +121,7 @@ export function CoverPhotoHero({ treeId, serverCoverPosition }: Props) {
     setPos(reset);
     setDraft(reset);
     try {
-      localStorage.setItem(coverPositionStorageKey(treeId), JSON.stringify(reset));
+      localStorage.removeItem(coverPositionStorageKey(treeId));
     } catch { /* ignore */ }
   }, [coverPhoto?.photoUrl, treeId]);
 

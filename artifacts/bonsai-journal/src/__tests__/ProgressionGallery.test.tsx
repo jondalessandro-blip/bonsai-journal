@@ -486,6 +486,50 @@ describe("ProgressionGallery — photo upload flow", () => {
   });
 });
 
+describe("ProgressionGallery — cover selection", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUpdateTreeMutate.mockImplementation(
+      (_vars: unknown, opts: { onSuccess?: () => void }) => {
+        opts?.onSuccess?.();
+      },
+    );
+  });
+
+  it("sets a progression photo as the cover and resets its position", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("bonsai-cover-tree-abc", JSON.stringify({ x: 20, y: 30, zoom: 2 }));
+    renderGallery();
+
+    await user.click(screen.getByRole("button", { name: /set as cover/i }));
+
+    expect(mockUpdateTreeMutate).toHaveBeenCalledWith(
+      {
+        id: "tree-abc",
+        data: {
+          photoUrl: "https://example.com/photo.jpg",
+          coverPosition: { x: 50, y: 50, zoom: 1 },
+        },
+      },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+    expect(localStorage.getItem("bonsai-cover-tree-abc")).toBeNull();
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["/api/trees", "tree-abc"],
+    });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["/api/trees"],
+    });
+  });
+
+  it("marks the selected photo as the current cover", () => {
+    renderGallery("https://example.com/photo.jpg");
+
+    expect(screen.getByRole("button", { name: /current cover/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /set as cover/i })).toBeNull();
+  });
+});
+
 describe("ProgressionGallery — lightbox", () => {
   beforeEach(() => {
     vi.clearAllMocks();

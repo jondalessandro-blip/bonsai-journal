@@ -5,6 +5,7 @@ import {
   ImagePlus,
   Loader2,
   Pencil,
+  Star,
   Trash2,
   Check,
   X as XIcon,
@@ -29,9 +30,10 @@ import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 interface Props {
   treeId: string;
+  treePhotoUrl?: string | null;
 }
 
-export function ProgressionGallery({ treeId }: Props) {
+export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -176,6 +178,30 @@ export function ProgressionGallery({ treeId }: Props) {
     );
   };
 
+  const handleSetCover = (photo: TreePhoto) => {
+    const defaultCoverPosition = { ...DEFAULT_COVER_POSITION };
+    try {
+      localStorage.removeItem(coverPositionStorageKey(treeId));
+    } catch { /* ignore */ }
+
+    updateTree.mutate(
+      {
+        id: treeId,
+        data: {
+          photoUrl: photo.photoUrl,
+          ...(photo.photoThumb ? { coverThumb: photo.photoThumb } : {}),
+          coverPosition: defaultCoverPosition,
+        },
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId] });
+          queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
+        },
+      },
+    );
+  };
+
   const currentLightboxPhoto =
     lightboxIndex !== null ? photos[lightboxIndex] : null;
 
@@ -270,7 +296,12 @@ export function ProgressionGallery({ treeId }: Props) {
             <div key={photo.id} className="group relative">
               {/* Tile */}
               <div
-                className="aspect-[4/3] rounded-lg overflow-hidden border border-border/50 bg-muted cursor-zoom-in relative"
+                className={[
+                  "aspect-[4/3] rounded-lg overflow-hidden border bg-muted cursor-zoom-in relative",
+                  treePhotoUrl === photo.photoUrl
+                    ? "border-primary ring-2 ring-primary/30"
+                    : "border-border/50",
+                ].join(" ")}
                 onClick={() => {
                   if (confirmDeleteId !== photo.id) setLightboxIndex(idx);
                 }}
@@ -282,6 +313,16 @@ export function ProgressionGallery({ treeId }: Props) {
                   decoding="async"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
+
+                {treePhotoUrl === photo.photoUrl && (
+                  <div
+                    className="absolute top-1.5 left-1.5 rounded-full bg-primary text-primary-foreground p-1 shadow"
+                    aria-label="Current cover"
+                    title="Current cover"
+                  >
+                    <Star className="w-3 h-3 fill-current" />
+                  </div>
+                )}
 
                 {/* Delete button — always visible on mobile, hover-only on desktop */}
                 <div className="absolute top-1.5 right-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:transition-opacity flex gap-1 z-10">
@@ -309,16 +350,43 @@ export function ProgressionGallery({ treeId }: Props) {
                       </button>
                     </>
                   ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setConfirmDeleteId(photo.id);
-                      }}
-                      className="bg-black/60 text-white rounded p-1.5 hover:bg-destructive transition-colors shadow"
-                      aria-label="Delete photo"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSetCover(photo);
+                        }}
+                        disabled={updateTree.isPending || treePhotoUrl === photo.photoUrl}
+                        className={[
+                          "rounded p-1.5 shadow transition-colors disabled:cursor-default disabled:opacity-80",
+                          treePhotoUrl === photo.photoUrl
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-black/60 text-white hover:bg-primary",
+                        ].join(" ")}
+                        aria-label={
+                          treePhotoUrl === photo.photoUrl
+                            ? "Current cover"
+                            : "Set as cover"
+                        }
+                        title={
+                          treePhotoUrl === photo.photoUrl
+                            ? "Current cover"
+                            : "Set as cover"
+                        }
+                      >
+                        <Star className="w-3 h-3" fill={treePhotoUrl === photo.photoUrl ? "currentColor" : "none"} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteId(photo.id);
+                        }}
+                        className="bg-black/60 text-white rounded p-1.5 hover:bg-destructive transition-colors shadow"
+                        aria-label="Delete photo"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

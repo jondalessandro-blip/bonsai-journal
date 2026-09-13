@@ -234,6 +234,7 @@ export default function TreeDetailPage() {
       {/* Cover photo hero — repositionable banner */}
       <CoverPhotoHero
         treeId={tree.id}
+        serverPhotoUrl={tree.photoUrl}
         serverCoverPosition={tree.coverPosition}
       />
 
@@ -431,7 +432,7 @@ export default function TreeDetailPage() {
 
           {/* Progression gallery — below the name/notes, full right-col width */}
           <div className="pt-2">
-            <ProgressionGallery treeId={tree.id} />
+            <ProgressionGallery treeId={tree.id} treePhotoUrl={tree.photoUrl} />
           </div>
 
           <div className="space-y-6 pt-6 border-t">
