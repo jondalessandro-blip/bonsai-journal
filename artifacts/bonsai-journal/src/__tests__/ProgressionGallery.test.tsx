@@ -103,11 +103,11 @@ function makeClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
 }
 
-function renderGallery() {
+function renderGallery(treePhotoUrl?: string | null) {
   const client = makeClient();
   return render(
     <QueryClientProvider client={client}>
-      <ProgressionGallery treeId="tree-abc" />
+      <ProgressionGallery treeId="tree-abc" treePhotoUrl={treePhotoUrl} />
     </QueryClientProvider>,
   );
 }
