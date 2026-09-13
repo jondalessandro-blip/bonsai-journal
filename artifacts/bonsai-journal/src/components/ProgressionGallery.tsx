@@ -119,7 +119,7 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
           id: treeId,
           data: {
             photoUrl: result.serveUrl,
-            ...(result.thumbUrl ? { coverThumb: result.thumbUrl } : {}),
+            coverThumb: result.thumbUrl ?? null,
             coverPosition: defaultCoverPosition,
           },
         },
@@ -189,7 +189,7 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
         id: treeId,
         data: {
           photoUrl: photo.photoUrl,
-          ...(photo.photoThumb ? { coverThumb: photo.photoThumb } : {}),
+          coverThumb: photo.photoThumb ?? null,
           coverPosition: defaultCoverPosition,
         },
       },
