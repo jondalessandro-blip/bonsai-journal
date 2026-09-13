@@ -50,7 +50,7 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      types: [initialData?.type ?? "Watering"],
+      types: initialData ? [initialData.type] : [],
       dueDate: initialData?.dueDate
         ? initialData.dueDate.split("T")[0]
         : format(addDays(new Date(), 7), "yyyy-MM-dd"),

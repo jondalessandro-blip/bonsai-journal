@@ -52,7 +52,7 @@ export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      types: [initialData?.type ?? "Watering"],
+      types: initialData ? [initialData.type] : [],
       date: initialData?.date
         ? initialData.date.split("T")[0]
         : new Date().toISOString().split("T")[0],
