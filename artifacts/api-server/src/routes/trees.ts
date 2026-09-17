@@ -11,10 +11,12 @@ import {
   ListTreeLogsParams,
   CreateTreeLogParams,
   CreateTreeLogBody,
+  CreateBulkTreeLogsBody,
   DeleteTreeLogParams,
   ListTreeRemindersParams,
   CreateTreeReminderParams,
   CreateTreeReminderBody,
+  CreateBulkTreeRemindersBody,
   UpdateTreeReminderParams,
   UpdateTreeReminderBody,
   DeleteTreeReminderParams,
@@ -335,6 +337,47 @@ router.delete("/trees/:id", requireAuth, async (req, res): Promise<void> => {
 
 // ---- Care Logs ----
 
+router.post("/trees/logs/bulk", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as AuthedRequest).userId;
+  const parsed = CreateBulkTreeLogsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { treeIds, ...sharedLog } = parsed.data;
+  let logs: (typeof careLogsTable.$inferSelect)[] | undefined;
+
+  await db.transaction(async (tx) => {
+    const ownedTrees = await tx
+      .select({ id: treesTable.id })
+      .from(treesTable)
+      .where(
+        and(
+          inArray(treesTable.id, treeIds),
+          eq(treesTable.userId, userId),
+        ),
+      )
+      .for("update");
+
+    if (ownedTrees.length !== treeIds.length) return;
+
+    logs = await tx
+      .insert(careLogsTable)
+      .values(treeIds.map((treeId) => ({ treeId, ...sharedLog })))
+      .returning();
+  });
+
+  if (!logs) {
+    res.status(404).json({
+      error: "One or more trees were not found or not owned by the user",
+    });
+    return;
+  }
+
+  res.status(201).json(logs.map(formatLog));
+});
+
 router.get("/trees/:id/logs", requireAuth, async (req, res): Promise<void> => {
   const params = ListTreeLogsParams.safeParse(req.params);
   if (!params.success) {
@@ -442,6 +485,47 @@ router.delete("/trees/:id/logs/:logId", requireAuth, async (req, res): Promise<v
 });
 
 // ---- Care Reminders ----
+
+router.post("/trees/reminders/bulk", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as AuthedRequest).userId;
+  const parsed = CreateBulkTreeRemindersBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { treeIds, ...sharedReminder } = parsed.data;
+  let reminders: (typeof careRemindersTable.$inferSelect)[] | undefined;
+
+  await db.transaction(async (tx) => {
+    const ownedTrees = await tx
+      .select({ id: treesTable.id })
+      .from(treesTable)
+      .where(
+        and(
+          inArray(treesTable.id, treeIds),
+          eq(treesTable.userId, userId),
+        ),
+      )
+      .for("update");
+
+    if (ownedTrees.length !== treeIds.length) return;
+
+    reminders = await tx
+      .insert(careRemindersTable)
+      .values(treeIds.map((treeId) => ({ treeId, ...sharedReminder })))
+      .returning();
+  });
+
+  if (!reminders) {
+    res.status(404).json({
+      error: "One or more trees were not found or not owned by the user",
+    });
+    return;
+  }
+
+  res.status(201).json(reminders.map(formatReminder));
+});
 
 router.get("/trees/:id/reminders", requireAuth, async (req, res): Promise<void> => {
   const params = ListTreeRemindersParams.safeParse(req.params);

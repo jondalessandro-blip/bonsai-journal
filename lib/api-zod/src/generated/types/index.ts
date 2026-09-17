@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './bulkCareLogInput';
+export * from './bulkCareReminderInput';
 export * from './careLog';
 export * from './careLogInput';
 export * from './careReminder';

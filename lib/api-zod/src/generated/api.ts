@@ -240,6 +240,31 @@ export const DeleteTreeResponse = zod.void()
 
 
 /**
+ * @summary Add a care log entry to multiple trees
+ */
+export const createBulkTreeLogsBodyTreeIdsMax = 200;
+
+
+
+export const CreateBulkTreeLogsBody = zod.object({
+  "treeIds": zod.array(zod.string()).min(1).max(createBulkTreeLogsBodyTreeIdsMax),
+  "type": zod.string(),
+  "date": zod.string(),
+  "notes": zod.string().optional()
+})
+
+export const CreateBulkTreeLogsResponseItem = zod.object({
+  "id": zod.string(),
+  "treeId": zod.string(),
+  "type": zod.string(),
+  "date": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const CreateBulkTreeLogsResponse = zod.array(CreateBulkTreeLogsResponseItem)
+
+
+/**
  * @summary Get care logs for a tree
  */
 export const ListTreeLogsParams = zod.object({
@@ -313,6 +338,32 @@ export const DeleteTreeLogParams = zod.object({
 })
 
 export const DeleteTreeLogResponse = zod.void()
+
+
+/**
+ * @summary Add a reminder to multiple trees
+ */
+export const createBulkTreeRemindersBodyTreeIdsMax = 200;
+
+
+
+export const CreateBulkTreeRemindersBody = zod.object({
+  "treeIds": zod.array(zod.string()).min(1).max(createBulkTreeRemindersBodyTreeIdsMax),
+  "type": zod.string(),
+  "dueDate": zod.string(),
+  "notes": zod.string().optional()
+})
+
+export const CreateBulkTreeRemindersResponseItem = zod.object({
+  "id": zod.string(),
+  "treeId": zod.string(),
+  "type": zod.string(),
+  "dueDate": zod.string(),
+  "notes": zod.string().nullish(),
+  "completed": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const CreateBulkTreeRemindersResponse = zod.array(CreateBulkTreeRemindersResponseItem)
 
 
 /**

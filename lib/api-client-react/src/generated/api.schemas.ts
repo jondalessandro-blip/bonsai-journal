@@ -134,6 +134,17 @@ export interface CareLogInput {
   notes?: string;
 }
 
+export interface BulkCareLogInput {
+  /**
+     * @minItems 1
+     * @maxItems 200
+     */
+  treeIds: string[];
+  type: string;
+  date: string;
+  notes?: string;
+}
+
 export interface CareReminder {
   id: string;
   treeId: string;
@@ -146,6 +157,17 @@ export interface CareReminder {
 }
 
 export interface CareReminderInput {
+  type: string;
+  dueDate: string;
+  notes?: string;
+}
+
+export interface BulkCareReminderInput {
+  /**
+     * @minItems 1
+     * @maxItems 200
+     */
+  treeIds: string[];
   type: string;
   dueDate: string;
   notes?: string;

@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BulkCareLogInput,
+  BulkCareReminderInput,
   CareLog,
   CareLogInput,
   CareReminder,
@@ -665,6 +667,77 @@ export const useDeleteTree = <TError = ErrorType<unknown>,
       return useMutation(getDeleteTreeMutationOptions(options));
     }
 
+export const getCreateBulkTreeLogsUrl = () => {
+
+
+
+
+  return `/api/trees/logs/bulk`
+}
+
+/**
+ * @summary Add a care log entry to multiple trees
+ */
+export const createBulkTreeLogs = async (bulkCareLogInput: BulkCareLogInput, options?: RequestInit): Promise<CareLog[]> => {
+
+  return customFetch<CareLog[]>(getCreateBulkTreeLogsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(bulkCareLogInput)
+  }
+);}
+
+
+
+
+
+export const getCreateBulkTreeLogsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBulkTreeLogs>>, TError,{data: BodyType<BulkCareLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBulkTreeLogs>>, TError,{data: BodyType<BulkCareLogInput>}, TContext> => {
+
+const mutationKey = ['createBulkTreeLogs'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBulkTreeLogs>>, {data: BodyType<BulkCareLogInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createBulkTreeLogs(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBulkTreeLogsMutationResult = NonNullable<Awaited<ReturnType<typeof createBulkTreeLogs>>>
+    export type CreateBulkTreeLogsMutationBody = BodyType<BulkCareLogInput>
+    export type CreateBulkTreeLogsMutationError = ErrorType<void>
+
+    /**
+ * @summary Add a care log entry to multiple trees
+ */
+export const useCreateBulkTreeLogs = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBulkTreeLogs>>, TError,{data: BodyType<BulkCareLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createBulkTreeLogs>>,
+        TError,
+        {data: BodyType<BulkCareLogInput>},
+        TContext
+      > => {
+      return useMutation(getCreateBulkTreeLogsMutationOptions(options));
+    }
+
 export const getListTreeLogsUrl = (id: string,) => {
 
 
@@ -959,6 +1032,77 @@ export const useDeleteTreeLog = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteTreeLogMutationOptions(options));
+    }
+
+export const getCreateBulkTreeRemindersUrl = () => {
+
+
+
+
+  return `/api/trees/reminders/bulk`
+}
+
+/**
+ * @summary Add a reminder to multiple trees
+ */
+export const createBulkTreeReminders = async (bulkCareReminderInput: BulkCareReminderInput, options?: RequestInit): Promise<CareReminder[]> => {
+
+  return customFetch<CareReminder[]>(getCreateBulkTreeRemindersUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(bulkCareReminderInput)
+  }
+);}
+
+
+
+
+
+export const getCreateBulkTreeRemindersMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBulkTreeReminders>>, TError,{data: BodyType<BulkCareReminderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBulkTreeReminders>>, TError,{data: BodyType<BulkCareReminderInput>}, TContext> => {
+
+const mutationKey = ['createBulkTreeReminders'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBulkTreeReminders>>, {data: BodyType<BulkCareReminderInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createBulkTreeReminders(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBulkTreeRemindersMutationResult = NonNullable<Awaited<ReturnType<typeof createBulkTreeReminders>>>
+    export type CreateBulkTreeRemindersMutationBody = BodyType<BulkCareReminderInput>
+    export type CreateBulkTreeRemindersMutationError = ErrorType<void>
+
+    /**
+ * @summary Add a reminder to multiple trees
+ */
+export const useCreateBulkTreeReminders = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBulkTreeReminders>>, TError,{data: BodyType<BulkCareReminderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createBulkTreeReminders>>,
+        TError,
+        {data: BodyType<BulkCareReminderInput>},
+        TContext
+      > => {
+      return useMutation(getCreateBulkTreeRemindersMutationOptions(options));
     }
 
 export const getListTreeRemindersUrl = (id: string,) => {
