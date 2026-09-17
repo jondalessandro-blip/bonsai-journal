@@ -38,6 +38,7 @@ export default function TreeDetailPage() {
       status: getArrayParam("status"),
       statusExclude: getArrayParam("statusExclude"),
       tags: getArrayParam("tags"),
+      tagsMode: params.get("tagsMode") === "any" ? "any" : undefined,
     };
   })();
 
