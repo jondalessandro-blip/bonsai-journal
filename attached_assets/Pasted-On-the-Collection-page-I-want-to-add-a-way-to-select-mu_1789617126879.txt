@@ -1,0 +1,11 @@
+On the Collection page, I want to add a way to select multiple trees and apply a care action to all of them at once.
+
+Add a "Select" button to the toolbar on CollectionPage.tsx, near the existing filter controls. Tapping it toggles a selectMode boolean state on the page. While selectMode is true, the button's label changes to "Cancel" and tapping it again turns selectMode off and clears any selection.
+
+Add a selectedTreeIds state on CollectionPage, holding the set of currently selected tree ids. While selectMode is true, also show a "Select all" text button that selects every tree currently loaded in the list (or "Deselect all" if all are already selected).
+
+Update TreeCard.tsx (desktop grid) and TreeGridTile.tsx (mobile grid) to each accept three new optional props: selectMode (boolean), isSelected (boolean), and onToggleSelect (a function with no arguments). When selectMode is true: clicking the card/tile should call onToggleSelect instead of navigating to the tree detail page, and a checkbox should appear overlaid in a corner of the thumbnail image reflecting isSelected (use the existing Checkbox component from @/components/ui/checkbox, styled so it's clearly visible over a photo, e.g. with a small circular background). When selectMode is false or not provided, both components should behave exactly as they do today. Pass these three props down from CollectionPage wherever it renders TreeCard and TreeGridTile, using selectedTreeIds to compute isSelected per tree.
+
+Finally, add a floating action bar fixed near the bottom of the screen that only appears when selectedTreeIds has at least one entry. It should show the count, like "3 trees selected", and two buttons: "Log Care" and "Schedule Care". For now, wire both buttons to just open an empty Dialog (from @/components/ui/dialog) with a placeholder DialogTitle of "Log Care" or "Schedule Care" and placeholder text inside saying "Form goes here" — we'll fill these in with real forms in the next step. Make sure the action bar doesn't visually block the infinite-scroll sentinel at the bottom of the page.
+
+Just make the changes and confirm what you edited, including which files changed. Don't push to GitHub — I'll do that myself.

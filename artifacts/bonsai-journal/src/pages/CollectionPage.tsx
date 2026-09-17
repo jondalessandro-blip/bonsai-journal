@@ -5,6 +5,13 @@ import { TreeGridTile } from "@/components/TreeGridTile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
 import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown } from "lucide-react";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
@@ -83,6 +90,11 @@ export default function CollectionPage() {
   });
   const [tagsOpen, setTagsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedTreeIds, setSelectedTreeIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [bulkDialog, setBulkDialog] = useState<"log" | "schedule" | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -187,6 +199,34 @@ export default function CollectionPage() {
   });
 
   const trees = useMemo(() => data?.pages.flat() ?? [], [data]);
+  const allLoadedSelected =
+    trees.length > 0 && trees.every((tree) => selectedTreeIds.has(tree.id));
+
+  const toggleTreeSelection = useCallback((treeId: string) => {
+    setSelectedTreeIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(treeId)) {
+        next.delete(treeId);
+      } else {
+        next.add(treeId);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleSelectMode = useCallback(() => {
+    if (selectMode) setSelectedTreeIds(new Set());
+    setSelectMode(!selectMode);
+  }, [selectMode]);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedTreeIds((previous) => {
+      const everyLoadedTreeIsSelected =
+        trees.length > 0 && trees.every((tree) => previous.has(tree.id));
+      if (everyLoadedTreeIsSelected) return new Set();
+      return new Set(trees.map((tree) => tree.id));
+    });
+  }, [trees]);
 
   // Grow the master tag list as new trees load — never shrinks so the popover
   // stays complete even when a tag filter is active and results are narrowed.
@@ -248,12 +288,17 @@ export default function CollectionPage() {
 
   const searchQuery = debouncedSearch.toLowerCase();
   const totalLoaded = trees.length;
+  const selectedCount = selectedTreeIds.size;
 
   // Whether the panel is collapsed and has active filters
   const showChips = !filtersOpen && activeFilterCount > 0;
 
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
+    <div
+      className={`space-y-8 animate-in fade-in duration-500 ${
+        selectedCount > 0 ? "pb-48 sm:pb-36" : "pb-12"
+      }`}
+    >
 
       {reminders && reminders.length > 0 && (
         <UpcomingCarePanel reminders={reminders} />
@@ -315,23 +360,43 @@ export default function CollectionPage() {
         <div className="h-px bg-border/50" />
 
         {/* Toggle row */}
-        <button
-          type="button"
-          onClick={() => setFiltersOpen((o) => !o)}
-          className="flex items-center gap-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors select-none"
-          aria-expanded={filtersOpen}
-        >
-          <Filter className="w-3.5 h-3.5 shrink-0" />
-          <span className="font-medium">Filters</span>
-          {activeFilterCount > 0 && (
-            <span className="bg-primary text-primary-foreground text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center leading-none shrink-0">
-              {activeFilterCount}
-            </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((o) => !o)}
+            className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors select-none"
+            aria-expanded={filtersOpen}
+          >
+            <Filter className="w-3.5 h-3.5 shrink-0" />
+            <span className="font-medium">Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-primary text-primary-foreground text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center leading-none shrink-0">
+                {activeFilterCount}
+              </span>
+            )}
+            <ChevronDown
+              className={`w-3.5 h-3.5 ml-auto shrink-0 transition-transform duration-200 ${filtersOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {selectMode && trees.length > 0 && (
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="shrink-0 px-1 text-xs font-medium text-primary hover:text-primary/75 transition-colors"
+            >
+              {allLoadedSelected ? "Deselect all" : "Select all"}
+            </button>
           )}
-          <ChevronDown
-            className={`w-3.5 h-3.5 ml-auto shrink-0 transition-transform duration-200 ${filtersOpen ? "rotate-180" : ""}`}
-          />
-        </button>
+          <Button
+            type="button"
+            size="sm"
+            variant={selectMode ? "secondary" : "outline"}
+            onClick={toggleSelectMode}
+            className="h-8 shrink-0"
+          >
+            {selectMode ? "Cancel" : "Select"}
+          </Button>
+        </div>
 
         {/* Collapsible filter panel */}
         {filtersOpen && (
@@ -532,7 +597,14 @@ export default function CollectionPage() {
         <>
           <div className="sm:hidden grid grid-cols-3 gap-3">
             {trees.map(tree => (
-              <TreeGridTile key={tree.id} tree={tree} navContext={navFilterQuery} />
+              <TreeGridTile
+                key={tree.id}
+                tree={tree}
+                navContext={navFilterQuery}
+                selectMode={selectMode}
+                isSelected={selectedTreeIds.has(tree.id)}
+                onToggleSelect={() => toggleTreeSelection(tree.id)}
+              />
             ))}
           </div>
           <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -542,6 +614,9 @@ export default function CollectionPage() {
                 tree={tree}
                 searchQuery={searchQuery}
                 navContext={navFilterQuery}
+                selectMode={selectMode}
+                isSelected={selectedTreeIds.has(tree.id)}
+                onToggleSelect={() => toggleTreeSelection(tree.id)}
               />
             ))}
           </div>
@@ -565,6 +640,47 @@ export default function CollectionPage() {
           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         )}
       </div>
+
+      {selectedCount > 0 && (
+        <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5rem)] sm:bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-40 flex justify-center px-4 pointer-events-none">
+          <div className="pointer-events-auto flex w-full max-w-xl items-center gap-3 rounded-2xl border border-border/70 bg-background/95 p-3 shadow-xl backdrop-blur-md">
+            <p className="min-w-0 flex-1 text-sm font-medium">
+              {selectedCount} {selectedCount === 1 ? "tree" : "trees"} selected
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setBulkDialog("log")}
+            >
+              Log Care
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setBulkDialog("schedule")}
+            >
+              Schedule Care
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <Dialog
+        open={bulkDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setBulkDialog(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {bulkDialog === "schedule" ? "Schedule Care" : "Log Care"}
+            </DialogTitle>
+            <DialogDescription>Form goes here</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -433,7 +433,7 @@ describe("ProgressionGallery — photo upload flow", () => {
     }, expect.any(Object));
   });
 
-  it("omits photoThumb and coverThumb when the upload returns no thumbUrl", async () => {
+  it("omits photoThumb and clears coverThumb when the upload returns no thumbUrl", async () => {
     mockUploadPhoto.mockResolvedValue({
       objectPath: "/photos/test.webp",
       serveUrl: uploadResult.serveUrl,
@@ -460,11 +460,10 @@ describe("ProgressionGallery — photo upload flow", () => {
       id: "tree-abc",
       data: {
         photoUrl: uploadResult.serveUrl,
+        coverThumb: null,
         coverPosition: { x: 50, y: 50, zoom: 1 },
       },
     }, expect.any(Object));
-    const [updateArgs] = mockUpdateTreeMutate.mock.calls[0];
-    expect(updateArgs.data).not.toHaveProperty("coverThumb");
   });
 
   it("does not call createPhoto.mutate or updateTree.mutate when uploadPhoto returns null", async () => {
@@ -508,6 +507,7 @@ describe("ProgressionGallery — cover selection", () => {
         id: "tree-abc",
         data: {
           photoUrl: "https://example.com/photo.jpg",
+          coverThumb: null,
           coverPosition: { x: 50, y: 50, zoom: 1 },
         },
       },

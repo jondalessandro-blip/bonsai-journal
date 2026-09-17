@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import type { Tree } from "@workspace/api-client-react";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Checkbox } from "./ui/checkbox";
 import { Calendar } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -10,12 +11,18 @@ interface TreeCardProps {
   tree: Tree;
   searchQuery?: string;
   navContext?: string;
+  selectMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 export const TreeCard = memo(function TreeCard({
   tree,
   searchQuery = "",
   navContext = "",
+  selectMode = false,
+  isSelected = false,
+  onToggleSelect,
 }: TreeCardProps) {
   const [, setLocation] = useLocation();
 
@@ -25,10 +32,30 @@ export const TreeCard = memo(function TreeCard({
   const tagMatches = (tag: string) =>
     searchQuery.length > 0 && tag.toLowerCase().includes(searchQuery);
 
+  const handleActivate = () => {
+    if (selectMode) {
+      onToggleSelect?.();
+      return;
+    }
+    setLocation(`/trees/${tree.id}${navContext ? `?${navContext}` : ""}`);
+  };
+
   return (
     <Card
-      className="group overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300 border-border/50 hover:border-primary/30"
-      onClick={() => setLocation(`/trees/${tree.id}${navContext ? `?${navContext}` : ""}`)}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selectMode ? isSelected : undefined}
+      className={[
+        "group overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300 border-border/50 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        selectMode && isSelected ? "ring-2 ring-primary border-primary/60" : "",
+      ].join(" ")}
+      onClick={handleActivate}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleActivate();
+        }
+      }}
     >
       <div className="aspect-[4/3] w-full overflow-hidden bg-muted relative">
         {(tree.coverThumb ?? tree.photoUrl) ? (
@@ -52,6 +79,16 @@ export const TreeCard = memo(function TreeCard({
             <span className="text-xs tracking-widest uppercase">No Photo</span>
           </div>
         )}
+        {selectMode && (
+          <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-background/90 p-1 shadow-md backdrop-blur-sm">
+            <Checkbox
+              checked={isSelected}
+              tabIndex={-1}
+              aria-hidden="true"
+              className="h-5 w-5 rounded-full border-2 border-primary bg-background data-[state=checked]:bg-primary"
+            />
+          </span>
+        )}
       </div>
 
       <CardContent className="p-4">
@@ -64,6 +101,7 @@ export const TreeCard = memo(function TreeCard({
               <button
                 type="button"
                 onClick={(e) => {
+                   if (selectMode) return;
                   e.stopPropagation();
                   setLocation(`/?status=${encodeURIComponent(tree.status!)}`);
                 }}

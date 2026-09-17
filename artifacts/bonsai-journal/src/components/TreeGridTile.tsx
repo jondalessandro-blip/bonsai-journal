@@ -2,23 +2,50 @@ import { memo } from "react";
 import { useLocation } from "wouter";
 import type { Tree } from "@workspace/api-client-react";
 import { Leaf } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface TreeGridTileProps {
   tree: Tree;
   navContext?: string;
+  selectMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 /** 3-column grid tile used on mobile screens only. */
 export const TreeGridTile = memo(function TreeGridTile({
   tree,
   navContext = "",
+  selectMode = false,
+  isSelected = false,
+  onToggleSelect,
 }: TreeGridTileProps) {
   const [, setLocation] = useLocation();
 
+  const handleActivate = () => {
+    if (selectMode) {
+      onToggleSelect?.();
+      return;
+    }
+    setLocation(`/trees/${tree.id}${navContext ? `?${navContext}` : ""}`);
+  };
+
   return (
-    <button
-      className="flex flex-col items-stretch text-left active:opacity-70 transition-opacity"
-      onClick={() => setLocation(`/trees/${tree.id}${navContext ? `?${navContext}` : ""}`)}
+    <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={selectMode ? isSelected : undefined}
+      className={[
+        "flex flex-col items-stretch text-left active:opacity-70 transition-all rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        selectMode && isSelected ? "ring-2 ring-primary ring-offset-2" : "",
+      ].join(" ")}
+      onClick={handleActivate}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleActivate();
+        }
+      }}
     >
       {/* Square thumbnail */}
       <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-muted border border-border/40">
@@ -43,6 +70,16 @@ export const TreeGridTile = memo(function TreeGridTile({
             <Leaf className="w-6 h-6 text-muted-foreground/30" />
           </div>
         )}
+        {selectMode && (
+          <span className="pointer-events-none absolute right-1.5 top-1.5 rounded-full bg-background/90 p-0.5 shadow-md backdrop-blur-sm">
+            <Checkbox
+              checked={isSelected}
+              tabIndex={-1}
+              aria-hidden="true"
+              className="h-5 w-5 rounded-full border-2 border-primary bg-background data-[state=checked]:bg-primary"
+            />
+          </span>
+        )}
       </div>
 
       {/* Name */}
@@ -56,12 +93,17 @@ export const TreeGridTile = memo(function TreeGridTile({
           role="button"
           tabIndex={0}
           onClick={(e) => {
+            if (selectMode) return;
             e.stopPropagation();
             setLocation(`/?status=${encodeURIComponent(tree.status!)}`);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.stopPropagation();
+              if (selectMode) {
+                onToggleSelect?.();
+                return;
+              }
               setLocation(`/?status=${encodeURIComponent(tree.status!)}`);
             }
           }}
@@ -78,6 +120,6 @@ export const TreeGridTile = memo(function TreeGridTile({
           {tree.status}
         </span>
       )}
-    </button>
+    </div>
   );
 });
