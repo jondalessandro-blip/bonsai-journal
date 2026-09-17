@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
-import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown } from "lucide-react";
+import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown, HelpCircle } from "lucide-react";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 
@@ -333,12 +333,24 @@ export default function CollectionPage() {
               : `${totalLoaded} tree${totalLoaded !== 1 ? "s" : ""} growing`}
           </p>
         </div>
-        <Link href="/trees/new">
-          <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="w-4 h-4" />
-            Add Tree
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/help">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Help"
+              className="rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="/trees/new">
+            <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Plus className="w-4 h-4" />
+              Add Tree
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

@@ -12,6 +12,7 @@ import CollectionPage from "@/pages/CollectionPage";
 import TreeDetailPage from "@/pages/TreeDetailPage";
 import NewTreePage from "@/pages/NewTreePage";
 import StatsPage from "@/pages/StatsPage";
+import HelpPage from "@/pages/HelpPage";
 import FeedbackAdminPage from "@/pages/FeedbackAdminPage";
 import LandingPage from "@/pages/LandingPage";
 import VideoTemplate from "@/components/video/VideoTemplate";
@@ -197,6 +198,13 @@ function Router() {
         <Protected>
           <Layout>
             <StatsPage />
+          </Layout>
+        </Protected>
+      </Route>
+      <Route path="/help">
+        <Protected>
+          <Layout>
+            <HelpPage />
           </Layout>
         </Protected>
       </Route>
