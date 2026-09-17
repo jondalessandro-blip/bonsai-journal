@@ -1,22 +1,36 @@
 import { useEffect } from "react";
-import { X, ZoomIn, Plus, Minus } from "lucide-react";
+import { X, ZoomIn, Plus, Minus, ChevronLeft, ChevronRight } from "lucide-react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 interface LightboxProps {
   src: string;
   alt?: string;
   onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  hasPrev: boolean;
+  hasNext: boolean;
 }
 
-export function Lightbox({ src, alt, onClose }: LightboxProps) {
-  // Close on Escape key
+export function Lightbox({
+  src,
+  alt,
+  onClose,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
+}: LightboxProps) {
+  // Close on Escape and navigate with the arrow keys
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft" && hasPrev) onPrev();
+      if (e.key === "ArrowRight" && hasNext) onNext();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [hasNext, hasPrev, onClose, onNext, onPrev]);
 
   return (
     <div
@@ -30,6 +44,30 @@ export function Lightbox({ src, alt, onClose }: LightboxProps) {
         aria-label="Close"
       >
         <X className="w-6 h-6" />
+      </button>
+
+      <button
+        className="fixed left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-black/50"
+        onClick={(e) => {
+          e.stopPropagation();
+          onPrev();
+        }}
+        disabled={!hasPrev}
+        aria-label="Previous photo"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+
+      <button
+        className="fixed right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-black/50"
+        onClick={(e) => {
+          e.stopPropagation();
+          onNext();
+        }}
+        disabled={!hasNext}
+        aria-label="Next photo"
+      >
+        <ChevronRight className="w-6 h-6" />
       </button>
 
       {/*
@@ -78,11 +116,11 @@ export function Lightbox({ src, alt, onClose }: LightboxProps) {
                 </button>
               </div>
 
-              <TransformComponent wrapperClass="rounded-xl overflow-hidden shadow-2xl">
+              <TransformComponent wrapperClass="flex items-center justify-center">
                 <img
                   src={src}
                   alt={alt ?? "Photo"}
-                  style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", display: "block" }}
+                  style={{ maxWidth: "100vw", maxHeight: "100dvh", objectFit: "contain", display: "block" }}
                   className="select-none"
                   draggable={false}
                 />

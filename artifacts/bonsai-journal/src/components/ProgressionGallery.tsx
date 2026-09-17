@@ -454,6 +454,10 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
           src={currentLightboxPhoto.photoUrl}
           alt={`Progression — ${format(parseISO(currentLightboxPhoto.takenAt), "MMM d, yyyy")}`}
           onClose={() => setLightboxIndex(null)}
+          onPrev={() => setLightboxIndex((index) => index !== null && index > 0 ? index - 1 : index)}
+          onNext={() => setLightboxIndex((index) => index !== null && index < photos.length - 1 ? index + 1 : index)}
+          hasPrev={lightboxIndex !== null && lightboxIndex > 0}
+          hasNext={lightboxIndex !== null && lightboxIndex < photos.length - 1}
         />
       )}
     </section>
