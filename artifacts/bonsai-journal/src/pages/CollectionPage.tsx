@@ -2,6 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { listTrees, useListUpcomingReminders } from "@workspace/api-client-react";
 import { TreeCard } from "@/components/TreeCard";
 import { TreeGridTile } from "@/components/TreeGridTile";
+import { BulkLogForm } from "@/components/BulkLogForm";
+import { BulkReminderForm } from "@/components/BulkReminderForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -95,6 +97,7 @@ export default function CollectionPage() {
     () => new Set(),
   );
   const [bulkDialog, setBulkDialog] = useState<"log" | "schedule" | null>(null);
+  const [bulkTreeIds, setBulkTreeIds] = useState<string[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -289,6 +292,20 @@ export default function CollectionPage() {
   const searchQuery = debouncedSearch.toLowerCase();
   const totalLoaded = trees.length;
   const selectedCount = selectedTreeIds.size;
+
+  const handleBulkSuccess = useCallback(() => {
+    setBulkDialog(null);
+    setSelectedTreeIds(new Set());
+    setSelectMode(false);
+  }, []);
+
+  const openBulkDialog = useCallback(
+    (dialog: "log" | "schedule") => {
+      setBulkTreeIds(Array.from(selectedTreeIds));
+      setBulkDialog(dialog);
+    },
+    [selectedTreeIds],
+  );
 
   // Whether the panel is collapsed and has active filters
   const showChips = !filtersOpen && activeFilterCount > 0;
@@ -651,14 +668,14 @@ export default function CollectionPage() {
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => setBulkDialog("log")}
+              onClick={() => openBulkDialog("log")}
             >
               Log Care
             </Button>
             <Button
               type="button"
               size="sm"
-              onClick={() => setBulkDialog("schedule")}
+              onClick={() => openBulkDialog("schedule")}
             >
               Schedule Care
             </Button>
@@ -677,8 +694,23 @@ export default function CollectionPage() {
             <DialogTitle>
               {bulkDialog === "schedule" ? "Schedule Care" : "Log Care"}
             </DialogTitle>
-            <DialogDescription>Form goes here</DialogDescription>
+            <DialogDescription>
+              Applying to {bulkTreeIds.length}{" "}
+              {bulkTreeIds.length === 1 ? "tree" : "trees"}
+            </DialogDescription>
           </DialogHeader>
+          {bulkDialog === "log" && (
+            <BulkLogForm
+              treeIds={bulkTreeIds}
+              onSuccess={handleBulkSuccess}
+            />
+          )}
+          {bulkDialog === "schedule" && (
+            <BulkReminderForm
+              treeIds={bulkTreeIds}
+              onSuccess={handleBulkSuccess}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
