@@ -5,6 +5,7 @@
  * Bonsai Journal API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListTreesTagsMode } from './listTreesTagsMode';
 
 export type ListTreesParams = {
 search?: string;
@@ -30,9 +31,10 @@ stageExclude?: string[];
 statusExclude?: string[];
 tag?: string;
 /**
- * Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder.
+ * Comma-separated list of tags. Combined according to tagsMode (default: all, meaning a tree must have every selected tag).
  */
 tags?: string[];
+tagsMode?: ListTreesTagsMode;
 limit?: number;
 offset?: number;
 };

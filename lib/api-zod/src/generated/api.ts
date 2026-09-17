@@ -58,6 +58,8 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary List all trees with optional filters
  */
+export const listTreesQueryTagsModeDefault = `all`;
+
 export const ListTreesQueryParams = zod.object({
   "search": zod.coerce.string().optional(),
   "climate": zod.array(zod.coerce.string()).optional(),
@@ -69,7 +71,8 @@ export const ListTreesQueryParams = zod.object({
   "stageExclude": zod.array(zod.coerce.string()).optional().describe('List of stage values to exclude (NOT IN logic).'),
   "statusExclude": zod.array(zod.coerce.string()).optional().describe('List of status values to exclude (NOT IN logic).'),
   "tag": zod.coerce.string().optional(),
-  "tags": zod.array(zod.coerce.string()).optional().describe('Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder.'),
+  "tags": zod.array(zod.coerce.string()).optional().describe('Comma-separated list of tags. Combined according to tagsMode (default: all, meaning a tree must have every selected tag).'),
+  "tagsMode": zod.enum(['all', 'any']).default(listTreesQueryTagsModeDefault),
   "limit": zod.coerce.number().optional(),
   "offset": zod.coerce.number().optional()
 })

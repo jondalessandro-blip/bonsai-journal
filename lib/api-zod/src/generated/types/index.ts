@@ -19,6 +19,7 @@ export * from './finalizeUploadResult';
 export * from './healthStatus';
 export * from './labelCount';
 export * from './listTreesParams';
+export * from './listTreesTagsMode';
 export * from './timelineEvent';
 export * from './tree';
 export * from './treeCoverPosition';

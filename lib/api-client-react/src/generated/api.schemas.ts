@@ -262,10 +262,19 @@ stageExclude?: string[];
 statusExclude?: string[];
 tag?: string;
 /**
- * Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder.
+ * Comma-separated list of tags. Combined according to tagsMode (default: all, meaning a tree must have every selected tag).
  */
 tags?: string[];
+tagsMode?: ListTreesTagsMode;
 limit?: number;
 offset?: number;
 };
+
+export type ListTreesTagsMode = typeof ListTreesTagsMode[keyof typeof ListTreesTagsMode];
+
+
+export const ListTreesTagsMode = {
+  all: 'all',
+  any: 'any',
+} as const;
 

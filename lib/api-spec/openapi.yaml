@@ -164,12 +164,18 @@ paths:
           schema: { type: string }
         - name: tags
           in: query
-          description: "Comma-separated list of tags (OR logic). Passed as string[], serialized by URL builder."
+          description: "Comma-separated list of tags. Combined according to tagsMode (default: all, meaning a tree must have every selected tag)."
           schema:
             type: array
             items: { type: string }
           style: form
           explode: false
+        - name: tagsMode
+          in: query
+          schema:
+            type: string
+            enum: [all, any]
+            default: all
         - name: limit
           in: query
           schema: { type: integer }

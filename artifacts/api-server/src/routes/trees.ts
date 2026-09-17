@@ -95,6 +95,7 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
     statusExclude,
     tag,
     tags: tagsParam,
+    tagsMode = "all",
     limit,
     offset,
   } = query.data;
@@ -144,9 +145,15 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
     conditions.push(or(isNull(treesTable.status), notInArray(treesTable.status, statusExcludeList))!);
   }
   if (tagsList.length > 0) {
-    conditions.push(and(...tagsList.map(t =>
-      sql`EXISTS (SELECT 1 FROM unnest(${treesTable.tags}) AS _t WHERE _t ILIKE ${t})`
-    ))!);
+    if (tagsMode === "any") {
+      conditions.push(or(...tagsList.map(t =>
+        sql`EXISTS (SELECT 1 FROM unnest(${treesTable.tags}) AS _t WHERE _t ILIKE ${t})`
+      ))!);
+    } else {
+      conditions.push(and(...tagsList.map(t =>
+        sql`EXISTS (SELECT 1 FROM unnest(${treesTable.tags}) AS _t WHERE _t ILIKE ${t})`
+      ))!);
+    }
   }
 
   const trees = await db
