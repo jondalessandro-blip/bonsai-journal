@@ -90,6 +90,9 @@ export default function CollectionPage() {
     const tags = new URLSearchParams(searchString).get("tags");
     return tags ? tags.split(",") : [];
   });
+  const [tagsMode, setTagsMode] = useState<"all" | "any">(() =>
+    new URLSearchParams(searchString).get("tagsMode") === "any" ? "any" : "all",
+  );
   const [tagsOpen, setTagsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
@@ -111,9 +114,10 @@ export default function CollectionPage() {
     applyFilter("stage", stageFilter);
     applyFilter("status", statusFilter);
     if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+    if (tagsMode === "any") params.set("tagsMode", "any");
     const qs = params.toString();
     setLocation(qs ? "/?" + qs : "/", { replace: false });
-  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
+  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags, tagsMode]);
 
   // Master tag list — seeded with DEFAULT_TAGS so they appear in the filter even before
   // any tree uses them; only ever grows so the popover stays complete while a filter is active
@@ -147,6 +151,7 @@ export default function CollectionPage() {
     setStageFilter({ values: [], mode: "include" });
     setStatusFilter({ values: [], mode: "include" });
     setSelectedTags([]);
+    setTagsMode("all");
   }, []);
 
   // Debounce search
@@ -167,8 +172,9 @@ export default function CollectionPage() {
     status: statusFilter.mode === "include" && statusFilter.values.length > 0 ? statusFilter.values : undefined,
     statusExclude: statusFilter.mode === "exclude" && statusFilter.values.length > 0 ? statusFilter.values : undefined,
     tags: selectedTags.length > 0 ? selectedTags : undefined,
+    tagsMode: tagsMode === "any" ? "any" as const : undefined,
     limit: PAGE_SIZE,
-  }), [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
+  }), [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags, tagsMode]);
 
   const navFilterQuery = useMemo(() => {
     const params = new URLSearchParams();
@@ -182,8 +188,9 @@ export default function CollectionPage() {
     applyFilter("stage", stageFilter);
     applyFilter("status", statusFilter);
     if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+    if (tagsMode === "any") params.set("tagsMode", "any");
     return params.toString();
-  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags]);
+  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags, tagsMode]);
 
   const {
     data,
@@ -509,6 +516,20 @@ export default function CollectionPage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-56 p-2" align="start">
+                <div className="flex gap-1 mb-2 pb-2 border-b">
+                  {(["all", "any"] as const).map((mode) => (
+                    <Button
+                      key={mode}
+                      type="button"
+                      size="sm"
+                      variant={tagsMode === mode ? "default" : "ghost"}
+                      className="h-7 flex-1 text-xs capitalize"
+                      onClick={() => setTagsMode(mode)}
+                    >
+                      {mode}
+                    </Button>
+                  ))}
+                </div>
                 {knownTags.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-4">No tags yet</p>
                 ) : (
@@ -529,12 +550,15 @@ export default function CollectionPage() {
                 )}
                 {selectedTags.length > 1 && (
                   <p className="mt-2 pt-2 border-t text-[11px] text-muted-foreground text-center leading-snug">
-                    Showing trees with <strong>all {selectedTags.length} tags</strong>
+                    Showing trees with <strong>{tagsMode} {selectedTags.length} tags</strong>
                   </p>
                 )}
                 {selectedTags.length > 0 && (
                   <button
-                    onClick={() => setSelectedTags([])}
+                    onClick={() => {
+                      setSelectedTags([]);
+                      setTagsMode("all");
+                    }}
                     className={`w-full text-xs text-muted-foreground hover:text-foreground text-center transition-colors ${selectedTags.length > 1 ? "mt-1.5" : "mt-2 pt-2 border-t"}`}
                   >
                     Clear tags filter
