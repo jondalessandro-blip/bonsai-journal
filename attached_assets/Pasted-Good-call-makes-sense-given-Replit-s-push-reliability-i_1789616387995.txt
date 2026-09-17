@@ -1,0 +1,17 @@
+Good call — makes sense given Replit's push reliability issues. Here's the adjusted prompt:
+
+---
+
+I want to add two new bulk-care endpoints so I can log or schedule care for multiple trees at once, instead of one at a time.
+
+First, update the OpenAPI spec at lib/api-spec/openapi.yaml. Add two new paths, modeled closely on the existing /trees/{id}/logs and /trees/{id}/reminders POST endpoints. Add /trees/logs/bulk with operationId createBulkTreeLogs, tag logs, a request body requiring treeIds (array of strings), type (string), date (string), and notes (optional string), and a 201 response returning an array of CareLog objects. Add /trees/reminders/bulk with operationId createBulkTreeReminders, tag reminders, a request body requiring treeIds (array of strings), type (string), dueDate (string), and notes (optional string), and a 201 response returning an array of CareReminder objects. You can add new component schemas BulkCareLogInput and BulkCareReminderInput for these request bodies rather than reusing CareLogInput/CareReminderInput, since those don't have treeIds.
+
+After editing the spec, run the codegen command to regenerate the Zod types and client: pnpm --filter @workspace/api-spec run codegen. Do not hand-edit anything under lib/api-zod/ or lib/api-client-react/.
+
+Then implement the two routes in artifacts/api-server/src/routes/trees.ts, near the existing single-tree logs and reminders POST routes. For each route: parse and validate the request body against the new generated Zod schema. Look up all trees where the id is in treeIds AND userId matches the authenticated user (use the inArray helper from drizzle-orm, which is already imported in this file). If the number of trees found doesn't match the number of treeIds requested, return a 404 with an error message saying one or more trees were not found or not owned by the user, and don't insert anything. Otherwise, wrap the insert in a db.transaction (follow the same transaction pattern already used elsewhere in this file, for example in the tree update and delete routes), and insert one row per treeId into care_logs (or care_reminders) with the shared type/date/notes (or type/dueDate/notes) values. Return the created rows as a 201 JSON array, formatted the same way the existing formatLog / formatReminder helper functions do.
+
+Just make the changes and confirm what you edited. I'll handle committing and pushing to GitHub myself.
+
+---
+
+Once you've run this in Replit, push it up yourself and let me know — I'll fetch `origin/dev` and verify the diff before we move to Step 2.

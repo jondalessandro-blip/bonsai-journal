@@ -259,6 +259,29 @@ paths:
         "204":
           description: Deleted
 
+  /trees/logs/bulk:
+    post:
+      operationId: createBulkTreeLogs
+      tags: [logs]
+      summary: Add a care log entry to multiple trees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkCareLogInput"
+      responses:
+        "201":
+          description: Created care logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CareLog"
+        "404":
+          description: One or more trees were not found or are not owned by the user
+
   /trees/{id}/logs:
     get:
       operationId: listTreeLogs
@@ -344,6 +367,29 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /trees/reminders/bulk:
+    post:
+      operationId: createBulkTreeReminders
+      tags: [reminders]
+      summary: Add a reminder to multiple trees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkCareReminderInput"
+      responses:
+        "201":
+          description: Created care reminders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CareReminder"
+        "404":
+          description: One or more trees were not found or are not owned by the user
 
   /trees/{id}/reminders:
     get:
@@ -770,6 +816,23 @@ components:
         notes:
           type: string
 
+    BulkCareLogInput:
+      type: object
+      required: [treeIds, type, date]
+      properties:
+        treeIds:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: string
+        type:
+          type: string
+        date:
+          type: string
+        notes:
+          type: string
+
     CareReminder:
       type: object
       required: [id, treeId, type, dueDate, completed, createdAt]
@@ -793,6 +856,23 @@ components:
       type: object
       required: [type, dueDate]
       properties:
+        type:
+          type: string
+        dueDate:
+          type: string
+        notes:
+          type: string
+
+    BulkCareReminderInput:
+      type: object
+      required: [treeIds, type, dueDate]
+      properties:
+        treeIds:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: string
         type:
           type: string
         dueDate:
