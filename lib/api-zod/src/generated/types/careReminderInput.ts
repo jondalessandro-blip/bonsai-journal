@@ -10,4 +10,8 @@ export interface CareReminderInput {
   type: string;
   dueDate: string;
   notes?: string;
+  recurring?: boolean;
+  intervalValue?: number;
+  intervalUnit?: string;
+  excludedMonths?: number[];
 }

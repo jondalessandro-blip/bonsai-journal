@@ -855,6 +855,16 @@ components:
           type: ["string", "null"]
         completed:
           type: boolean
+        recurring:
+          type: boolean
+        intervalValue:
+          type: ["integer", "null"]
+        intervalUnit:
+          type: ["string", "null"]
+        excludedMonths:
+          type: ["array", "null"]
+          items:
+            type: integer
         createdAt:
           type: string
 
@@ -868,6 +878,16 @@ components:
           type: string
         notes:
           type: string
+        recurring:
+          type: boolean
+        intervalValue:
+          type: integer
+        intervalUnit:
+          type: string
+        excludedMonths:
+          type: array
+          items:
+            type: integer
 
     BulkCareReminderInput:
       type: object
@@ -897,6 +917,16 @@ components:
           type: string
         completed:
           type: boolean
+        recurring:
+          type: boolean
+        intervalValue:
+          type: integer
+        intervalUnit:
+          type: string
+        excludedMonths:
+          type: array
+          items:
+            type: integer
 
     CollectionStats:
       type: object

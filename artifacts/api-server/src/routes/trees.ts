@@ -957,6 +957,10 @@ function formatReminder(r: typeof careRemindersTable.$inferSelect) {
     dueDate: r.dueDate,
     notes: r.notes,
     completed: r.completed,
+    recurring: r.recurring,
+    intervalValue: r.intervalValue,
+    intervalUnit: r.intervalUnit,
+    excludedMonths: r.excludedMonths,
     createdAt: r.createdAt.toISOString(),
   };
 }

@@ -153,6 +153,13 @@ export interface CareReminder {
   /** @nullable */
   notes?: string | null;
   completed: boolean;
+  recurring?: boolean;
+  /** @nullable */
+  intervalValue?: number | null;
+  /** @nullable */
+  intervalUnit?: string | null;
+  /** @nullable */
+  excludedMonths?: number[] | null;
   createdAt: string;
 }
 
@@ -160,6 +167,10 @@ export interface CareReminderInput {
   type: string;
   dueDate: string;
   notes?: string;
+  recurring?: boolean;
+  intervalValue?: number;
+  intervalUnit?: string;
+  excludedMonths?: number[];
 }
 
 export interface BulkCareReminderInput {
@@ -178,6 +189,10 @@ export interface CareReminderUpdate {
   dueDate?: string;
   notes?: string;
   completed?: boolean;
+  recurring?: boolean;
+  intervalValue?: number;
+  intervalUnit?: string;
+  excludedMonths?: number[];
 }
 
 export interface LabelCount {

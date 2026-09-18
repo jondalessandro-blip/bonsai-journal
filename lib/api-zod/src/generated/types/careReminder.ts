@@ -14,5 +14,12 @@ export interface CareReminder {
   /** @nullable */
   notes?: string | null;
   completed: boolean;
+  recurring?: boolean;
+  /** @nullable */
+  intervalValue?: number | null;
+  /** @nullable */
+  intervalUnit?: string | null;
+  /** @nullable */
+  excludedMonths?: number[] | null;
   createdAt: string;
 }

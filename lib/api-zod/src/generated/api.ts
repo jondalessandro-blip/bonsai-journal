@@ -364,6 +364,10 @@ export const CreateBulkTreeRemindersResponseItem = zod.object({
   "dueDate": zod.string(),
   "notes": zod.string().nullish(),
   "completed": zod.boolean(),
+  "recurring": zod.boolean().optional(),
+  "intervalValue": zod.number().nullish(),
+  "intervalUnit": zod.string().nullish(),
+  "excludedMonths": zod.array(zod.number()).nullish(),
   "createdAt": zod.string()
 })
 export const CreateBulkTreeRemindersResponse = zod.array(CreateBulkTreeRemindersResponseItem)
@@ -383,6 +387,10 @@ export const ListTreeRemindersResponseItem = zod.object({
   "dueDate": zod.string(),
   "notes": zod.string().nullish(),
   "completed": zod.boolean(),
+  "recurring": zod.boolean().optional(),
+  "intervalValue": zod.number().nullish(),
+  "intervalUnit": zod.string().nullish(),
+  "excludedMonths": zod.array(zod.number()).nullish(),
   "createdAt": zod.string()
 })
 export const ListTreeRemindersResponse = zod.array(ListTreeRemindersResponseItem)
@@ -398,7 +406,11 @@ export const CreateTreeReminderParams = zod.object({
 export const CreateTreeReminderBody = zod.object({
   "type": zod.string(),
   "dueDate": zod.string(),
-  "notes": zod.string().optional()
+  "notes": zod.string().optional(),
+  "recurring": zod.boolean().optional(),
+  "intervalValue": zod.number().optional(),
+  "intervalUnit": zod.string().optional(),
+  "excludedMonths": zod.array(zod.number()).optional()
 })
 
 export const CreateTreeReminderResponse = zod.object({
@@ -408,6 +420,10 @@ export const CreateTreeReminderResponse = zod.object({
   "dueDate": zod.string(),
   "notes": zod.string().nullish(),
   "completed": zod.boolean(),
+  "recurring": zod.boolean().optional(),
+  "intervalValue": zod.number().nullish(),
+  "intervalUnit": zod.string().nullish(),
+  "excludedMonths": zod.array(zod.number()).nullish(),
   "createdAt": zod.string()
 })
 
@@ -424,7 +440,11 @@ export const UpdateTreeReminderBody = zod.object({
   "type": zod.string().optional(),
   "dueDate": zod.string().optional(),
   "notes": zod.string().optional(),
-  "completed": zod.boolean().optional()
+  "completed": zod.boolean().optional(),
+  "recurring": zod.boolean().optional(),
+  "intervalValue": zod.number().optional(),
+  "intervalUnit": zod.string().optional(),
+  "excludedMonths": zod.array(zod.number()).optional()
 })
 
 export const UpdateTreeReminderResponse = zod.object({
@@ -434,6 +454,10 @@ export const UpdateTreeReminderResponse = zod.object({
   "dueDate": zod.string(),
   "notes": zod.string().nullish(),
   "completed": zod.boolean(),
+  "recurring": zod.boolean().optional(),
+  "intervalValue": zod.number().nullish(),
+  "intervalUnit": zod.string().nullish(),
+  "excludedMonths": zod.array(zod.number()).nullish(),
   "createdAt": zod.string()
 })
 

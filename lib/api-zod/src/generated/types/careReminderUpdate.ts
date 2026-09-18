@@ -11,4 +11,8 @@ export interface CareReminderUpdate {
   dueDate?: string;
   notes?: string;
   completed?: boolean;
+  recurring?: boolean;
+  intervalValue?: number;
+  intervalUnit?: string;
+  excludedMonths?: number[];
 }
