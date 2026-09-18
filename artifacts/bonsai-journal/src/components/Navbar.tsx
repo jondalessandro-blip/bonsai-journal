@@ -2,6 +2,17 @@ import { useLocation, Link as WouterLink } from "wouter";
 import { useUser, useClerk, Show } from "@clerk/react";
 import { LogOut, User } from "lucide-react";
 import { Button } from "./ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -18,15 +29,32 @@ function UserMenu() {
         <User className="h-3.5 w-3.5" />
         <span className="max-w-[140px] truncate">{displayName}</span>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-muted-foreground hover:text-foreground gap-1.5"
-        onClick={() => signOut({ redirectUrl: basePath || "/" })}
-      >
-        <LogOut className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Sign out</span>
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground gap-1.5"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Sign out</span>
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Log out?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to log out?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => signOut({ redirectUrl: basePath || "/" })}>
+              Log out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
