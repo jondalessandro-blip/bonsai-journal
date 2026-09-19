@@ -673,6 +673,10 @@ router.get("/trees/:id/timeline", requireAuth, async (req, res): Promise<void> =
       type: r.type,
       notes: r.notes,
       completed: r.completed,
+      recurring: r.recurring,
+      intervalValue: r.intervalValue,
+      intervalUnit: r.intervalUnit,
+      excludedMonths: r.excludedMonths,
     })),
   ].sort((a, b) => a.date.localeCompare(b.date));
 

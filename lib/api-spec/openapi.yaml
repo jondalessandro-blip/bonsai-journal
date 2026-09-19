@@ -1002,6 +1002,16 @@ components:
           type: ["string", "null"]
         completed:
           type: ["boolean", "null"]
+        recurring:
+          type: boolean
+        intervalValue:
+          type: ["integer", "null"]
+        intervalUnit:
+          type: ["string", "null"]
+        excludedMonths:
+          type: ["array", "null"]
+          items:
+            type: integer
 
     TreePhoto:
       type: object

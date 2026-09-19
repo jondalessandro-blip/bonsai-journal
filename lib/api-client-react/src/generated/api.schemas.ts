@@ -231,6 +231,13 @@ export interface TimelineEvent {
   notes?: string | null;
   /** @nullable */
   completed?: boolean | null;
+  recurring?: boolean;
+  /** @nullable */
+  intervalValue?: number | null;
+  /** @nullable */
+  intervalUnit?: string | null;
+  /** @nullable */
+  excludedMonths?: number[] | null;
 }
 
 export interface TreePhoto {

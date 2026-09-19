@@ -486,7 +486,11 @@ export const GetTreeTimelineResponseItem = zod.object({
   "date": zod.string(),
   "type": zod.string(),
   "notes": zod.string().nullish(),
-  "completed": zod.boolean().nullish()
+  "completed": zod.boolean().nullish(),
+  "recurring": zod.boolean().optional(),
+  "intervalValue": zod.number().nullish(),
+  "intervalUnit": zod.string().nullish(),
+  "excludedMonths": zod.array(zod.number()).nullish()
 })
 export const GetTreeTimelineResponse = zod.array(GetTreeTimelineResponseItem)
 
