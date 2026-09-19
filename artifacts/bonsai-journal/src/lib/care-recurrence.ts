@@ -7,16 +7,27 @@ import {
   parseISO,
 } from "date-fns";
 
+export function skipExcludedMonths(
+  date: Date,
+  excludedMonths: number[],
+): Date {
+  if (new Set(excludedMonths).size >= 12) {
+    throw new Error("At least one month must remain available");
+  }
+
+  while (excludedMonths.includes(date.getMonth() + 1)) {
+    date = addMonths(date, 1);
+  }
+
+  return date;
+}
+
 export function computeNextDueDate(
   currentDueDate: string,
   intervalValue: number,
   intervalUnit: "days" | "weeks" | "months" | "years",
   excludedMonths: number[],
 ): string {
-  if (new Set(excludedMonths).size >= 12) {
-    throw new Error("At least one month must remain available");
-  }
-
   const today = new Date();
   const parsedCurrentDueDate = parseISO(currentDueDate);
   const startDate =
@@ -39,9 +50,5 @@ export function computeNextDueDate(
       break;
   }
 
-  while (excludedMonths.includes(nextDate.getMonth() + 1)) {
-    nextDate = addMonths(nextDate, 1);
-  }
-
-  return format(nextDate, "yyyy-MM-dd");
+  return format(skipExcludedMonths(nextDate, excludedMonths), "yyyy-MM-dd");
 }

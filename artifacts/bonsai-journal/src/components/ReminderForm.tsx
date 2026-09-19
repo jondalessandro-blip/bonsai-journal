@@ -10,9 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { CareEventMultiSelect } from "@/components/CareEventMultiSelect";
 import { CARE_EVENT_TYPES } from "@/lib/care-events";
-import { computeNextDueDate } from "@/lib/care-recurrence";
+import { computeNextDueDate, skipExcludedMonths } from "@/lib/care-recurrence";
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useState } from "react";
 import { CheckCircle2, AlertCircle, Loader2, SkipForward } from "lucide-react";
 
@@ -99,6 +99,12 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
       // Route to confirmation step instead
       setConfirmOpen(true);
       return;
+    }
+    if (values.recurring && values.excludedMonths.length > 0) {
+      values.dueDate = format(
+        skipExcludedMonths(parseISO(values.dueDate), values.excludedMonths),
+        "yyyy-MM-dd",
+      );
     }
     if (isEdit) {
       updateReminder.mutate(
