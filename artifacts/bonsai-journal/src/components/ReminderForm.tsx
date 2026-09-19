@@ -10,24 +10,47 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { CareEventMultiSelect } from "@/components/CareEventMultiSelect";
 import { CARE_EVENT_TYPES } from "@/lib/care-events";
+import { computeNextDueDate } from "@/lib/care-recurrence";
 import { useQueryClient } from "@tanstack/react-query";
 import { addDays, format } from "date-fns";
 import { useState } from "react";
-import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, SkipForward } from "lucide-react";
 
 const formSchema = z.object({
   types: z.array(z.string()).min(1, "Select at least one care event"),
   dueDate: z.string().min(1, "Due date is required"),
   notes: z.string().optional(),
+  recurring: z.boolean().default(false),
+  intervalValue: z.coerce.number().int().min(1).default(1),
+  intervalUnit: z.enum(["days", "weeks", "months", "years"]).default("days"),
+  excludedMonths: z
+    .array(z.number().int().min(1).max(12))
+    .max(11, "At least one month must remain available")
+    .default([]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
+type IntervalUnit = FormValues["intervalUnit"];
+
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 interface ReminderFormProps {
   treeId: string;
   onSuccess: () => void;
   /** Provide to put the form into edit mode */
-  initialData?: { id: string; type: string; dueDate: string; notes?: string | null };
+  initialData?: {
+    id: string;
+    type: string;
+    dueDate: string;
+    notes?: string | null;
+    recurring?: boolean;
+    intervalValue?: number | null;
+    intervalUnit?: string | null;
+    excludedMonths?: number[] | null;
+  };
 }
 
 export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormProps) {
@@ -55,8 +78,13 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
         ? initialData.dueDate.split("T")[0]
         : format(addDays(new Date(), 7), "yyyy-MM-dd"),
       notes: initialData?.notes ?? "",
+      recurring: initialData?.recurring ?? false,
+      intervalValue: initialData?.intervalValue ?? 1,
+      intervalUnit: (initialData?.intervalUnit as IntervalUnit) ?? "days",
+      excludedMonths: initialData?.excludedMonths ?? [],
     },
   });
+  const recurring = form.watch("recurring");
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId, "reminders"] });
@@ -81,6 +109,10 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
             type: values.types[0],
             dueDate: values.dueDate,
             notes: values.notes,
+            recurring: values.recurring,
+            intervalValue: values.recurring ? values.intervalValue : undefined,
+            intervalUnit: values.recurring ? values.intervalUnit : undefined,
+            excludedMonths: values.recurring ? values.excludedMonths : undefined,
           },
         },
         { onSuccess: () => { invalidateAll(); onSuccess(); } }
@@ -96,6 +128,10 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
               type,
               dueDate: values.dueDate,
               notes: values.notes || undefined,
+              recurring: values.recurring,
+              intervalValue: values.recurring ? values.intervalValue : undefined,
+              intervalUnit: values.recurring ? values.intervalUnit : undefined,
+              excludedMonths: values.recurring ? values.excludedMonths : undefined,
             },
           })
         )
@@ -129,7 +165,36 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
       },
       {
         onSuccess: () => {
-          // Log saved — now delete the original reminder
+          if (values.recurring) {
+            updateReminder.mutate(
+              {
+                id: treeId,
+                reminderId: initialData!.id,
+                data: {
+                  dueDate: computeNextDueDate(
+                    values.intervalValue,
+                    values.intervalUnit,
+                    values.excludedMonths,
+                  ),
+                },
+              },
+              {
+                onSuccess: () => {
+                  invalidateAll();
+                  setIsCompleting(false);
+                  onSuccess();
+                },
+                onError: () => {
+                  invalidateAll();
+                  setIsCompleting(false);
+                  onSuccess();
+                },
+              },
+            );
+            return;
+          }
+
+          // Log saved — now delete the original one-time reminder
           deleteReminder.mutate(
             { id: treeId, reminderId: initialData!.id },
             {
@@ -156,6 +221,34 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
           setConfirmOpen(false);
         },
       }
+    );
+  };
+
+  const handleSkip = () => {
+    if (!initialData) return;
+    const values = form.getValues();
+    setSubmitError(null);
+    updateReminder.mutate(
+      {
+        id: treeId,
+        reminderId: initialData.id,
+        data: {
+          dueDate: computeNextDueDate(
+            values.intervalValue,
+            values.intervalUnit,
+            values.excludedMonths,
+          ),
+        },
+      },
+      {
+        onSuccess: () => {
+          invalidateAll();
+          onSuccess();
+        },
+        onError: () => {
+          setSubmitError("Could not skip this reminder. Please try again.");
+        },
+      },
     );
   };
 
@@ -213,6 +306,131 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
           />
         </div>
 
+        {/* Frequency */}
+        <FormField
+          control={form.control}
+          name="recurring"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Frequency</FormLabel>
+              <FormControl>
+                <div className="grid grid-cols-2 rounded-md border bg-muted/30 p-1" role="group" aria-label="Reminder frequency">
+                  {[
+                    { label: "One time", value: false },
+                    { label: "Recurring", value: true },
+                  ].map((option) => (
+                    <Button
+                      key={option.label}
+                      type="button"
+                      variant={field.value === option.value ? "default" : "ghost"}
+                      size="sm"
+                      aria-pressed={field.value === option.value}
+                      onClick={() => {
+                        field.onChange(option.value);
+                        if (!option.value) {
+                          form.setValue("intervalValue", 1);
+                          form.setValue("intervalUnit", "days");
+                          form.setValue("excludedMonths", []);
+                        }
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        {recurring && (
+          <div className="space-y-4 rounded-lg border border-border/60 bg-muted/20 p-4">
+            <div className="grid grid-cols-[auto_1fr_1.4fr] items-end gap-3">
+              <span className="pb-2 text-sm font-medium">Every</span>
+              <FormField
+                control={form.control}
+                name="intervalValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        aria-label="Recurrence interval"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="intervalUnit"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger aria-label="Recurrence unit">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="days">Days</SelectItem>
+                        <SelectItem value="weeks">Weeks</SelectItem>
+                        <SelectItem value="months">Months</SelectItem>
+                        <SelectItem value="years">Years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="excludedMonths"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Excluded months</FormLabel>
+                  <FormControl>
+                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                      {MONTH_NAMES.map((month, index) => {
+                        const monthNumber = index + 1;
+                        const selected = field.value.includes(monthNumber);
+                        return (
+                          <Button
+                            key={month}
+                            type="button"
+                            size="sm"
+                            variant={selected ? "default" : "outline"}
+                            aria-pressed={selected}
+                            onClick={() => {
+                              if (!selected && field.value.length >= 11) return;
+                              field.onChange(
+                                selected
+                                  ? field.value.filter((value) => value !== monthNumber)
+                                  : [...field.value, monthNumber].sort((a, b) => a - b),
+                              );
+                            }}
+                          >
+                            {month}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Reminders will advance past selected months.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
         {/* Notes */}
         <FormField
           control={form.control}
@@ -239,20 +457,39 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
               ? "border-primary/30 bg-primary/5"
               : "border-border/50 bg-muted/30"
           } p-4 space-y-3`}>
-            <label className="flex items-center gap-3 cursor-pointer select-none">
-              <Checkbox
-                checked={completedChecked}
-                onCheckedChange={(checked) => {
-                  setCompletedChecked(!!checked);
-                  setConfirmOpen(false);
-                  setSubmitError(null);
-                }}
-                id="task-completed"
-              />
-              <span className={`text-sm font-medium ${completedChecked ? "text-primary" : "text-muted-foreground"}`}>
-                Task completed
-              </span>
-            </label>
+            <div className="flex items-center justify-between gap-3">
+              <label className="flex cursor-pointer select-none items-center gap-3">
+                <Checkbox
+                  checked={completedChecked}
+                  onCheckedChange={(checked) => {
+                    setCompletedChecked(!!checked);
+                    setConfirmOpen(false);
+                    setSubmitError(null);
+                  }}
+                  id="task-completed"
+                />
+                <span className={`text-sm font-medium ${completedChecked ? "text-primary" : "text-muted-foreground"}`}>
+                  Task completed
+                </span>
+              </label>
+              {initialData.recurring && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={handleSkip}
+                  disabled={updateReminder.isPending}
+                >
+                  {updateReminder.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <SkipForward className="h-3.5 w-3.5" />
+                  )}
+                  Skip
+                </Button>
+              )}
+            </div>
 
             {completedChecked && (
               <div className="space-y-2 pl-7">
@@ -269,7 +506,7 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
                   required
                 />
                 <p className="text-[11px] text-muted-foreground leading-tight">
-                  A care log entry will be created and this planned task removed.
+                  A care log entry will be created and this planned task {recurring ? "rescheduled" : "removed"}.
                 </p>
               </div>
             )}
@@ -292,7 +529,7 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
               <p className="text-sm text-foreground leading-snug">
                 This will permanently log{" "}
                 <strong>{form.getValues("types").join(", ")}</strong> on{" "}
-                <strong>{performedDate}</strong> and remove this planned care item.
+                <strong>{performedDate}</strong> and {recurring ? "reschedule" : "remove"} this planned care item.
                 This cannot be undone.
               </p>
             </div>
