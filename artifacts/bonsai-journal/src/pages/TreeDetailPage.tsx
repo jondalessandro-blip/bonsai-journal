@@ -798,7 +798,7 @@ export default function TreeDetailPage() {
 
       {/* Edit reminder dialog */}
       <Dialog open={!!editingReminder} onOpenChange={(open) => { if (!open) setEditingReminder(null); }}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Reminder</DialogTitle>
           </DialogHeader>
