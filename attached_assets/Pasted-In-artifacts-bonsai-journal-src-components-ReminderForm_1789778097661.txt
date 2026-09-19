@@ -1,0 +1,17 @@
+In artifacts/bonsai-journal/src/components/ReminderForm.tsx, add recurrence support to the existing form.
+
+Add three fields to the Zod formSchema: recurring (boolean, default false), intervalValue (number, default 1), intervalUnit (enum of days, weeks, months, years, default days), and excludedMonths (array of numbers 1 through 12, default empty array). Update the initialData prop type and defaultValues to read these from an existing reminder when editing.
+
+Below the existing dueDate field, add a Frequency control with two options, One time and Recurring, using the same segmented-button visual style as CareEventMultiSelect if that pattern fits, otherwise a simple two-button toggle. When Recurring is selected, reveal an Every row with a number input bound to intervalValue and a unit Select bound to intervalUnit (Days, Weeks, Months, Years), plus an Excluded months control below it — a simple grid or multi-select of the twelve month names, storing the selected month numbers in excludedMonths. When One time is selected, hide those controls and clear intervalValue, intervalUnit, and excludedMonths back to null before submit.
+
+In the normal save path (onSubmit, both create and edit, not the completion flow), include recurring, intervalValue, intervalUnit, and excludedMonths in the payload sent to createReminder and updateReminder exactly as the other fields are already sent. When creating multiple types at once via the types.map loop, apply the same recurring settings to each one independently.
+
+Add a new file, artifacts/bonsai-journal/src/lib/care-recurrence.ts, exporting a function computeNextDueDate(intervalValue: number, intervalUnit: "days" | "weeks" | "months" | "years", excludedMonths: number[]): string. It should take today's date, add the interval using date-fns (addDays, addWeeks, addMonths, or addYears based on intervalUnit), and if the resulting date's month is in excludedMonths, keep advancing by one month at a time until it lands on a month that is not excluded. Return the result formatted as yyyy-MM-dd.
+
+In handleConfirmComplete, after the care log is successfully created, branch on values.recurring. If true, instead of calling deleteReminder, call updateReminder.mutate with the same reminder id and dueDate set to computeNextDueDate(values.intervalValue, values.intervalUnit, values.excludedMonths), then invalidateAll and onSuccess exactly as the existing success path does. If false, leave the existing deleteReminder behavior exactly as it is today.
+
+Add a Skip button next to the Mark complete checkbox, visible only when isEdit is true and initialData.recurring is true. On click, it should call updateReminder.mutate with the reminder id and dueDate set to computeNextDueDate using the current form values for intervalValue, intervalUnit, and excludedMonths, then invalidateAll and onSuccess. It should not create a care log and should not open the confirm dialog — it applies immediately on click.
+
+Do not modify BulkReminderForm.tsx — bulk-created reminders must remain one-time only, with no recurring controls added there.
+
+Once done, report the commit hash and confirm on origin/dev that ReminderForm.tsx contains the new Frequency toggle and that care-recurrence.ts was created."
