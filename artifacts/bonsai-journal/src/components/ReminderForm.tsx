@@ -12,7 +12,7 @@ import { CareEventMultiSelect } from "@/components/CareEventMultiSelect";
 import { CARE_EVENT_TYPES } from "@/lib/care-events";
 import { computeNextDueDate } from "@/lib/care-recurrence";
 import { useQueryClient } from "@tanstack/react-query";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import { useState } from "react";
 import { CheckCircle2, AlertCircle, Loader2, SkipForward } from "lucide-react";
 
@@ -76,7 +76,7 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
       types: initialData ? [initialData.type] : [],
       dueDate: initialData?.dueDate
         ? initialData.dueDate.split("T")[0]
-        : format(addDays(new Date(), 7), "yyyy-MM-dd"),
+        : format(new Date(), "yyyy-MM-dd"),
       notes: initialData?.notes ?? "",
       recurring: initialData?.recurring ?? false,
       intervalValue: initialData?.intervalValue ?? 1,
