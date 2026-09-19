@@ -69,6 +69,9 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [showScheduleEditor, setShowScheduleEditor] = useState(
+    !(isEdit && initialData?.recurring),
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -314,128 +317,150 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
           />
         </div>
 
-        {/* Frequency */}
-        <FormField
-          control={form.control}
-          name="recurring"
-          render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel>Frequency</FormLabel>
-              <FormControl>
-                <div className="grid grid-cols-2 rounded-md border bg-muted/30 p-1" role="group" aria-label="Reminder frequency">
-                  {[
-                    { label: "One time", value: false },
-                    { label: "Recurring", value: true },
-                  ].map((option) => (
-                    <Button
-                      key={option.label}
-                      type="button"
-                      variant={field.value === option.value ? "default" : "ghost"}
-                      size="sm"
-                      aria-pressed={field.value === option.value}
-                      onClick={() => {
-                        field.onChange(option.value);
-                        if (!option.value) {
-                          form.setValue("intervalValue", 1);
-                          form.setValue("intervalUnit", "days");
-                          form.setValue("excludedMonths", []);
-                        }
-                      }}
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        {recurring && (
-          <div className="space-y-4 rounded-lg border border-border/60 bg-muted/20 p-4">
-            <div className="grid grid-cols-[auto_1fr_1.4fr] items-end gap-3">
-              <span className="pb-2 text-sm font-medium">Every</span>
-              <FormField
-                control={form.control}
-                name="intervalValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        aria-label="Recurrence interval"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="intervalUnit"
-                render={({ field }) => (
-                  <FormItem>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger aria-label="Recurrence unit">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="days">Days</SelectItem>
-                        <SelectItem value="weeks">Weeks</SelectItem>
-                        <SelectItem value="months">Months</SelectItem>
-                        <SelectItem value="years">Years</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
+        {showScheduleEditor ? (
+          <>
+            {/* Frequency */}
             <FormField
               control={form.control}
-              name="excludedMonths"
+              name="recurring"
               render={({ field }) => (
                 <FormItem className="space-y-2">
-                  <FormLabel>Excluded months</FormLabel>
+                  <FormLabel>Frequency</FormLabel>
                   <FormControl>
-                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                      {MONTH_NAMES.map((month, index) => {
-                        const monthNumber = index + 1;
-                        const selected = field.value.includes(monthNumber);
-                        return (
-                          <Button
-                            key={month}
-                            type="button"
-                            size="sm"
-                            variant={selected ? "default" : "outline"}
-                            aria-pressed={selected}
-                            onClick={() => {
-                              if (!selected && field.value.length >= 11) return;
-                              field.onChange(
-                                selected
-                                  ? field.value.filter((value) => value !== monthNumber)
-                                  : [...field.value, monthNumber].sort((a, b) => a - b),
-                              );
-                            }}
-                          >
-                            {month}
-                          </Button>
-                        );
-                      })}
+                    <div className="grid grid-cols-2 rounded-md border bg-muted/30 p-1" role="group" aria-label="Reminder frequency">
+                      {[
+                        { label: "One time", value: false },
+                        { label: "Recurring", value: true },
+                      ].map((option) => (
+                        <Button
+                          key={option.label}
+                          type="button"
+                          variant={field.value === option.value ? "default" : "ghost"}
+                          size="sm"
+                          aria-pressed={field.value === option.value}
+                          onClick={() => {
+                            field.onChange(option.value);
+                            if (!option.value) {
+                              form.setValue("intervalValue", 1);
+                              form.setValue("intervalUnit", "days");
+                              form.setValue("excludedMonths", []);
+                            }
+                          }}
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
                     </div>
                   </FormControl>
-                  <p className="text-xs text-muted-foreground">
-                    Reminders will advance past selected months.
-                  </p>
-                  <FormMessage />
                 </FormItem>
               )}
             />
+
+            {recurring && (
+              <div className="space-y-4 rounded-lg border border-border/60 bg-muted/20 p-4">
+                <div className="grid grid-cols-[auto_1fr_1.4fr] items-end gap-3">
+                  <span className="pb-2 text-sm font-medium">Every</span>
+                  <FormField
+                    control={form.control}
+                    name="intervalValue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            aria-label="Recurrence interval"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="intervalUnit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger aria-label="Recurrence unit">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="days">Days</SelectItem>
+                            <SelectItem value="weeks">Weeks</SelectItem>
+                            <SelectItem value="months">Months</SelectItem>
+                            <SelectItem value="years">Years</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="excludedMonths"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel>Excluded months</FormLabel>
+                      <FormControl>
+                        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                          {MONTH_NAMES.map((month, index) => {
+                            const monthNumber = index + 1;
+                            const selected = field.value.includes(monthNumber);
+                            return (
+                              <Button
+                                key={month}
+                                type="button"
+                                size="sm"
+                                variant={selected ? "default" : "outline"}
+                                aria-pressed={selected}
+                                onClick={() => {
+                                  if (!selected && field.value.length >= 11) return;
+                                  field.onChange(
+                                    selected
+                                      ? field.value.filter((value) => value !== monthNumber)
+                                      : [...field.value, monthNumber].sort((a, b) => a - b),
+                                  );
+                                }}
+                              >
+                                {month}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        Reminders will advance past selected months.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-4 py-3">
+            <span className="text-sm text-muted-foreground">
+              Recurring — every {form.watch("intervalValue")}{" "}
+              {form.watch("intervalValue") === 1
+                ? form.watch("intervalUnit").replace(/s$/, "")
+                : form.watch("intervalUnit")}
+            </span>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="h-auto shrink-0 px-0"
+              onClick={() => setShowScheduleEditor(true)}
+            >
+              Edit schedule
+            </Button>
           </div>
         )}
 
