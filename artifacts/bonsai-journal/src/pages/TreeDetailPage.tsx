@@ -1,4 +1,4 @@
-import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTreeReminder, useUpdateTreeLog, useDeleteTreeLog, useDeleteTreeReminder, listTrees } from "@workspace/api-client-react";
+import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTreeReminder, useCreateTreeLog, useUpdateTreeLog, useDeleteTreeLog, useDeleteTreeReminder, listTrees } from "@workspace/api-client-react";
 import { useParams, useLocation, Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { buildTreePrefill } from "@/pages/NewTreePage";
+import { computeNextDueDate } from "@/lib/care-recurrence";
 
 export default function TreeDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -126,6 +127,7 @@ export default function TreeDetailPage() {
 
   const deleteTree = useDeleteTree();
   const updateReminder = useUpdateTreeReminder();
+  const createLog = useCreateTreeLog();
   const updateLog = useUpdateTreeLog();
   const deleteLog = useDeleteTreeLog();
   const deleteReminder = useDeleteTreeReminder();
@@ -157,8 +159,49 @@ export default function TreeDetailPage() {
     });
   };
 
-  const handleToggleReminder = (reminderId: string, completed: boolean) => {
-    updateReminder.mutate({ id: tree.id, reminderId, data: { completed } }, {
+  const handleToggleReminder = (event: {
+    id: string;
+    type: string;
+    date: string;
+    recurring?: boolean | null;
+    intervalValue?: number | null;
+    intervalUnit?: string | null;
+    excludedMonths?: number[] | null;
+  }) => {
+    const invalidateReminderQueries = () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "reminders"] });
+    };
+
+    if (event.recurring) {
+      createLog.mutate({
+        id: tree.id,
+        data: {
+          type: event.type,
+          date: format(new Date(), "yyyy-MM-dd"),
+        },
+      }, {
+        onSuccess: () => {
+          updateReminder.mutate({
+            id: tree.id,
+            reminderId: event.id,
+            data: {
+              dueDate: computeNextDueDate(
+                event.date,
+                event.intervalValue ?? 1,
+                (event.intervalUnit ?? "days") as "days" | "weeks" | "months" | "years",
+                event.excludedMonths ?? [],
+              ),
+            },
+          }, {
+            onSuccess: invalidateReminderQueries,
+          });
+        },
+      });
+      return;
+    }
+
+    updateReminder.mutate({ id: tree.id, reminderId: event.id, data: { completed: true } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
         queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "reminders"] });
@@ -507,7 +550,7 @@ export default function TreeDetailPage() {
                     <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                       <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-card shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 ${isStatusChange ? "text-amber-500" : "text-primary"}`}>
                         {isReminder ? (
-                          <button onClick={() => handleToggleReminder(event.id, !event.completed)} className="hover:text-primary transition-colors focus:outline-none">
+                          <button onClick={() => handleToggleReminder(event)} className="hover:text-primary transition-colors focus:outline-none">
                             {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 opacity-50 hover:opacity-100" />}
                           </button>
                         ) : isStatusChange ? (
@@ -678,7 +721,7 @@ export default function TreeDetailPage() {
                       <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                         <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-card shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 ${isStatusChange ? "text-amber-500" : "text-primary"}`}>
                           {isReminder ? (
-                            <button onClick={() => handleToggleReminder(event.id, !event.completed)} className="hover:text-primary transition-colors focus:outline-none">
+                            <button onClick={() => handleToggleReminder(event)} className="hover:text-primary transition-colors focus:outline-none">
                               {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 opacity-50 hover:opacity-100" />}
                             </button>
                           ) : isStatusChange ? (
