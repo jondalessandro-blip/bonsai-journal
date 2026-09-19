@@ -172,6 +172,7 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
                 reminderId: initialData!.id,
                 data: {
                   dueDate: computeNextDueDate(
+                     initialData!.dueDate,
                     values.intervalValue,
                     values.intervalUnit,
                     values.excludedMonths,
@@ -234,6 +235,7 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
         reminderId: initialData.id,
         data: {
           dueDate: computeNextDueDate(
+             initialData.dueDate,
             values.intervalValue,
             values.intervalUnit,
             values.excludedMonths,

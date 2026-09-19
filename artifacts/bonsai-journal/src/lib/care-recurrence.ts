@@ -4,9 +4,11 @@ import {
   addWeeks,
   addYears,
   format,
+  parseISO,
 } from "date-fns";
 
 export function computeNextDueDate(
+  currentDueDate: string,
   intervalValue: number,
   intervalUnit: "days" | "weeks" | "months" | "years",
   excludedMonths: number[],
@@ -16,21 +18,24 @@ export function computeNextDueDate(
   }
 
   const today = new Date();
+  const parsedCurrentDueDate = parseISO(currentDueDate);
+  const startDate =
+    parsedCurrentDueDate > today ? parsedCurrentDueDate : today;
   let nextDate: Date;
 
   switch (intervalUnit) {
     case "weeks":
-      nextDate = addWeeks(today, intervalValue);
+      nextDate = addWeeks(startDate, intervalValue);
       break;
     case "months":
-      nextDate = addMonths(today, intervalValue);
+      nextDate = addMonths(startDate, intervalValue);
       break;
     case "years":
-      nextDate = addYears(today, intervalValue);
+      nextDate = addYears(startDate, intervalValue);
       break;
     case "days":
     default:
-      nextDate = addDays(today, intervalValue);
+      nextDate = addDays(startDate, intervalValue);
       break;
   }
 
