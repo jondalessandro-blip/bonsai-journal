@@ -704,6 +704,23 @@ export default function CollectionPage() {
               type="button"
               size="sm"
               variant="outline"
+              onClick={() => {
+                const firstSelectedTree = trees.find((tree) =>
+                  selectedTreeIds.has(tree.id),
+                );
+                if (firstSelectedTree) {
+                  setLocation(
+                    `/trees/${firstSelectedTree.id}?ids=${Array.from(selectedTreeIds).join(",")}`,
+                  );
+                }
+              }}
+            >
+              View
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
               onClick={() => openBulkDialog("log")}
             >
               Log Care

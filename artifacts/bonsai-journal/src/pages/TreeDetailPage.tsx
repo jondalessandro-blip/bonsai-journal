@@ -22,34 +22,34 @@ export default function TreeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const searchString = useSearch();
 
-  const navFilters = (() => {
-    const params = new URLSearchParams(searchString);
-    const getArrayParam = (key: string) => {
-      const value = params.get(key);
-      return value ? value.split(",") : undefined;
-    };
-    return {
-      search: params.get("search") ?? undefined,
-      climate: getArrayParam("climate"),
-      climateExclude: getArrayParam("climateExclude"),
-      foliage: getArrayParam("foliage"),
-      foliageExclude: getArrayParam("foliageExclude"),
-      stage: getArrayParam("stage"),
-      stageExclude: getArrayParam("stageExclude"),
-      status: getArrayParam("status"),
-      statusExclude: getArrayParam("statusExclude"),
-      tags: getArrayParam("tags"),
-      tagsMode: params.get("tagsMode") === "any" ? "any" : undefined,
-    };
-  })();
+  const params = new URLSearchParams(searchString);
+  const idsParam = params.get("ids");
+  const getArrayParam = (key: string) => {
+    const value = params.get(key);
+    return value ? value.split(",") : undefined;
+  };
+  const navFilters = {
+    search: params.get("search") ?? undefined,
+    climate: getArrayParam("climate"),
+    climateExclude: getArrayParam("climateExclude"),
+    foliage: getArrayParam("foliage"),
+    foliageExclude: getArrayParam("foliageExclude"),
+    stage: getArrayParam("stage"),
+    stageExclude: getArrayParam("stageExclude"),
+    status: getArrayParam("status"),
+    statusExclude: getArrayParam("statusExclude"),
+    tags: getArrayParam("tags"),
+    tagsMode: params.get("tagsMode") === "any" ? ("any" as const) : undefined,
+  };
 
   const { data: navTrees } = useQuery({
     queryKey: ["/api/trees/nav", searchString],
     queryFn: () => listTrees({ ...navFilters, limit: 200 }),
     staleTime: 60_000,
+    enabled: !idsParam,
   });
 
-  const navIds = navTrees?.map((t) => t.id) ?? [];
+  const navIds = idsParam ? idsParam.split(",") : navTrees?.map((t) => t.id) ?? [];
   const currentNavIndex = id ? navIds.indexOf(id) : -1;
   const prevTreeId = currentNavIndex > 0 ? navIds[currentNavIndex - 1] : null;
   const nextTreeId =
