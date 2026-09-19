@@ -95,10 +95,13 @@ export default function CollectionPage() {
   );
   const [tagsOpen, setTagsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [selectMode, setSelectMode] = useState(false);
-  const [selectedTreeIds, setSelectedTreeIds] = useState<Set<string>>(
-    () => new Set(),
+  const [selectMode, setSelectMode] = useState(
+    () => new URLSearchParams(searchString).get("ids") !== null,
   );
+  const [selectedTreeIds, setSelectedTreeIds] = useState<Set<string>>(() => {
+    const idsParam = new URLSearchParams(searchString).get("ids");
+    return new Set(idsParam ? idsParam.split(",") : []);
+  });
   const [bulkDialog, setBulkDialog] = useState<"log" | "schedule" | null>(null);
   const [bulkTreeIds, setBulkTreeIds] = useState<string[]>([]);
 
