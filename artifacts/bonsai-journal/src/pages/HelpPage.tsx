@@ -37,7 +37,11 @@ const helpSections = [
   },
   {
     title: "Setting reminders",
-    body: "Reminders let you flag something to do in the future, like checking for pests in two weeks. They'll show up so you don't forget.",
+    body: "Reminders let you flag something to do in the future, like checking for pests in two weeks. Set a one-time reminder for something that only needs doing once, or make it recurring, such as watering every day or fertilizing every two weeks, and choose months to skip when the tree goes dormant for part of the year. They'll show up in the journal so you don't forget.",
+  },
+  {
+    title: "Completing a scheduled task",
+    body: "There are two ways to mark a planned task done. Tap the circle icon next to it in the journal for a one-tap shortcut, it logs the care and, if it's a recurring task, moves it forward to its next due date automatically. Or open the task by tapping its pencil icon, check Task completed, confirm the date it was actually done, and save. That same dialog also lets you Skip a recurring task instead, moving it to its next occurrence without logging any care.",
   },
   {
     title: "Plant Another Tree and Add Duplicate Tree",
