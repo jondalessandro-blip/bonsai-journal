@@ -465,7 +465,7 @@ export default function TreeDetailPage() {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
-                    <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
+                    {isReminderOpen && <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />}
                   </DialogContent>
                 </Dialog>
                 <button
@@ -639,7 +639,7 @@ export default function TreeDetailPage() {
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
-                        <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />
+                        {isReminderOpen && <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />}
                       </DialogContent>
                     </Dialog>
                     <button
