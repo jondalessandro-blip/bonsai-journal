@@ -72,7 +72,16 @@ export default function TreeDetailPage() {
   const [notesExpanded, setNotesExpanded] = useState(false);
   const [careExpanded, setCareExpanded] = useState(false);
   const [editingLog, setEditingLog] = useState<{ id: string; type: string; date: string; notes?: string | null } | null>(null);
-  const [editingReminder, setEditingReminder] = useState<{ id: string; type: string; dueDate: string; notes?: string | null } | null>(null);
+  const [editingReminder, setEditingReminder] = useState<{
+    id: string;
+    type: string;
+    dueDate: string;
+    notes?: string | null;
+    recurring?: boolean;
+    intervalValue?: number | null;
+    intervalUnit?: string | null;
+    excludedMonths?: number[] | null;
+  } | null>(null);
   const [editingStatusDateId, setEditingStatusDateId] = useState<string | null>(null);
   const [editingStatusDateValue, setEditingStatusDateValue] = useState("");
   const [careFilter, setCareFilter] = useState<"all" | "completed" | "planned">("all");
@@ -561,7 +570,16 @@ export default function TreeDetailPage() {
                             {!isStatusChange && (
                               <button
                                 onClick={() => isReminder
-                                  ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
+                                  ? setEditingReminder({
+                                    id: event.id,
+                                    type: event.type,
+                                    dueDate: event.date,
+                                    notes: event.notes,
+                                    recurring: event.recurring,
+                                    intervalValue: event.intervalValue,
+                                    intervalUnit: event.intervalUnit,
+                                    excludedMonths: event.excludedMonths,
+                                  })
                                   : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
                                 }
                                 className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -723,7 +741,16 @@ export default function TreeDetailPage() {
                               {!isStatusChange && (
                                 <button
                                   onClick={() => isReminder
-                                    ? setEditingReminder({ id: event.id, type: event.type, dueDate: event.date, notes: event.notes })
+                                    ? setEditingReminder({
+                                      id: event.id,
+                                      type: event.type,
+                                      dueDate: event.date,
+                                      notes: event.notes,
+                                      recurring: event.recurring,
+                                      intervalValue: event.intervalValue,
+                                      intervalUnit: event.intervalUnit,
+                                      excludedMonths: event.excludedMonths,
+                                    })
                                     : setEditingLog({ id: event.id, type: event.type, date: event.date, notes: event.notes })
                                   }
                                   className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
