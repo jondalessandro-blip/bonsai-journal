@@ -555,59 +555,61 @@ export function ReminderForm({ treeId, onSuccess, initialData }: ReminderFormPro
         )}
 
         {/* ── Confirmation step ── */}
-        {confirmOpen ? (
-          <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 space-y-3">
-            <div className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
-              <p className="text-sm text-foreground leading-snug">
-                This will permanently log{" "}
-                <strong>{form.getValues("types").join(", ")}</strong> on{" "}
-                <strong>{performedDate}</strong> and {recurring ? "reschedule" : "remove"} this planned care item.
-                This cannot be undone.
-              </p>
+        <div className="sticky bottom-0 bg-background border-t pt-3 mt-2">
+          {confirmOpen ? (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 space-y-3">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                <p className="text-sm text-foreground leading-snug">
+                  This will permanently log{" "}
+                  <strong>{form.getValues("types").join(", ")}</strong> on{" "}
+                  <strong>{performedDate}</strong> and {recurring ? "reschedule" : "remove"} this planned care item.
+                  This cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmOpen(false)}
+                  disabled={isCompleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleConfirmComplete}
+                  disabled={isCompleting || !performedDate}
+                  className="gap-1.5"
+                >
+                  {isCompleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {isCompleting ? "Saving…" : "Yes, complete it"}
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2 justify-end">
+          ) : (
+            <div className="flex justify-end">
               <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmOpen(false)}
-                disabled={isCompleting}
+                type="submit"
+                disabled={isSaving || (completedChecked && !performedDate)}
+                className={completedChecked ? "gap-1.5" : ""}
               >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleConfirmComplete}
-                disabled={isCompleting || !performedDate}
-                className="gap-1.5"
-              >
-                {isCompleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                {isCompleting ? "Saving…" : "Yes, complete it"}
+                {completedChecked ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Complete &amp; Log Care
+                  </>
+                ) : isEdit ? (
+                  "Save Changes"
+                ) : (
+                  "Set Reminder"
+                )}
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={isSaving || (completedChecked && !performedDate)}
-              className={completedChecked ? "gap-1.5" : ""}
-            >
-              {completedChecked ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  Complete &amp; Log Care
-                </>
-              ) : isEdit ? (
-                "Save Changes"
-              ) : (
-                "Set Reminder"
-              )}
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </form>
     </Form>
   );
