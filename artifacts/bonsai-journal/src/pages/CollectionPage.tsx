@@ -713,7 +713,10 @@ export default function CollectionPage() {
                 );
                 if (firstSelectedTree) {
                   setLocation(
-                    `/trees/${firstSelectedTree.id}?ids=${Array.from(selectedTreeIds).join(",")}`,
+                    `/trees/${firstSelectedTree.id}?ids=${trees
+                      .filter((tree) => selectedTreeIds.has(tree.id))
+                      .map((tree) => tree.id)
+                      .join(",")}`,
                   );
                 }
               }}
