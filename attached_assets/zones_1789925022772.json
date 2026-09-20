@@ -1,0 +1,146 @@
+[
+  {
+    "id": "3a",
+    "label": "3a",
+    "display": "Zone 3a (-40 to -37°C)",
+    "zone_value": 3.0,
+    "last_frost": "06-05",
+    "first_frost": "08-31",
+    "shift_weeks": 5
+  },
+  {
+    "id": "3b",
+    "label": "3b",
+    "display": "Zone 3b (-37 to -34°C)",
+    "zone_value": 3.5,
+    "last_frost": "06-01",
+    "first_frost": "09-07",
+    "shift_weeks": 4
+  },
+  {
+    "id": "4a",
+    "label": "4a",
+    "display": "Zone 4a (-34 to -32°C)",
+    "zone_value": 4.0,
+    "last_frost": "05-28",
+    "first_frost": "09-12",
+    "shift_weeks": 3
+  },
+  {
+    "id": "4b",
+    "label": "4b",
+    "display": "Zone 4b (-32 to -29°C)",
+    "zone_value": 4.5,
+    "last_frost": "05-25",
+    "first_frost": "09-17",
+    "shift_weeks": 2
+  },
+  {
+    "id": "5a",
+    "label": "5a",
+    "display": "Zone 5a (-29 to -26°C)",
+    "zone_value": 5.0,
+    "last_frost": "05-20",
+    "first_frost": "09-24",
+    "shift_weeks": 1
+  },
+  {
+    "id": "5b",
+    "label": "5b",
+    "display": "Zone 5b (-26 to -23°C)",
+    "zone_value": 5.5,
+    "last_frost": "05-15",
+    "first_frost": "09-30",
+    "shift_weeks": 0
+  },
+  {
+    "id": "6a",
+    "label": "6a",
+    "display": "Zone 6a (-23 to -21°C)",
+    "zone_value": 6.0,
+    "last_frost": "05-05",
+    "first_frost": "10-08",
+    "shift_weeks": -1
+  },
+  {
+    "id": "6b",
+    "label": "6b",
+    "display": "Zone 6b (-21 to -18°C)",
+    "zone_value": 6.5,
+    "last_frost": "04-25",
+    "first_frost": "10-15",
+    "shift_weeks": -2
+  },
+  {
+    "id": "7a",
+    "label": "7a",
+    "display": "Zone 7a (-18 to -15°C)",
+    "zone_value": 7.0,
+    "last_frost": "04-15",
+    "first_frost": "10-25",
+    "shift_weeks": -3
+  },
+  {
+    "id": "7b",
+    "label": "7b",
+    "display": "Zone 7b (-15 to -12°C)",
+    "zone_value": 7.5,
+    "last_frost": "04-05",
+    "first_frost": "11-05",
+    "shift_weeks": -4
+  },
+  {
+    "id": "8a",
+    "label": "8a",
+    "display": "Zone 8a (-12 to -9°C)",
+    "zone_value": 8.0,
+    "last_frost": "03-25",
+    "first_frost": "11-15",
+    "shift_weeks": -5
+  },
+  {
+    "id": "8b",
+    "label": "8b",
+    "display": "Zone 8b (-9 to -7°C)",
+    "zone_value": 8.5,
+    "last_frost": "03-10",
+    "first_frost": "11-25",
+    "shift_weeks": -6
+  },
+  {
+    "id": "9a",
+    "label": "9a",
+    "display": "Zone 9a (-7 to -4°C)",
+    "zone_value": 9.0,
+    "last_frost": "02-20",
+    "first_frost": "12-05",
+    "shift_weeks": -7
+  },
+  {
+    "id": "9b",
+    "label": "9b",
+    "display": "Zone 9b (-4 to -1°C)",
+    "zone_value": 9.5,
+    "last_frost": "02-01",
+    "first_frost": "12-20",
+    "shift_weeks": -8
+  },
+  {
+    "id": "10a",
+    "label": "10a",
+    "display": "Zone 10a (-1 to 2°C)",
+    "zone_value": 10.0,
+    "last_frost": "01-10",
+    "first_frost": "12-30",
+    "shift_weeks": -9
+  },
+  {
+    "id": "10b",
+    "label": "10b",
+    "display": "Zone 10b (2 to 4°C)",
+    "zone_value": 10.5,
+    "last_frost": null,
+    "first_frost": null,
+    "shift_weeks": -10
+  }
+]
