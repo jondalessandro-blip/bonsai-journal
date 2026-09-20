@@ -163,6 +163,7 @@ export default function TreeDetailPage() {
     id: string;
     type: string;
     date: string;
+    notes?: string | null;
     recurring?: boolean | null;
     intervalValue?: number | null;
     intervalUnit?: string | null;
@@ -179,6 +180,7 @@ export default function TreeDetailPage() {
         data: {
           type: event.type,
           date: format(new Date(), "yyyy-MM-dd"),
+          notes: event.notes || undefined,
         },
       }, {
         onSuccess: () => {
@@ -201,11 +203,30 @@ export default function TreeDetailPage() {
       return;
     }
 
-    updateReminder.mutate({ id: tree.id, reminderId: event.id, data: { completed: true } }, {
+    createLog.mutate({
+      id: tree.id,
+      data: {
+        type: event.type,
+        date: format(new Date(), "yyyy-MM-dd"),
+        notes: event.notes || undefined,
+      },
+    }, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "reminders"] });
-      }
+        deleteReminder.mutate({ id: tree.id, reminderId: event.id }, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "reminders"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "logs"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/reminders/upcoming"] });
+          },
+          onError: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "timeline"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "reminders"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/trees", tree.id, "logs"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/reminders/upcoming"] });
+          },
+        });
+      },
     });
   };
 
@@ -638,7 +659,7 @@ export default function TreeDetailPage() {
                           </div>
                         </div>
                         {event.notes && (
-                          <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : isStatusChange ? 'text-amber-700/80 dark:text-amber-400/80 font-medium' : 'text-muted-foreground'}`}>
+                          <p className={`text-sm mt-2 ${isStatusChange ? 'text-amber-700/80 dark:text-amber-400/80 font-medium' : 'text-muted-foreground'}`}>
                             {event.notes}
                           </p>
                         )}
@@ -809,7 +830,7 @@ export default function TreeDetailPage() {
                             </div>
                           </div>
                           {event.notes && (
-                            <p className={`text-sm mt-2 ${isReminder && isCompleted ? 'line-through text-muted-foreground/60' : isStatusChange ? 'text-amber-700/80 dark:text-amber-400/80 font-medium' : 'text-muted-foreground'}`}>
+                            <p className={`text-sm mt-2 ${isStatusChange ? 'text-amber-700/80 dark:text-amber-400/80 font-medium' : 'text-muted-foreground'}`}>
                               {event.notes}
                             </p>
                           )}
