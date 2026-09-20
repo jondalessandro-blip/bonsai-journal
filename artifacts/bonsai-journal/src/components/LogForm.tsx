@@ -55,7 +55,7 @@ export function LogForm({ treeId, onSuccess, initialData }: LogFormProps) {
       types: initialData ? [initialData.type] : [],
       date: initialData?.date
         ? initialData.date.split("T")[0]
-        : new Date().toISOString().split("T")[0],
+        : format(new Date(), "yyyy-MM-dd"),
       notes: initialData?.notes ?? "",
     },
   });

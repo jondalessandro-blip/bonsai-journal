@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCreateBulkTreeLogs } from "@workspace/api-client-react";
 import { z } from "zod";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { format } from "date-fns";
 import { CareEventMultiSelect } from "@/components/CareEventMultiSelect";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +42,7 @@ export function BulkLogForm({ treeIds, onSuccess }: BulkLogFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       types: [],
-      date: new Date().toISOString().split("T")[0],
+      date: format(new Date(), "yyyy-MM-dd"),
       notes: "",
     },
   });

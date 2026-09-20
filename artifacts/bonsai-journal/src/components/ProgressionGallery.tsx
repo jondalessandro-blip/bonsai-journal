@@ -89,7 +89,7 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
     e.target.value = "";
     const result = await uploadPhoto(file);
     if (result) {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = format(new Date(), "yyyy-MM-dd");
 
       // Save to progression gallery history
       createPhoto.mutate(

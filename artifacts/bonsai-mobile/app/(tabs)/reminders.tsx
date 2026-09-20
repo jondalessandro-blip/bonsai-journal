@@ -10,10 +10,14 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useListUpcomingReminders } from '@workspace/api-client-react';
+import {
+  getListUpcomingRemindersQueryKey,
+  useListUpcomingReminders,
+} from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { formatLocalDate } from '@/constants/date';
 
 const CARE_TYPE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   Watering: 'water-outline',
@@ -80,10 +84,17 @@ export default function RemindersScreen() {
   const styles = makeStyles(colors);
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const today = formatLocalDate();
 
-  const { data: reminders, isLoading, isError, refetch } = useListUpcomingReminders({
-    query: { staleTime: 60_000 },
-  });
+  const { data: reminders, isLoading, isError, refetch } = useListUpcomingReminders(
+    { today },
+    {
+      query: {
+        queryKey: getListUpcomingRemindersQueryKey({ today }),
+        staleTime: 60_000,
+      },
+    },
+  );
 
   const overdue = reminders?.filter((r) => r.daysUntilDue < 0) ?? [];
   const upcoming = reminders?.filter((r) => r.daysUntilDue >= 0) ?? [];

@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useQueryClient } from '@tanstack/react-query';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
+import { formatLocalDate } from '@/constants/date';
 
 const CARE_TYPES = [
   { label: 'Watering', icon: 'water-outline' as const },
@@ -38,7 +39,7 @@ export default function AddLogScreen() {
   const queryClient = useQueryClient();
 
   const [selectedType, setSelectedType] = useState('Watering');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(formatLocalDate);
   const [notes, setNotes] = useState('');
 
   const { mutateAsync: createLog, isPending } = useCreateTreeLog();

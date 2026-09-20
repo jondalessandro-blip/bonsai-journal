@@ -18,6 +18,7 @@ import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
 import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown, HelpCircle } from "lucide-react";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useSearch, useLocation } from "wouter";
+import { format } from "date-fns";
 
 import { DEFAULT_TAGS } from "@/data/defaultTags";
 
@@ -279,7 +280,9 @@ export default function CollectionPage() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const { data: reminders } = useListUpcomingReminders();
+  const { data: reminders } = useListUpcomingReminders({
+    today: format(new Date(), "yyyy-MM-dd"),
+  });
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>

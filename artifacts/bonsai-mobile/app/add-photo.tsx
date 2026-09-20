@@ -23,6 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { formatLocalDate } from '@/constants/date';
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const WARN_BYTES = 4 * 1024 * 1024; // warn + compress if >4 MB
@@ -66,7 +67,7 @@ export default function AddPhotoScreen() {
   const [wasCompressed, setWasCompressed] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [date] = useState(new Date().toISOString().slice(0, 10));
+  const [date] = useState(formatLocalDate);
 
   const { mutateAsync: requestUploadUrl } = useRequestUploadUrl();
   const { mutateAsync: finalizeUpload } = useFinalizeUpload();
