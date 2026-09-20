@@ -98,6 +98,16 @@ export function Navbar() {
               >
                 Stats
               </WouterLink>
+              <WouterLink
+                href="/calendar"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location === "/calendar"
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50"
+                }`}
+              >
+                Care Calendar
+              </WouterLink>
             </div>
           </Show>
         </div>
