@@ -32,6 +32,7 @@ import type {
   FinalizeUploadResult,
   HealthStatus,
   ListTreesParams,
+  ListUpcomingRemindersParams,
   TimelineEvent,
   Tree,
   TreeInput,
@@ -1555,20 +1556,27 @@ export function useGetCollectionStats<TData = Awaited<ReturnType<typeof getColle
 
 
 
-export const getListUpcomingRemindersUrl = () => {
+export const getListUpcomingRemindersUrl = (params?: ListUpcomingRemindersParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/reminders/upcoming`
+  return stringifiedParams.length > 0 ? `/api/reminders/upcoming?${stringifiedParams}` : `/api/reminders/upcoming`
 }
 
 /**
  * @summary All upcoming reminders in the next 30 days across all trees
  */
-export const listUpcomingReminders = async ( options?: RequestInit): Promise<UpcomingReminder[]> => {
+export const listUpcomingReminders = async (params?: ListUpcomingRemindersParams, options?: RequestInit): Promise<UpcomingReminder[]> => {
 
-  return customFetch<UpcomingReminder[]>(getListUpcomingRemindersUrl(),
+  return customFetch<UpcomingReminder[]>(getListUpcomingRemindersUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1581,23 +1589,23 @@ export const listUpcomingReminders = async ( options?: RequestInit): Promise<Upc
 
 
 
-export const getListUpcomingRemindersQueryKey = () => {
+export const getListUpcomingRemindersQueryKey = (params?: ListUpcomingRemindersParams,) => {
     return [
-    `/api/reminders/upcoming`
+    `/api/reminders/upcoming`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListUpcomingRemindersQueryOptions = <TData = Awaited<ReturnType<typeof listUpcomingReminders>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUpcomingReminders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListUpcomingRemindersQueryOptions = <TData = Awaited<ReturnType<typeof listUpcomingReminders>>, TError = ErrorType<unknown>>(params?: ListUpcomingRemindersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUpcomingReminders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListUpcomingRemindersQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListUpcomingRemindersQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listUpcomingReminders>>> = ({ signal }) => listUpcomingReminders({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listUpcomingReminders>>> = ({ signal }) => listUpcomingReminders(params, { signal, ...requestOptions });
 
 
 
@@ -1615,11 +1623,11 @@ export type ListUpcomingRemindersQueryError = ErrorType<unknown>
  */
 
 export function useListUpcomingReminders<TData = Awaited<ReturnType<typeof listUpcomingReminders>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUpcomingReminders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: ListUpcomingRemindersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUpcomingReminders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListUpcomingRemindersQueryOptions(options)
+  const queryOptions = getListUpcomingRemindersQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

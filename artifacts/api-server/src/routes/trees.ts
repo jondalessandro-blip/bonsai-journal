@@ -871,11 +871,22 @@ router.get("/collection/stats", requireAuth, async (req, res): Promise<void> => 
 
 router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthedRequest).userId;
-  const today = new Date();
+  const todayParam =
+    typeof req.query.today === "string" && isValidDateOnly(req.query.today)
+      ? req.query.today
+      : undefined;
+  const today = todayParam
+    ? new Date(`${todayParam}T00:00:00.000Z`)
+    : new Date();
   const in30 = new Date(today);
-  in30.setDate(in30.getDate() + 30);
+  if (todayParam) {
+    in30.setUTCDate(in30.getUTCDate() + 30);
+  } else {
+    in30.setDate(in30.getDate() + 30);
+  }
 
   const in30Str = in30.toISOString().slice(0, 10);
+  const todayStr = todayParam ?? today.toISOString().slice(0, 10);
 
   const rows = await db
     .select({
@@ -901,14 +912,21 @@ router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> =
   res.json(
     rows.map((r) => ({
       ...r,
-      daysUntilDue: Math.ceil(
-        (new Date(r.dueDate).getTime() - today.setHours(0, 0, 0, 0)) / 86400000,
-      ),
+      daysUntilDue:
+        (new Date(`${r.dueDate}T00:00:00.000Z`).getTime() -
+          new Date(`${todayStr}T00:00:00.000Z`).getTime()) /
+        86400000,
     })),
   );
 });
 
 // ---- Helpers ----
+
+function isValidDateOnly(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
 
 function formatPhoto(p: typeof treePhotosTable.$inferSelect) {
   return {

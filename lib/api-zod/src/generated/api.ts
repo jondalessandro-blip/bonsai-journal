@@ -544,6 +544,13 @@ export const GetCollectionStatsResponse = zod.object({
 /**
  * @summary All upcoming reminders in the next 30 days across all trees
  */
+export const listUpcomingRemindersQueryTodayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
+export const ListUpcomingRemindersQueryParams = zod.object({
+  "today": zod.coerce.string().regex(listUpcomingRemindersQueryTodayRegExp).optional()
+})
+
 export const ListUpcomingRemindersResponseItem = zod.object({
   "id": zod.string(),
   "treeId": zod.string(),
