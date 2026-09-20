@@ -12,7 +12,10 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useListTrees } from '@workspace/api-client-react';
+import {
+  getListTreesQueryKey,
+  useListTrees,
+} from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -74,10 +77,16 @@ export default function CollectionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
+  const listTreesParams = search ? { search } : undefined;
 
   const { data: trees, isLoading, isError, refetch } = useListTrees(
-    search ? { search } : undefined,
-    { query: { staleTime: 30_000 } },
+    listTreesParams,
+    {
+      query: {
+        queryKey: getListTreesQueryKey(listTreesParams),
+        staleTime: 30_000,
+      },
+    },
   );
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
