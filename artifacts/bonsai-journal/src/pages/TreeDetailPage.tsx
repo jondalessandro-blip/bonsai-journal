@@ -528,7 +528,7 @@ export default function TreeDetailPage() {
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-h-[85vh] overflow-y-auto">
                     <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
                     {isReminderOpen && <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />}
                   </DialogContent>
@@ -702,7 +702,7 @@ export default function TreeDetailPage() {
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" /> Plan</Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="max-h-[85vh] overflow-y-auto">
                         <DialogHeader><DialogTitle>Schedule Care</DialogTitle></DialogHeader>
                         {isReminderOpen && <ReminderForm treeId={tree.id} onSuccess={() => setIsReminderOpen(false)} />}
                       </DialogContent>
