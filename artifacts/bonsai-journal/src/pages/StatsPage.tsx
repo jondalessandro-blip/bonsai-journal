@@ -8,6 +8,7 @@ import { Link } from "wouter";
 
 const STATUS_ORDER = [
   "Thriving",
+  "Healthy",
   "Dormant",
   "Stressed/In Distress",
   "Sick",
@@ -16,6 +17,7 @@ const STATUS_ORDER = [
 
 const STATUS_COLORS: Record<string, string> = {
   "Thriving":             "#16a34a", // green-600
+  "Healthy":              "#0d9488", // teal-600
   "Dormant":              "#2563eb", // blue-600
   "Stressed/In Distress": "#d97706", // amber-600
   "Sick":                 "#ea580c", // orange-600
@@ -24,6 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_BG: Record<string, string> = {
   "Thriving":             "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+  "Healthy":              "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300",
   "Dormant":              "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   "Stressed/In Distress": "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
   "Sick":                 "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",

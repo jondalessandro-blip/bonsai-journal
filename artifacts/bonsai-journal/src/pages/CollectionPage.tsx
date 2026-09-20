@@ -46,6 +46,7 @@ const STAGE_LABELS: Record<string, string> = {
 };
 const STATUS_LABELS: Record<string, string> = {
   "Thriving": "Thriving",
+  "Healthy": "Healthy",
   "Dormant": "Dormant",
   "Stressed/In Distress": "Stressed/In Distress",
   "Sick": "Sick",
@@ -61,7 +62,7 @@ const STAGE_ITEM_LABELS: Record<string, string> = {
   "Primary Branch Development": "3. Primary Branch Development",
   "Ramification & Refinement": "4. Ramification & Refinement",
 };
-const STATUS_OPTIONS = ["Thriving", "Dormant", "Stressed/In Distress", "Sick", "Dead/Beyond Recovery"];
+const STATUS_OPTIONS = ["Thriving", "Healthy", "Dormant", "Stressed/In Distress", "Sick", "Dead/Beyond Recovery"];
 
 type FilterState = { values: string[]; mode: "include" | "exclude" };
 

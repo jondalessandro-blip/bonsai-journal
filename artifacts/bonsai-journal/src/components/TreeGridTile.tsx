@@ -110,6 +110,7 @@ export const TreeGridTile = memo(function TreeGridTile({
           className={[
             "mx-auto mt-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium leading-none cursor-pointer hover:opacity-75 transition-opacity",
             tree.status === "Thriving"             ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"     :
+            tree.status === "Healthy"              ? "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300"        :
             tree.status === "Dormant"              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"         :
             tree.status === "Stressed/In Distress" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"    :
             tree.status === "Sick"                 ? "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300" :
