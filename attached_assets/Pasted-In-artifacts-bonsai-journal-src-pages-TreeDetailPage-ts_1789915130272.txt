@@ -1,0 +1,15 @@
+In artifacts/bonsai-journal/src/pages/TreeDetailPage.tsx, make three changes.
+
+First, add an optional notes field (string or null) to the event type in the handleToggleReminder parameter, so the reminder's notes are available inside the handler. The timeline rows already pass the full event object, so no caller changes should be needed.
+
+Second, change the non-recurring branch of handleToggleReminder, the part after the "if (event.recurring)" block that currently calls updateReminder with completed: true. Replace it so it mirrors the Complete & Log Care flow in handleConfirmComplete in ReminderForm.tsx. First call the existing createLog mutation with id tree.id and data containing type event.type, date set to today using format(new Date(), "yyyy-MM-dd"), and notes set to event.notes or undefined if empty. Only in that mutation's onSuccess, call the existing deleteReminder mutation with id tree.id and reminderId event.id. If creating the log fails, do not delete the reminder. If the log succeeds but the delete fails, still invalidate the queries so the screen shows the true state. After the delete finishes, invalidate the timeline, reminders, and logs query keys for this tree, plus the ["/api/reminders/upcoming"] key.
+
+Third, in the recurring branch, add the same notes field (event.notes or undefined if empty) to the care log it creates, so the completed entry carries the reminder's notes the same way the Complete & Log Care button in the dialog does. Leave the rest of the recurring branch exactly as it is, including the reschedule logic.
+
+Also in TreeDetailPage.tsx, in both timeline renderings (the inline timeline and the full-screen Care Journal overlay), remove the line-through and the dimmed muted-foreground/60 styling that applies to notes on completed reminders, so those notes display with the same normal styling as other notes. Keep the CheckCircle2 icon rendering for older reminders that are already marked completed.
+
+Do not change ReminderForm.tsx, LogForm.tsx, the API server, the OpenAPI spec, or any generated files.
+
+Expected result: tapping the circle on a one-time reminder makes it leave the planned list and appear as a leaf-icon log entry dated today with its notes shown in full, and tapping the pencil on that entry opens the log edit dialog with the Return to planned option. Tapping the circle on a recurring reminder also creates a leaf-icon log with the notes, and the reminder reschedules as before.
+
+Run the typecheck. The existing failures in calendar.tsx, spinner.tsx, and TreeDetailPage.tsx line 48 are known and unrelated, so leave them alone. Commit locally only and report the real commit hash from git log. Do not push, publish, rebase, or modify anything on the remote GitHub branch.
