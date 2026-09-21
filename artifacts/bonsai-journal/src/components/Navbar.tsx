@@ -1,7 +1,13 @@
 import { useLocation, Link as WouterLink } from "wouter";
 import { useUser, useClerk, Show } from "@clerk/react";
-import { LogOut, User } from "lucide-react";
+import { LogOut, Menu, User } from "lucide-react";
 import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +72,71 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto max-w-5xl flex h-16 items-center px-4 justify-between">
         <div className="flex items-center gap-6">
+          <Show when="signed-in">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 md:hidden"
+                  aria-label="Open menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem
+                  asChild
+                  className={
+                    location === "/" || location.startsWith("/trees")
+                      ? "bg-accent text-accent-foreground"
+                      : undefined
+                  }
+                >
+                  <WouterLink
+                    href="/"
+                    aria-current={
+                      location === "/" || location.startsWith("/trees")
+                        ? "page"
+                        : undefined
+                    }
+                  >
+                    Collection
+                  </WouterLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  asChild
+                  className={
+                    location === "/stats"
+                      ? "bg-accent text-accent-foreground"
+                      : undefined
+                  }
+                >
+                  <WouterLink
+                    href="/stats"
+                    aria-current={location === "/stats" ? "page" : undefined}
+                  >
+                    Stats
+                  </WouterLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  asChild
+                  className={
+                    location === "/calendar"
+                      ? "bg-accent text-accent-foreground"
+                      : undefined
+                  }
+                >
+                  <WouterLink
+                    href="/calendar"
+                    aria-current={location === "/calendar" ? "page" : undefined}
+                  >
+                    Care Calendar
+                  </WouterLink>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Show>
           <WouterLink href="/" className="flex items-center gap-2 group">
             <div className="bg-primary/10 p-1.5 rounded-md group-hover:bg-primary/20 transition-colors">
               <img src={`${basePath}/logo.svg`} alt="" aria-hidden className="h-5 w-5" />
