@@ -235,10 +235,10 @@ export default function CalendarPage() {
                 htmlFor="calendar-advanced"
                 className="text-sm font-medium text-foreground"
               >
-                Show advanced tasks (defoliation, bud selection)
+                Show advanced tasks
               </label>
               <p className="text-xs text-muted-foreground">
-                Include optional and more specialized work in the calendar.
+                Adds defoliation and bud selection, which suit experienced growers and strong, healthy trees.
               </p>
             </div>
             <Switch
