@@ -179,3 +179,45 @@ export function generateCalendar(
 
   return { months, zoneNotes };
 }
+
+export type MergedCalendarTask = {
+  task: CalendarTask;
+  groups: { group_id: string; group_label: string; group_icon: string }[];
+};
+
+export function mergeIdenticalTasks(tasks: CalendarTask[]): MergedCalendarTask[] {
+  const merged = new Map<string, MergedCalendarTask>();
+
+  for (const task of tasks) {
+    const key = JSON.stringify([
+      task.title,
+      task.care_type,
+      task.timeLabel,
+      task.desc,
+      task.warning,
+      task.trigger,
+    ]);
+    const existing = merged.get(key);
+
+    if (existing) {
+      existing.groups.push({
+        group_id: task.group_id,
+        group_label: task.group_label,
+        group_icon: task.group_icon,
+      });
+    } else {
+      merged.set(key, {
+        task,
+        groups: [
+          {
+            group_id: task.group_id,
+            group_label: task.group_label,
+            group_icon: task.group_icon,
+          },
+        ],
+      });
+    }
+  }
+
+  return Array.from(merged.values());
+}

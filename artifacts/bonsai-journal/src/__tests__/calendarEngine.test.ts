@@ -1,7 +1,13 @@
 import { describe, it, expect } from "vitest";
 import zonesJson from "../data/careCalendar/zones.json";
 import groupsJson from "../data/careCalendar/groups.json";
-import { generateCalendar, resolveTaskDay, type Zone, type Group } from "../lib/calendarEngine";
+import {
+  generateCalendar,
+  mergeIdenticalTasks,
+  resolveTaskDay,
+  type Zone,
+  type Group,
+} from "../lib/calendarEngine";
 import { matchTreeToGroup } from "../lib/groupMatcher";
 
 const zones = zonesJson as Zone[];
@@ -27,6 +33,10 @@ describe("calendar engine", () => {
   it("5b: tropicals go out in June and come indoors in September (not August)", () => {
     expect(monthOf("5b", "tropical", "t_out")).toBe(6);
     expect(monthOf("5b", "tropical", "t_in")).toBe(9);
+  });
+  it("caps tropical repotting at mid-July in 3a but not 5b", () => {
+    expect(monthOf("3a", "tropical", "t_repot")).toBe(7);
+    expect(monthOf("5b", "tropical", "t_repot")).toBe(6);
   });
   it("5b: hardy deciduous repot early April, winter storage in November", () => {
     expect(monthOf("5b", "hardy_deciduous", "hd_repot")).toBe(4);
@@ -56,6 +66,16 @@ describe("calendar engine", () => {
   it("shows the too-warm note for hardy deciduous in 9a", () => {
     const cal = generateCalendar(zone("9a"), [group("hardy_deciduous")]);
     expect(cal.zoneNotes[0].notes.join(" ")).toMatch(/too warm/i);
+  });
+  it("merges the four January winter moisture checks", () => {
+    const cal = generateCalendar(zone("5b"), groups, { includeOptional: false });
+    const january = cal.months.find((month) => month.month === 1)!;
+    const merged = mergeIdenticalTasks(january.tasks).filter(
+      ({ task }) => task.title === "Winter moisture check",
+    );
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].groups).toHaveLength(4);
   });
   it("every task lands on a real month in every zone", () => {
     for (const z of zones) {

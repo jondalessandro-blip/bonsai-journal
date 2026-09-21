@@ -158,7 +158,7 @@
           "shift": "none"
         },
         "trigger": "every 2 to 3 weeks while stored",
-        "desc": "Check that the soil in stored pots hasn't dried out completely. Give a light watering on a day above freezing if it has.",
+        "desc": "Check that the soil in stored pots hasn't dried out completely. Evergreens keep losing water through winter, so they need this most. Water lightly on a day above freezing if the soil is dry.",
         "warning": "Dry pots are a very common cause of winter losses. Don't overdo it, since soggy soil that freezes is also bad.",
         "optional": false,
         "zones": {
@@ -305,8 +305,8 @@
           "shift": "none"
         },
         "trigger": "every 2 to 3 weeks while stored",
-        "desc": "Evergreens still lose water in winter. Check the soil and water lightly on a day above freezing if it's dry.",
-        "warning": "",
+        "desc": "Check that the soil in stored pots hasn't dried out completely. Evergreens keep losing water through winter, so they need this most. Water lightly on a day above freezing if the soil is dry.",
+        "warning": "Dry pots are a very common cause of winter losses. Don't overdo it, since soggy soil that freezes is also bad.",
         "optional": false,
         "zones": {
           "max": 7.5
@@ -444,8 +444,8 @@
           "shift": "none"
         },
         "trigger": "every 2 to 3 weeks while stored",
-        "desc": "Evergreens still lose water in winter. Check the soil and water lightly on a day above freezing if it's dry.",
-        "warning": "",
+        "desc": "Check that the soil in stored pots hasn't dried out completely. Evergreens keep losing water through winter, so they need this most. Water lightly on a day above freezing if the soil is dry.",
+        "warning": "Dry pots are a very common cause of winter losses. Don't overdo it, since soggy soil that freezes is also bad.",
         "optional": false,
         "zones": {
           "max": 7.5
@@ -609,8 +609,8 @@
           "shift": "none"
         },
         "trigger": "every 2 to 3 weeks while stored",
-        "desc": "Evergreens still lose water in winter. Check the soil and water lightly on a day above freezing if it's dry.",
-        "warning": "",
+        "desc": "Check that the soil in stored pots hasn't dried out completely. Evergreens keep losing water through winter, so they need this most. Water lightly on a day above freezing if the soil is dry.",
+        "warning": "Dry pots are a very common cause of winter losses. Don't overdo it, since soggy soil that freezes is also bad.",
         "optional": false,
         "zones": {
           "max": 7.5
@@ -721,7 +721,11 @@
         "trigger": "warm and growing strongly (about June to July)",
         "desc": "Repot in the warm months when growth is fastest, unlike hardy trees. Ficus can be bare-rooted.",
         "warning": "Serissa hates heavy root work (about 20 percent at most). Don't hard prune and repot the same week unless the tree is very vigorous.",
-        "optional": false
+        "optional": false,
+        "latest": {
+          "month": 7,
+          "part": "mid"
+        }
       },
       {
         "id": "t_in",
