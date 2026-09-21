@@ -293,84 +293,121 @@ export default function CalendarPage() {
               Tick at least one tree group above to see your calendar.
             </p>
           ) : (
-            calendar.months.map((month) => (
-              <Card key={month.month}>
-                <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
-                  <CardTitle className="text-xl">{month.monthName}</CardTitle>
-                  {month.month === currentMonth && (
-                    <Badge variant="secondary">This month</Badge>
-                  )}
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {month.tasks.length === 0 ? (
-                    <p className="text-sm italic text-muted-foreground">
-                      Nothing scheduled
-                    </p>
-                  ) : (
-                    mergeIdenticalTasks(month.tasks).map((mergedTask) => {
-                      const task = mergedTask.task;
-                      const isMerged = mergedTask.groups.length > 1;
+            calendar.months.map((month) => {
+              const mergedTasks = mergeIdenticalTasks(month.tasks);
+              const singleGroupSections = groups
+                .map((group) => ({
+                  heading: group.short_label,
+                  groupId: group.group_id,
+                  tasks: mergedTasks.filter(
+                    (mergedTask) =>
+                      mergedTask.groups.length === 1 &&
+                      mergedTask.groups[0].group_id === group.group_id,
+                  ),
+                }))
+                .filter((section) => section.tasks.length > 0);
+              const severalGroupsTasks = mergedTasks.filter(
+                (mergedTask) => mergedTask.groups.length > 1,
+              );
+              const sections = [
+                ...singleGroupSections,
+                ...(severalGroupsTasks.length > 0
+                  ? [
+                      {
+                        heading: "Several groups",
+                        groupId: "several-groups",
+                        tasks: severalGroupsTasks,
+                      },
+                    ]
+                  : []),
+              ];
 
-                      return (
-                        <article
-                          key={`${task.id}-${mergedTask.groups.map((group) => group.group_id).join("-")}`}
-                          className={`rounded-lg border border-border/60 border-l-4 p-4 ${
-                            isMerged
-                              ? "border-l-border bg-muted/30"
-                              : (GROUP_STYLES[task.group_id] ??
-                                "border-l-border bg-muted/30")
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <span
-                              aria-hidden="true"
-                              className={`mt-0.5 text-xl leading-none ${
-                                isMerged ? "flex gap-1" : ""
-                              }`}
-                            >
-                              {mergedTask.groups.map((group) => (
-                                <span key={group.group_id}>{group.group_icon}</span>
-                              ))}
-                            </span>
-                            <div className="min-w-0 flex-1 space-y-2">
-                              {isMerged && (
-                                <p className="text-xs text-muted-foreground">
-                                  <span className="font-medium">Applies to:</span>{" "}
-                                  {mergedTask.groups
-                                    .map((group) => group.group_label)
-                                    .join(", ")}
-                                </p>
-                              )}
-                              <div className="flex flex-wrap items-center gap-2">
-                                <h3 className="font-medium text-foreground">
-                                  {task.title}
-                                </h3>
-                                <Badge variant="outline">{task.care_type}</Badge>
-                                <span className="text-xs font-medium text-muted-foreground">
-                                  {task.timeLabel}
-                                </span>
-                              </div>
-                              <p className="text-sm leading-relaxed text-foreground/90">
-                                {task.desc}
-                              </p>
-                              {task.warning && (
-                                <p className="text-sm leading-relaxed text-red-700 dark:text-red-300">
-                                  <span className="font-semibold">Warning:</span>{" "}
-                                  {task.warning}
-                                </p>
-                              )}
-                              <p className="text-xs italic leading-relaxed text-muted-foreground">
-                                Trigger: {task.trigger}
-                              </p>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    })
-                  )}
-                </CardContent>
-              </Card>
-            ))
+              return (
+                <Card key={month.month}>
+                  <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
+                    <CardTitle className="text-xl">{month.monthName}</CardTitle>
+                    {month.month === currentMonth && (
+                      <Badge variant="secondary">This month</Badge>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {month.tasks.length === 0 ? (
+                      <p className="text-sm italic text-muted-foreground">
+                        Nothing scheduled
+                      </p>
+                    ) : (
+                      sections.map((section) => (
+                        <div key={section.groupId} className="space-y-2">
+                          <p className="text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                            {section.heading}
+                          </p>
+                          {section.tasks.map((mergedTask) => {
+                            const task = mergedTask.task;
+                            const isMerged = mergedTask.groups.length > 1;
+
+                            return (
+                              <article
+                                key={`${task.id}-${mergedTask.groups.map((group) => group.group_id).join("-")}`}
+                                className={`rounded-lg border border-border/60 border-l-4 p-4 ${
+                                  isMerged
+                                    ? "border-l-border bg-muted/30"
+                                    : (GROUP_STYLES[task.group_id] ??
+                                      "border-l-border bg-muted/30")
+                                }`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <span
+                                    aria-hidden="true"
+                                    className={`mt-0.5 text-xl leading-none ${
+                                      isMerged ? "flex gap-1" : ""
+                                    }`}
+                                  >
+                                    {mergedTask.groups.map((group) => (
+                                      <span key={group.group_id}>{group.group_icon}</span>
+                                    ))}
+                                  </span>
+                                  <div className="min-w-0 flex-1 space-y-2">
+                                    {isMerged && (
+                                      <p className="text-xs text-muted-foreground">
+                                        <span className="font-medium">Applies to:</span>{" "}
+                                        {mergedTask.groups
+                                          .map((group) => group.group_label)
+                                          .join(", ")}
+                                      </p>
+                                    )}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h3 className="font-medium text-foreground">
+                                        {task.title}
+                                      </h3>
+                                      <Badge variant="outline">{task.care_type}</Badge>
+                                      <span className="text-xs font-medium text-muted-foreground">
+                                        {task.timeLabel}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs italic leading-relaxed text-muted-foreground">
+                                      Trigger: {task.trigger}
+                                    </p>
+                                    <p className="text-sm leading-relaxed text-foreground/90">
+                                      {task.desc}
+                                    </p>
+                                    {task.warning && (
+                                      <p className="text-sm leading-relaxed text-red-700 dark:text-red-300">
+                                        <span className="font-semibold">Warning:</span>{" "}
+                                        {task.warning}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </section>

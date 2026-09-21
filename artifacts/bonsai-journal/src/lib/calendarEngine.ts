@@ -44,6 +44,7 @@ export type ZoneNote = { min: number; max: number; note: string };
 export type Group = {
   group_id: string;
   label: string;
+  short_label: string;
   icon: string;
   examples: string;
   description: string;
@@ -56,6 +57,7 @@ export type Group = {
 export type CalendarTask = Task & {
   group_id: string;
   group_label: string;
+  group_short_label: string;
   group_icon: string;
   month: number;
   part: Part;
@@ -156,6 +158,7 @@ export function generateCalendar(
         ...task,
         group_id: group.group_id,
         group_label: group.label,
+        group_short_label: group.short_label,
         group_icon: group.icon,
         month,
         part,

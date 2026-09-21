@@ -2,6 +2,7 @@
   {
     "group_id": "hardy_deciduous",
     "label": "Hardy Deciduous",
+    "short_label": "Hardy Deciduous",
     "icon": "🍁",
     "examples": "Maple, Elm, Hornbeam, Beech, Oak, Zelkova, Crabapple, Larch",
     "description": "Trees that drop their leaves and need a real winter rest",
@@ -194,6 +195,7 @@
   {
     "group_id": "pine_two_flush",
     "label": "Two-Flush Pines",
+    "short_label": "Two-Flush Pines",
     "icon": "🌲",
     "examples": "Japanese Black Pine, Japanese Red Pine",
     "description": "Pines that can be pushed to grow twice in a year. Candle cutting is the key task.",
@@ -333,6 +335,7 @@
   {
     "group_id": "pine_one_flush",
     "label": "Pines & Spruce (One Flush)",
+    "short_label": "Pines & Spruce",
     "icon": "🌿",
     "examples": "White Pine, Scots Pine, Mugo Pine, Red Pine, Spruce",
     "description": "Trees that grow once a year. Pinch candles. Do NOT candle cut like black pine.",
@@ -474,6 +477,7 @@
   {
     "group_id": "juniper",
     "label": "Junipers & Cedars",
+    "short_label": "Junipers",
     "icon": "🌱",
     "examples": "Chinese Juniper, Eastern Red Cedar, Shimpaku, White Cedar",
     "description": "Evergreens that keep growing through the season. Pinch, don't strip, and never bring them indoors.",
@@ -638,6 +642,7 @@
   {
     "group_id": "tropical",
     "label": "Tropical, Subtropical & Tender Succulents",
+    "short_label": "Tropical",
     "icon": "🌴",
     "examples": "Ficus, Serissa, Fukien Tea, Brazilian Raintree, Dwarf Jade (Portulacaria), Jade (Crassula)",
     "description": "No winter rest. Needs warmth, so it lives indoors for winter in cold zones.",

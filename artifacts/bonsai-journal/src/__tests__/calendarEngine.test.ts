@@ -38,6 +38,14 @@ describe("calendar engine", () => {
     expect(monthOf("3a", "tropical", "t_repot")).toBe(7);
     expect(monthOf("5b", "tropical", "t_repot")).toBe(6);
   });
+  it("gives every tropical task the Tropical short label", () => {
+    const cal = generateCalendar(zone("5b"), [group("tropical")], {
+      includeOptional: true,
+    });
+    expect(cal.months.flatMap((month) => month.tasks).every(
+      (task) => task.group_short_label === "Tropical",
+    )).toBe(true);
+  });
   it("5b: hardy deciduous repot early April, winter storage in November", () => {
     expect(monthOf("5b", "hardy_deciduous", "hd_repot")).toBe(4);
     expect(monthOf("5b", "hardy_deciduous", "hd_winter")).toBe(11);
