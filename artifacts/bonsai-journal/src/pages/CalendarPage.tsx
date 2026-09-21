@@ -235,7 +235,7 @@ export default function CalendarPage() {
                 htmlFor="calendar-advanced"
                 className="text-sm font-medium text-foreground"
               >
-                Show advanced tasks
+                Show advanced tasks (defoliation, bud selection)
               </label>
               <p className="text-xs text-muted-foreground">
                 Include optional and more specialized work in the calendar.
@@ -250,7 +250,7 @@ export default function CalendarPage() {
                   includeOptional,
                 }))
               }
-              aria-label="Show advanced tasks"
+              aria-label="Show advanced tasks (defoliation, bud selection)"
             />
           </div>
         </CardContent>
