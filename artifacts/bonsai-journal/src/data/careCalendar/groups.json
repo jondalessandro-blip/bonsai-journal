@@ -1,0 +1,782 @@
+[
+  {
+    "group_id": "hardy_deciduous",
+    "label": "Hardy Deciduous",
+    "short_label": "Hardy Deciduous",
+    "icon": "🍁",
+    "examples": "Maple, Elm, Hornbeam, Beech, Oak, Zelkova, Crabapple, Larch",
+    "description": "Trees that drop their leaves and need a real winter rest",
+    "match": {
+      "keywords": [
+        "acer",
+        "maple",
+        "japanese maple",
+        "trident maple",
+        "ulmus",
+        "elm",
+        "zelkova",
+        "carpinus",
+        "hornbeam",
+        "fagus",
+        "beech",
+        "quercus",
+        "oak",
+        "malus",
+        "crabapple",
+        "larix",
+        "larch"
+      ]
+    },
+    "tasks": [
+      {
+        "id": "hd_prune",
+        "title": "Structural pruning",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 1,
+          "part": "mid",
+          "shift": "none"
+        },
+        "trigger": "deep winter, fully dormant, bare branches",
+        "desc": "Bare branches make the structure easy to see. Remove crossing branches and thick shoots that don't fit the design, and cut back to the branch collar.",
+        "warning": "Sap starts rising earlier than you'd think. Maples can bleed if cut once it runs, which looks alarming but is rarely harmful. For maples, do big cuts in deep winter or in summer once leaves have hardened.",
+        "optional": false,
+        "zones": {
+          "max": 8.5
+        }
+      },
+      {
+        "id": "hd_out",
+        "title": "Bring out of winter storage",
+        "care_type": "Other",
+        "timing": {
+          "kind": "season",
+          "month": 3,
+          "part": "late",
+          "shift": "spring"
+        },
+        "trigger": "buds start to swell and the hardest freezes have passed",
+        "desc": "Move trees from the garage or shed to a sheltered outdoor spot. Keep the pots off bare ground and be ready to cover them for a late frost.",
+        "warning": "Once buds open, a hard frost can burn new growth. Shelter or cover trees on cold nights.",
+        "optional": false,
+        "zones": {
+          "max": 7.5
+        }
+      },
+      {
+        "id": "hd_repot",
+        "title": "Repot",
+        "care_type": "Repotting",
+        "timing": {
+          "kind": "season",
+          "month": 4,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "buds swelling, before the leaves open",
+        "desc": "Repot as buds swell. Trim roots lightly (well under a third for most trees) and use a fast-draining bonsai mix.",
+        "warning": "Beech hates heavy root work. Larch wakes first, so do it first. Don't fertilize a freshly repotted tree for about 4 weeks.",
+        "optional": false
+      },
+      {
+        "id": "hd_fert",
+        "title": "Start fertilizing",
+        "care_type": "Fertilizing",
+        "timing": {
+          "kind": "season",
+          "month": 5,
+          "part": "late",
+          "shift": "spring"
+        },
+        "trigger": "first leaves have hardened off",
+        "desc": "Start feeding once the first leaves have hardened. Organic cakes are replaced about monthly, or use diluted liquid feed every 1 to 2 weeks. Keep going until about mid-August.",
+        "warning": "Stop nitrogen by mid-August so the growth hardens before winter. Don't feed weak, dry or freshly repotted trees.",
+        "optional": false
+      },
+      {
+        "id": "hd_pinch",
+        "title": "Clip and grow / pinch",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 6,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "first flush of shoots has hardened",
+        "desc": "Let new shoots grow out to about 5 or 6 leaves, then cut back to about 2 to build fine, twiggy branching. Repeat through early summer.",
+        "warning": "Crabapple and other flowering trees set next year's flower buds in summer. Heavy pinching removes them, so leave some shoots to grow.",
+        "optional": false
+      },
+      {
+        "id": "hd_defoliate",
+        "title": "Defoliation (advanced, optional)",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 6,
+          "part": "late",
+          "shift": "spring"
+        },
+        "trigger": "strong, healthy, well-fed trees only",
+        "desc": "Removing most leaves forces a second flush of smaller leaves. Only for strong, healthy trees. For Japanese maple, remove leaves partially only.",
+        "warning": "Never on weak or freshly repotted trees. Not after mid-July, and skip it entirely in short-season zones.",
+        "optional": true,
+        "latest": {
+          "month": 7,
+          "part": "early"
+        },
+        "zones": {
+          "min": 4.5
+        }
+      },
+      {
+        "id": "hd_winter",
+        "title": "Move to winter storage",
+        "care_type": "Winter Prep",
+        "timing": {
+          "kind": "frost",
+          "anchor": "first_frost",
+          "offset_days": 35
+        },
+        "trigger": "leaves have dropped and there have been several hard frosts",
+        "desc": "Store in an unheated garage or shed, or a sheltered spot. Aim for staying cold but not brutally so. Mulch or bury the pots and keep them out of winter wind and sun. Never bring hardy trees into the warm house.",
+        "warning": "Roots in pots freeze harder than roots in the ground. Roughly, a potted tree is about two zones less hardy than the same tree planted out.",
+        "optional": false,
+        "zones": {
+          "max": 7.5
+        }
+      },
+      {
+        "id": "hd_check",
+        "title": "Winter moisture check",
+        "care_type": "Watering",
+        "timing": {
+          "kind": "season",
+          "month": 1,
+          "part": "mid",
+          "shift": "none"
+        },
+        "trigger": "every 2 to 3 weeks while stored",
+        "desc": "Check that the soil in stored pots hasn't dried out completely. Evergreens keep losing water through winter, so they need this most. Water lightly on a day above freezing if the soil is dry.",
+        "warning": "Dry pots are a very common cause of winter losses. Don't overdo it, since soggy soil that freezes is also bad.",
+        "optional": false,
+        "zones": {
+          "max": 7.5
+        }
+      }
+    ],
+    "zone_notes": [
+      {
+        "min": 3.0,
+        "max": 4.0,
+        "note": "Very cold winters. Pots need serious protection, such as heavy mulch, burying, or a well insulated unheated space."
+      },
+      {
+        "min": 8.0,
+        "max": 8.5,
+        "note": "Winters here are mild. Hardy trees can usually stay outdoors; just shield pots from unusual hard freezes."
+      },
+      {
+        "min": 9.0,
+        "max": 10.5,
+        "note": "Probably too warm for a proper winter rest. Hardy deciduous trees need a real cold season (roughly 800+ hours of cold), so they often struggle here without extra chilling."
+      }
+    ],
+    "species_notes": {
+      "Japanese maple (Acer palmatum)": "Bleeds if cut once sap is running. Partial defoliation only.",
+      "Beech": "Hates heavy root work.",
+      "Larch": "First to need repotting in spring.",
+      "Chinese elm": "Less hardy than other elms and may keep some leaves. Protect it well in winter.",
+      "Crabapple / apple": "Heavy pinching and pruning removes next year's flowers."
+    }
+  },
+  {
+    "group_id": "pine_two_flush",
+    "label": "Two-Flush Pines",
+    "short_label": "Two-Flush Pines",
+    "icon": "🌲",
+    "examples": "Japanese Black Pine, Japanese Red Pine",
+    "description": "Pines that can be pushed to grow twice in a year. Candle cutting is the key task.",
+    "match": {
+      "keywords": [
+        "pinus thunbergii",
+        "japanese black pine",
+        "black pine",
+        "kuromatsu",
+        "jbp",
+        "pinus densiflora",
+        "japanese red pine",
+        "akamatsu"
+      ]
+    },
+    "tasks": [
+      {
+        "id": "p2_repot",
+        "title": "Repot",
+        "care_type": "Repotting",
+        "timing": {
+          "kind": "season",
+          "month": 4,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "buds swelling and starting to move",
+        "desc": "Repot as the buds swell. Take no more than about a third of the roots and keep some of the old soil around the root ball, since pine roots rely on helpful white fungus in the soil.",
+        "warning": "Never bare-root a pine.",
+        "optional": false
+      },
+      {
+        "id": "p2_fert",
+        "title": "Fertilize heavily in spring",
+        "care_type": "Fertilizing",
+        "timing": {
+          "kind": "season",
+          "month": 4,
+          "part": "late",
+          "shift": "spring"
+        },
+        "trigger": "a few weeks after repotting, as candles grow",
+        "desc": "A strong spring feed builds the vigor the tree needs for candle cutting. Ease off fertilizer for about 2 weeks before cutting the candles, then resume about 2 weeks after.",
+        "warning": "Don't feed a freshly repotted tree.",
+        "optional": false
+      },
+      {
+        "id": "p2_candle",
+        "title": "Candle cutting (key task)",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 6,
+          "part": "late",
+          "shift": "spring"
+        },
+        "trigger": "candles fully stretched, needles just starting to separate",
+        "desc": "Cut the strongest candles back to about a third, medium candles by about half, and leave weak candles alone. This balances the tree's energy and prompts a second, smaller flush.",
+        "warning": "Timing matters. Too early or too late can give a weak or no second flush. Only for strong, healthy trees.",
+        "optional": false,
+        "latest": {
+          "month": 7,
+          "part": "early"
+        },
+        "zones": {
+          "min": 4.5
+        }
+      },
+      {
+        "id": "p2_needle",
+        "title": "Pull old needles",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 9,
+          "part": "early",
+          "shift": "autumn"
+        },
+        "trigger": "after the new needles have hardened",
+        "desc": "Pull the oldest, browning needles (usually two or more years old) to let light and air into the inner buds. Thin gradually.",
+        "warning": "Don't strip weak branches all at once.",
+        "optional": false
+      },
+      {
+        "id": "p2_winter",
+        "title": "Winter protection",
+        "care_type": "Winter Prep",
+        "timing": {
+          "kind": "frost",
+          "anchor": "first_frost",
+          "offset_days": 30
+        },
+        "trigger": "after several frosts, dormant",
+        "desc": "Pines need a cold winter, but protect the pot. Bury it in mulch, use a windbreak, or use an unheated garage or shed with some light. Never indoors.",
+        "warning": "Freezing and thawing again and again is hard on roots in pots.",
+        "optional": false,
+        "zones": {
+          "max": 7.5
+        }
+      },
+      {
+        "id": "p2_check",
+        "title": "Winter moisture check",
+        "care_type": "Watering",
+        "timing": {
+          "kind": "season",
+          "month": 1,
+          "part": "mid",
+          "shift": "none"
+        },
+        "trigger": "every 2 to 3 weeks while stored",
+        "desc": "Check that the soil in stored pots hasn't dried out completely. Evergreens keep losing water through winter, so they need this most. Water lightly on a day above freezing if the soil is dry.",
+        "warning": "Dry pots are a very common cause of winter losses. Don't overdo it, since soggy soil that freezes is also bad.",
+        "optional": false,
+        "zones": {
+          "max": 7.5
+        }
+      }
+    ],
+    "zone_notes": [
+      {
+        "min": 3.0,
+        "max": 4.0,
+        "note": "Black pine is marginal this cold. The second flush may not have time to harden, so candle cutting is skipped here. Roots need serious winter protection."
+      },
+      {
+        "min": 8.0,
+        "max": 8.5,
+        "note": "Winters here are mild. Hardy trees can usually stay outdoors; just shield pots from unusual hard freezes."
+      }
+    ],
+    "species_notes": {
+      "Japanese black pine": "The classic two-flush pine. Only candle cut when the tree is vigorous.",
+      "Japanese red pine": "Treat like black pine but go a bit gentler."
+    }
+  },
+  {
+    "group_id": "pine_one_flush",
+    "label": "Pines & Spruce (One Flush)",
+    "short_label": "Pines & Spruce",
+    "icon": "🌿",
+    "examples": "White Pine, Scots Pine, Mugo Pine, Red Pine, Spruce",
+    "description": "Trees that grow once a year. Pinch candles. Do NOT candle cut like black pine.",
+    "match": {
+      "keywords": [
+        "pinus",
+        "pine",
+        "white pine",
+        "scots pine",
+        "mugo",
+        "mugo pine",
+        "pinus mugo",
+        "pinus strobus",
+        "pinus sylvestris",
+        "red pine",
+        "pinus resinosa",
+        "picea",
+        "spruce",
+        "abies",
+        "fir"
+      ]
+    },
+    "tasks": [
+      {
+        "id": "p1_repot",
+        "title": "Repot",
+        "care_type": "Repotting",
+        "timing": {
+          "kind": "season",
+          "month": 4,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "early spring, as buds swell",
+        "desc": "Repot early to mid spring with gentle root work. Keep some old soil around the root ball and remove no more than about a third of the roots.",
+        "warning": "Never bare-root pines. Spruce is touchy, so keep root work light.",
+        "optional": false
+      },
+      {
+        "id": "p1_fert",
+        "title": "Fertilize",
+        "care_type": "Fertilizing",
+        "timing": {
+          "kind": "season",
+          "month": 5,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "after repotting recovery, as growth starts",
+        "desc": "Feed through spring and summer, easing off in late summer so growth hardens for winter.",
+        "warning": "",
+        "optional": false
+      },
+      {
+        "id": "p1_pinch",
+        "title": "Pinch the candles",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 5,
+          "part": "late",
+          "shift": "spring"
+        },
+        "trigger": "candles stretched but needles not yet open",
+        "desc": "Pinch or snap off part of each strong candle (around a third to a half) to slow growth and encourage buds further back. Leave weak candles alone. For spruce, pinch soft new tips in spring in the same way.",
+        "warning": "This is pinching, not full candle cutting. Never remove the whole candle or cut into bare old wood, since most one-flush pines won't regrow from it.",
+        "optional": false
+      },
+      {
+        "id": "p1_select",
+        "title": "Bud selection (advanced, optional)",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 12,
+          "part": "mid",
+          "shift": "none"
+        },
+        "trigger": "winter, when buds are easy to see",
+        "desc": "Where several buds sit at one point, keep about two pointing sideways and remove the extras to avoid ugly whorls.",
+        "warning": "Advanced. Skip if unsure.",
+        "optional": true
+      },
+      {
+        "id": "p1_winter",
+        "title": "Winter protection",
+        "care_type": "Winter Prep",
+        "timing": {
+          "kind": "frost",
+          "anchor": "first_frost",
+          "offset_days": 30
+        },
+        "trigger": "after several frosts, dormant",
+        "desc": "These trees need a cold winter, but protect the pot. Bury it in mulch, use a windbreak, keep out of winter sun, or use an unheated garage or shed with some light. Never indoors.",
+        "warning": "Repeated freeze and thaw is hard on roots in pots.",
+        "optional": false,
+        "zones": {
+          "max": 7.5
+        }
+      },
+      {
+        "id": "p1_check",
+        "title": "Winter moisture check",
+        "care_type": "Watering",
+        "timing": {
+          "kind": "season",
+          "month": 1,
+          "part": "mid",
+          "shift": "none"
+        },
+        "trigger": "every 2 to 3 weeks while stored",
+        "desc": "Check that the soil in stored pots hasn't dried out completely. Evergreens keep losing water through winter, so they need this most. Water lightly on a day above freezing if the soil is dry.",
+        "warning": "Dry pots are a very common cause of winter losses. Don't overdo it, since soggy soil that freezes is also bad.",
+        "optional": false,
+        "zones": {
+          "max": 7.5
+        }
+      }
+    ],
+    "zone_notes": [
+      {
+        "min": 8.0,
+        "max": 8.5,
+        "note": "Winters here are mild. Hardy trees can usually stay outdoors; just shield pots from unusual hard freezes."
+      },
+      {
+        "min": 3.0,
+        "max": 4.0,
+        "note": "Very cold winters. Pots need serious protection."
+      }
+    ],
+    "species_notes": {
+      "White pine": "One flush. Pinch candles, never cut them off.",
+      "Mugo pine": "One flush. Pinch candles in late spring.",
+      "Red pine (Pinus resinosa)": "Ontario native and a one-flush pine. Treat like white pine.",
+      "Spruce": "Pinch soft new growth in spring."
+    }
+  },
+  {
+    "group_id": "juniper",
+    "label": "Junipers & Cedars",
+    "short_label": "Junipers",
+    "icon": "🌱",
+    "examples": "Chinese Juniper, Eastern Red Cedar, Shimpaku, White Cedar",
+    "description": "Evergreens that keep growing through the season. Pinch, don't strip, and never bring them indoors.",
+    "match": {
+      "keywords": [
+        "juniperus",
+        "juniper",
+        "shimpaku",
+        "itoigawa",
+        "red cedar",
+        "eastern red cedar",
+        "thuja",
+        "white cedar",
+        "arborvitae"
+      ]
+    },
+    "tasks": [
+      {
+        "id": "j_repot",
+        "title": "Repot",
+        "care_type": "Repotting",
+        "timing": {
+          "kind": "season",
+          "month": 4,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "early to mid spring (September also works)",
+        "desc": "Repot in early to mid spring, or in September. Junipers dislike root disturbance, so remove no more than about 30 to 40 percent of the roots.",
+        "warning": "Never bare-root a juniper.",
+        "optional": false
+      },
+      {
+        "id": "j_rust",
+        "title": "Check for cedar-apple rust",
+        "care_type": "Other",
+        "timing": {
+          "kind": "season",
+          "month": 5,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "damp spring weather, especially near apples or crabapples",
+        "desc": "Look for orange jelly-like galls on the foliage and remove them by hand.",
+        "warning": "Mostly relevant if apples, crabapples or serviceberry grow nearby.",
+        "optional": false
+      },
+      {
+        "id": "j_fert",
+        "title": "Fertilize",
+        "care_type": "Fertilizing",
+        "timing": {
+          "kind": "season",
+          "month": 5,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "as growth starts",
+        "desc": "Feed about monthly through the growing season, easing off by early fall.",
+        "warning": "",
+        "optional": false
+      },
+      {
+        "id": "j_pinch",
+        "title": "Pinch growth tips",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 6,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "new shoots a few centimetres long",
+        "desc": "Pinch new tips with your fingers to keep the foliage compact. Repeat through summer as it regrows. Young trees you're growing out to thicken the trunk can be left to run.",
+        "warning": "Never strip a branch bare. Junipers rarely regrow from bare wood, so leave green on every branch.",
+        "optional": false
+      },
+      {
+        "id": "j_thin",
+        "title": "Thin dense foliage pads",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 8,
+          "part": "early",
+          "shift": "none"
+        },
+        "trigger": "after summer pinching",
+        "desc": "Thin overly dense pads so light and air reach the interior and inner foliage doesn't die back.",
+        "warning": "",
+        "optional": false
+      },
+      {
+        "id": "j_style",
+        "title": "Heavy styling and wiring window",
+        "care_type": "Wiring",
+        "timing": {
+          "kind": "season",
+          "month": 11,
+          "part": "early",
+          "shift": "autumn"
+        },
+        "trigger": "growth has slowed, late fall to early spring",
+        "desc": "The best window for structural work. Wire carefully and avoid bending too hard. As a rule of thumb, don't remove more than about a third of the foliage at once.",
+        "warning": "",
+        "optional": false
+      },
+      {
+        "id": "j_winter",
+        "title": "Winter protection",
+        "care_type": "Winter Prep",
+        "timing": {
+          "kind": "frost",
+          "anchor": "first_frost",
+          "offset_days": 30
+        },
+        "trigger": "after a few frosts",
+        "desc": "Junipers need a cold rest. Protect the pot by burying it in mulch, or use an unheated garage with light, plus a windbreak, and keep out of harsh winter sun.",
+        "warning": "The number one juniper killer is keeping it indoors over winter.",
+        "optional": false,
+        "zones": {
+          "max": 7.5
+        }
+      },
+      {
+        "id": "j_check",
+        "title": "Winter moisture check",
+        "care_type": "Watering",
+        "timing": {
+          "kind": "season",
+          "month": 1,
+          "part": "mid",
+          "shift": "none"
+        },
+        "trigger": "every 2 to 3 weeks while stored",
+        "desc": "Check that the soil in stored pots hasn't dried out completely. Evergreens keep losing water through winter, so they need this most. Water lightly on a day above freezing if the soil is dry.",
+        "warning": "Dry pots are a very common cause of winter losses. Don't overdo it, since soggy soil that freezes is also bad.",
+        "optional": false,
+        "zones": {
+          "max": 7.5
+        }
+      }
+    ],
+    "zone_notes": [
+      {
+        "min": 3.0,
+        "max": 4.0,
+        "note": "Junipers are very hardy, but roots in pots still need protection from repeated freeze and thaw."
+      },
+      {
+        "min": 8.0,
+        "max": 8.5,
+        "note": "Winters here are mild. Hardy trees can usually stay outdoors; just shield pots from unusual hard freezes."
+      }
+    ],
+    "species_notes": {
+      "Eastern red cedar (Juniperus virginiana)": "Very hardy and loves full sun. Alternate host for cedar-apple rust.",
+      "Chinese juniper (Juniperus chinensis)": "Classic bonsai juniper. Needs full sun. Keep green on every branch.",
+      "Thuja (white cedar)": "Similar care, but even less forgiving. It won't regrow from bare wood, so always keep green at the tip of every branch you want to keep."
+    }
+  },
+  {
+    "group_id": "tropical",
+    "label": "Tropical, Subtropical & Tender Succulents",
+    "short_label": "Tropical",
+    "icon": "🌴",
+    "examples": "Ficus, Serissa, Fukien Tea, Brazilian Raintree, Dwarf Jade (Portulacaria), Jade (Crassula)",
+    "description": "No winter rest. Needs warmth, so it lives indoors for winter in cold zones.",
+    "match": {
+      "keywords": [
+        "ficus",
+        "fig",
+        "serissa",
+        "snow rose",
+        "fukien tea",
+        "carmona",
+        "ehretia",
+        "brazilian raintree",
+        "raintree",
+        "pithecellobium",
+        "portulacaria",
+        "dwarf jade",
+        "elephant bush",
+        "elephant food",
+        "crassula",
+        "jade",
+        "jade plant"
+      ]
+    },
+    "tasks": [
+      {
+        "id": "t_out",
+        "title": "Move outdoors",
+        "care_type": "Other",
+        "timing": {
+          "kind": "frost",
+          "anchor": "last_frost",
+          "offset_days": 21
+        },
+        "trigger": "nights reliably above about 12°C (Ficus) or 15°C (others)",
+        "desc": "Move outside once nights stay warm. Start in shade and move to more sun over about a week.",
+        "warning": "Direct sun straight after a winter indoors burns leaves.",
+        "optional": false,
+        "frost_zones_only": true
+      },
+      {
+        "id": "t_fert",
+        "title": "Fertilize",
+        "care_type": "Fertilizing",
+        "timing": {
+          "kind": "season",
+          "month": 6,
+          "part": "early",
+          "shift": "spring"
+        },
+        "trigger": "actively growing outdoors",
+        "desc": "Feed regularly through the warm months (a diluted liquid feed weekly or a solid feed monthly). Ease off in early fall. Feed succulents at half strength.",
+        "warning": "",
+        "optional": false
+      },
+      {
+        "id": "t_prune",
+        "title": "Hard prune and style",
+        "care_type": "Pruning",
+        "timing": {
+          "kind": "season",
+          "month": 6,
+          "part": "mid",
+          "shift": "spring"
+        },
+        "trigger": "warm weather, strong growth",
+        "desc": "This is when you build structure. Prune hard while the tree is warm and growing fast.",
+        "warning": "Succulents such as Portulacaria and Crassula also take pruning in warm months, but let cuts dry and callus, and don't defoliate them.",
+        "optional": false
+      },
+      {
+        "id": "t_repot",
+        "title": "Repot",
+        "care_type": "Repotting",
+        "timing": {
+          "kind": "season",
+          "month": 6,
+          "part": "late",
+          "shift": "spring"
+        },
+        "trigger": "warm and growing strongly (about June to July)",
+        "desc": "Repot in the warm months when growth is fastest, unlike hardy trees. Ficus can be bare-rooted.",
+        "warning": "Serissa hates heavy root work (about 20 percent at most). Don't hard prune and repot the same week unless the tree is very vigorous.",
+        "optional": false,
+        "latest": {
+          "month": 7,
+          "part": "mid"
+        }
+      },
+      {
+        "id": "t_in",
+        "title": "Move indoors",
+        "care_type": "Winter Prep",
+        "timing": {
+          "kind": "frost",
+          "anchor": "first_frost",
+          "offset_days": -21
+        },
+        "trigger": "before nights drop below about 12°C",
+        "desc": "Bring trees in gradually to a bright spot or under grow lights (about 12 to 14 hours a day, 18 to 22°C). Check for spider mites and scale first and spray with insecticidal soap. A humidity tray suits Ficus and Fukien tea.",
+        "warning": "Skip the humidity tray for succulents. Sudden moves cause leaf drop.",
+        "optional": false,
+        "frost_zones_only": true
+      },
+      {
+        "id": "t_winter",
+        "title": "Indoor winter care",
+        "care_type": "Watering",
+        "timing": {
+          "kind": "season",
+          "month": 12,
+          "part": "early",
+          "shift": "none"
+        },
+        "trigger": "indoors under light",
+        "desc": "Maintenance only. Water when the soil is slightly dry (succulents: only when fully dry). Light pinching is fine. No heavy work. Leggy growth means it needs more light.",
+        "warning": "Don't try to build branching indoors. Just keep it healthy.",
+        "optional": false,
+        "frost_zones_only": true
+      }
+    ],
+    "zone_notes": [
+      {
+        "min": 9.5,
+        "max": 10.5,
+        "note": "Frost is rare or absent here. Tropicals can generally stay outdoors all year."
+      }
+    ],
+    "species_notes": {
+      "Ficus": "Takes hard pruning, full defoliation when healthy, and bare-rooting.",
+      "Serissa": "Light root work only.",
+      "Brazilian raintree": "Leaves fold up at night. That's normal, not dying.",
+      "Dwarf jade (Portulacaria afra)": "Tender. Never leave out for a frost. Water only when dry, skip humidity trays, and acclimate slowly to full sun.",
+      "Jade (Crassula)": "Same succulent care as dwarf jade."
+    }
+  }
+]
