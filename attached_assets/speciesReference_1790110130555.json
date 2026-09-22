@@ -1,0 +1,883 @@
+[
+  {
+    "commonName": "Japanese Maple",
+    "aliases": [
+      "Momiji"
+    ],
+    "scientificName": "Acer palmatum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Trident Maple",
+    "aliases": [],
+    "scientificName": "Acer buergerianum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Amur Maple",
+    "aliases": [],
+    "scientificName": "Acer ginnala",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Field Maple",
+    "aliases": [
+      "Hedge Maple"
+    ],
+    "scientificName": "Acer campestre",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Red Maple",
+    "aliases": [
+      "Swamp Maple"
+    ],
+    "scientificName": "Acer rubrum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Sugar Maple",
+    "aliases": [],
+    "scientificName": "Acer saccharum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Silver Maple",
+    "aliases": [],
+    "scientificName": "Acer saccharinum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Box Elder",
+    "aliases": [
+      "Boxelder Maple"
+    ],
+    "scientificName": "Acer negundo",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Sycamore Maple",
+    "aliases": [],
+    "scientificName": "Acer pseudoplatanus",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Vine Maple",
+    "aliases": [],
+    "scientificName": "Acer circinatum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Montpelier Maple",
+    "aliases": [],
+    "scientificName": "Acer monspessulanum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Norway Maple",
+    "aliases": [],
+    "scientificName": "Acer platanoides",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Korean Maple",
+    "aliases": [],
+    "scientificName": "Acer pseudosieboldianum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Chinese Elm",
+    "aliases": [
+      "Lacebark Elm"
+    ],
+    "scientificName": "Ulmus parvifolia",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "American Elm",
+    "aliases": [],
+    "scientificName": "Ulmus americana",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "English Elm",
+    "aliases": [
+      "Field Elm"
+    ],
+    "scientificName": "Ulmus procera",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Siberian Elm",
+    "aliases": [],
+    "scientificName": "Ulmus pumila",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Japanese Elm",
+    "aliases": [],
+    "scientificName": "Ulmus davidiana var. japonica",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Japanese Zelkova",
+    "aliases": [
+      "Japanese Grey-Bark Elm"
+    ],
+    "scientificName": "Zelkova serrata",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "European Hornbeam",
+    "aliases": [],
+    "scientificName": "Carpinus betulus",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "American Hornbeam",
+    "aliases": [
+      "Musclewood"
+    ],
+    "scientificName": "Carpinus caroliniana",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Korean Hornbeam",
+    "aliases": [],
+    "scientificName": "Carpinus turczaninowii",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Japanese Hornbeam",
+    "aliases": [],
+    "scientificName": "Carpinus japonica",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "European Beech",
+    "aliases": [],
+    "scientificName": "Fagus sylvatica",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Japanese Beech",
+    "aliases": [],
+    "scientificName": "Fagus crenata",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "American Beech",
+    "aliases": [],
+    "scientificName": "Fagus grandifolia",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "English Oak",
+    "aliases": [
+      "Common Oak"
+    ],
+    "scientificName": "Quercus robur",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Pin Oak",
+    "aliases": [],
+    "scientificName": "Quercus palustris",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Willow Oak",
+    "aliases": [],
+    "scientificName": "Quercus phellos",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Red Oak",
+    "aliases": [],
+    "scientificName": "Quercus rubra",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Chinese Evergreen Oak",
+    "aliases": [],
+    "scientificName": "Quercus myrsinifolia",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Crabapple",
+    "aliases": [],
+    "scientificName": "Malus halliana",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Wild Crabapple",
+    "aliases": [],
+    "scientificName": "Malus sylvestris",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "European Larch",
+    "aliases": [],
+    "scientificName": "Larix decidua",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Japanese Larch",
+    "aliases": [],
+    "scientificName": "Larix kaempferi",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "American Larch",
+    "aliases": [
+      "Tamarack"
+    ],
+    "scientificName": "Larix laricina",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Common Hawthorn",
+    "aliases": [],
+    "scientificName": "Crataegus monogyna",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Washington Hawthorn",
+    "aliases": [],
+    "scientificName": "Crataegus phaenopyrum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Silver Birch",
+    "aliases": [],
+    "scientificName": "Betula pendula",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "River Birch",
+    "aliases": [],
+    "scientificName": "Betula nigra",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Chinese Hackberry",
+    "aliases": [],
+    "scientificName": "Celtis sinensis",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Common Hackberry",
+    "aliases": [],
+    "scientificName": "Celtis occidentalis",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Ginkgo",
+    "aliases": [
+      "Maidenhair Tree"
+    ],
+    "scientificName": "Ginkgo biloba",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Cotoneaster",
+    "aliases": [],
+    "scientificName": "Cotoneaster horizontalis"
+  },
+  {
+    "commonName": "Pomegranate",
+    "aliases": [],
+    "scientificName": "Punica granatum"
+  },
+  {
+    "commonName": "Dwarf Pomegranate",
+    "aliases": [],
+    "scientificName": "Punica granatum var. nana"
+  },
+  {
+    "commonName": "Flowering Quince",
+    "aliases": [
+      "Japanese Quince"
+    ],
+    "scientificName": "Chaenomeles speciosa"
+  },
+  {
+    "commonName": "Chinese Quince",
+    "aliases": [],
+    "scientificName": "Pseudocydonia sinensis"
+  },
+  {
+    "commonName": "Chinese Wisteria",
+    "aliases": [],
+    "scientificName": "Wisteria sinensis"
+  },
+  {
+    "commonName": "Japanese Wisteria",
+    "aliases": [],
+    "scientificName": "Wisteria floribunda"
+  },
+  {
+    "commonName": "Satsuki Azalea",
+    "aliases": [
+      "Azalea"
+    ],
+    "scientificName": "Rhododendron indicum"
+  },
+  {
+    "commonName": "Common Boxwood",
+    "aliases": [
+      "Boxwood"
+    ],
+    "scientificName": "Buxus sempervirens"
+  },
+  {
+    "commonName": "Littleleaf Boxwood",
+    "aliases": [],
+    "scientificName": "Buxus microphylla"
+  },
+  {
+    "commonName": "Harland Boxwood",
+    "aliases": [],
+    "scientificName": "Buxus harlandii"
+  },
+  {
+    "commonName": "Chinese Privet",
+    "aliases": [
+      "Privet"
+    ],
+    "scientificName": "Ligustrum sinense"
+  },
+  {
+    "commonName": "Box Honeysuckle",
+    "aliases": [],
+    "scientificName": "Lonicera nitida"
+  },
+  {
+    "commonName": "Firethorn",
+    "aliases": [
+      "Pyracantha"
+    ],
+    "scientificName": "Pyracantha coccinea"
+  },
+  {
+    "commonName": "Smoke Tree",
+    "aliases": [],
+    "scientificName": "Cotinus coggygria"
+  },
+  {
+    "commonName": "Flowering Dogwood",
+    "aliases": [
+      "Dogwood"
+    ],
+    "scientificName": "Cornus florida"
+  },
+  {
+    "commonName": "Camellia",
+    "aliases": [],
+    "scientificName": "Camellia japonica"
+  },
+  {
+    "commonName": "Grape",
+    "aliases": [],
+    "scientificName": "Vitis vinifera"
+  },
+  {
+    "commonName": "Common Witch Hazel",
+    "aliases": [
+      "Witch Hazel"
+    ],
+    "scientificName": "Hamamelis virginiana"
+  },
+  {
+    "commonName": "Weeping Willow",
+    "aliases": [],
+    "scientificName": "Salix babylonica"
+  },
+  {
+    "commonName": "European Rowan",
+    "aliases": [
+      "Mountain Ash"
+    ],
+    "scientificName": "Sorbus aucuparia"
+  },
+  {
+    "commonName": "Tamarisk",
+    "aliases": [
+      "Tamarix"
+    ],
+    "scientificName": "Tamarix ramosissima"
+  },
+  {
+    "commonName": "Bald Cypress",
+    "aliases": [
+      "Swamp Cypress"
+    ],
+    "scientificName": "Taxodium distichum"
+  },
+  {
+    "commonName": "Chinese Elm Cork Bark",
+    "aliases": [
+      "Cork Bark Elm"
+    ],
+    "scientificName": "Ulmus parvifolia 'Corticosa'"
+  },
+  {
+    "commonName": "Weigela",
+    "aliases": [],
+    "scientificName": "Weigela florida"
+  },
+  {
+    "commonName": "Ivy",
+    "aliases": [],
+    "scientificName": "Hedera helix"
+  },
+  {
+    "commonName": "Sweetgum",
+    "aliases": [
+      "Liquidambar"
+    ],
+    "scientificName": "Liquidambar styraciflua"
+  },
+  {
+    "commonName": "Japanese Black Pine",
+    "aliases": [
+      "Kuromatsu",
+      "JBP"
+    ],
+    "scientificName": "Pinus thunbergii",
+    "group_id": "pine_two_flush"
+  },
+  {
+    "commonName": "Japanese Red Pine",
+    "aliases": [
+      "Akamatsu"
+    ],
+    "scientificName": "Pinus densiflora",
+    "group_id": "pine_two_flush"
+  },
+  {
+    "commonName": "Scots Pine",
+    "aliases": [],
+    "scientificName": "Pinus sylvestris",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Mugo Pine",
+    "aliases": [],
+    "scientificName": "Pinus mugo",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Eastern White Pine",
+    "aliases": [
+      "White Pine"
+    ],
+    "scientificName": "Pinus strobus",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Red Pine",
+    "aliases": [],
+    "scientificName": "Pinus resinosa",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Japanese White Pine",
+    "aliases": [],
+    "scientificName": "Pinus parviflora",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Ponderosa Pine",
+    "aliases": [],
+    "scientificName": "Pinus ponderosa",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Austrian Pine",
+    "aliases": [],
+    "scientificName": "Pinus nigra",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Norway Spruce",
+    "aliases": [
+      "Spruce"
+    ],
+    "scientificName": "Picea abies",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Colorado Blue Spruce",
+    "aliases": [],
+    "scientificName": "Picea pungens",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "White Spruce",
+    "aliases": [],
+    "scientificName": "Picea glauca",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Black Spruce",
+    "aliases": [],
+    "scientificName": "Picea mariana",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Fir",
+    "aliases": [],
+    "scientificName": "Abies",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Balsam Fir",
+    "aliases": [],
+    "scientificName": "Abies balsamea",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Chinese Juniper",
+    "aliases": [
+      "Shimpaku",
+      "Itoigawa"
+    ],
+    "scientificName": "Juniperus chinensis",
+    "group_id": "juniper"
+  },
+  {
+    "commonName": "Rocky Mountain Juniper",
+    "aliases": [],
+    "scientificName": "Juniperus scopulorum",
+    "group_id": "juniper"
+  },
+  {
+    "commonName": "Common Juniper",
+    "aliases": [],
+    "scientificName": "Juniperus communis",
+    "group_id": "juniper"
+  },
+  {
+    "commonName": "Eastern Red Cedar",
+    "aliases": [
+      "Red Cedar"
+    ],
+    "scientificName": "Juniperus virginiana",
+    "group_id": "juniper"
+  },
+  {
+    "commonName": "Needle Juniper",
+    "aliases": [],
+    "scientificName": "Juniperus rigida",
+    "group_id": "juniper"
+  },
+  {
+    "commonName": "Procumbens Juniper",
+    "aliases": [
+      "Procumbens Nana"
+    ],
+    "scientificName": "Juniperus procumbens",
+    "group_id": "juniper"
+  },
+  {
+    "commonName": "Eastern White Cedar",
+    "aliases": [
+      "Northern White Cedar",
+      "Arborvitae"
+    ],
+    "scientificName": "Thuja occidentalis",
+    "group_id": "juniper"
+  },
+  {
+    "commonName": "Hinoki Cypress",
+    "aliases": [],
+    "scientificName": "Chamaecyparis obtusa"
+  },
+  {
+    "commonName": "Sawara Cypress",
+    "aliases": [],
+    "scientificName": "Chamaecyparis pisifera"
+  },
+  {
+    "commonName": "Japanese Cedar",
+    "aliases": [
+      "Sugi"
+    ],
+    "scientificName": "Cryptomeria japonica"
+  },
+  {
+    "commonName": "English Yew",
+    "aliases": [
+      "Yew"
+    ],
+    "scientificName": "Taxus baccata"
+  },
+  {
+    "commonName": "Japanese Yew",
+    "aliases": [],
+    "scientificName": "Taxus cuspidata"
+  },
+  {
+    "commonName": "Oriental Arborvitae",
+    "aliases": [],
+    "scientificName": "Platycladus orientalis"
+  },
+  {
+    "commonName": "Dwarf Jade",
+    "aliases": [
+      "Elephant Bush",
+      "Elephant Food"
+    ],
+    "scientificName": "Portulacaria afra",
+    "group_id": "tropical"
+  },
+  {
+    "commonName": "Jade Plant",
+    "aliases": [
+      "Jade"
+    ],
+    "scientificName": "Crassula ovata",
+    "group_id": "tropical"
+  },
+  {
+    "commonName": "Chinese Banyan",
+    "aliases": [
+      "Ficus Retusa",
+      "Green Island Ficus"
+    ],
+    "scientificName": "Ficus microcarpa",
+    "group_id": "tropical"
+  },
+  {
+    "commonName": "Weeping Fig",
+    "aliases": [],
+    "scientificName": "Ficus benjamina",
+    "group_id": "tropical"
+  },
+  {
+    "commonName": "Willow Leaf Fig",
+    "aliases": [],
+    "scientificName": "Ficus salicaria",
+    "group_id": "tropical"
+  },
+  {
+    "commonName": "Fukien Tea",
+    "aliases": [
+      "Ehretia microphylla",
+      "Fukien Tea Tree"
+    ],
+    "scientificName": "Carmona microphylla",
+    "group_id": "tropical"
+  },
+  {
+    "commonName": "Snow Rose",
+    "aliases": [
+      "Serissa foetida"
+    ],
+    "scientificName": "Serissa japonica",
+    "group_id": "tropical"
+  },
+  {
+    "commonName": "Bougainvillea",
+    "aliases": [],
+    "scientificName": "Bougainvillea glabra",
+    "group_id": "tropical"
+  },
+  {
+    "commonName": "Brazilian Raintree",
+    "aliases": [],
+    "scientificName": "Pithecellobium tortum",
+    "group_id": "tropical"
+  },
+  {
+    "commonName": "Water Jasmine",
+    "aliases": [],
+    "scientificName": "Wrightia religiosa"
+  },
+  {
+    "commonName": "Natal Plum",
+    "aliases": [],
+    "scientificName": "Carissa macrocarpa"
+  },
+  {
+    "commonName": "Buttonwood",
+    "aliases": [],
+    "scientificName": "Conocarpus erectus"
+  },
+  {
+    "commonName": "Bald Cypress (Tropical Form)",
+    "aliases": [
+      "Montezuma Cypress"
+    ],
+    "scientificName": "Taxodium mucronatum"
+  },
+  {
+    "commonName": "Olive",
+    "aliases": [],
+    "scientificName": "Olea europaea"
+  },
+  {
+    "commonName": "Chinese Sweet Plum",
+    "aliases": [],
+    "scientificName": "Sageretia thea"
+  },
+  {
+    "commonName": "Bahama Berry",
+    "aliases": [],
+    "scientificName": "Nashia inaguensis"
+  },
+  {
+    "commonName": "Jaboticaba",
+    "aliases": [],
+    "scientificName": "Plinia cauliflora"
+  },
+  {
+    "commonName": "Powder Puff",
+    "aliases": [],
+    "scientificName": "Calliandra haematocephala"
+  },
+  {
+    "commonName": "Bonsai Money Tree",
+    "aliases": [],
+    "scientificName": "Pachira aquatica"
+  },
+  {
+    "commonName": "Baby Jade",
+    "aliases": [],
+    "scientificName": "Portulacaria afra var. minima"
+  },
+  {
+    "commonName": "Hawaiian Umbrella Tree",
+    "aliases": [
+      "Dwarf Schefflera"
+    ],
+    "scientificName": "Schefflera arboricola"
+  },
+  {
+    "commonName": "Desert Rose",
+    "aliases": [],
+    "scientificName": "Adenium obesum"
+  },
+  {
+    "commonName": "Cedar of Lebanon",
+    "aliases": [],
+    "scientificName": "Cedrus libani"
+  },
+  {
+    "commonName": "Blue Atlas Cedar",
+    "aliases": [],
+    "scientificName": "Cedrus atlantica"
+  },
+  {
+    "commonName": "Buddhist Pine",
+    "aliases": [
+      "Chinese Yew"
+    ],
+    "scientificName": "Podocarpus macrophyllus"
+  },
+  {
+    "commonName": "Dawn Redwood",
+    "aliases": [],
+    "scientificName": "Metasequoia glyptostroboides"
+  },
+  {
+    "commonName": "Coast Redwood",
+    "aliases": [],
+    "scientificName": "Sequoia sempervirens"
+  },
+  {
+    "commonName": "Giant Sequoia",
+    "aliases": [],
+    "scientificName": "Sequoiadendron giganteum"
+  },
+  {
+    "commonName": "Eastern Hemlock",
+    "aliases": [],
+    "scientificName": "Tsuga canadensis",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Mountain Hemlock",
+    "aliases": [],
+    "scientificName": "Tsuga mertensiana",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Douglas Fir",
+    "aliases": [],
+    "scientificName": "Pseudotsuga menziesii",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Bristlecone Pine",
+    "aliases": [],
+    "scientificName": "Pinus longaeva",
+    "group_id": "pine_one_flush"
+  },
+  {
+    "commonName": "Japanese Flowering Apricot",
+    "aliases": [
+      "Ume"
+    ],
+    "scientificName": "Prunus mume",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Japanese Flowering Cherry",
+    "aliases": [
+      "Sakura"
+    ],
+    "scientificName": "Prunus serrulata",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Choke Cherry",
+    "aliases": [],
+    "scientificName": "Prunus virginiana",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Katsura",
+    "aliases": [],
+    "scientificName": "Cercidiphyllum japonicum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Star Magnolia",
+    "aliases": [],
+    "scientificName": "Magnolia stellata",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Crape Myrtle",
+    "aliases": [],
+    "scientificName": "Lagerstroemia indica",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Korean Boxwood",
+    "aliases": [],
+    "scientificName": "Buxus sinica var. insularis"
+  },
+  {
+    "commonName": "Mountain Maple",
+    "aliases": [],
+    "scientificName": "Acer spicatum",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "American Hophornbeam",
+    "aliases": [
+      "Ironwood"
+    ],
+    "scientificName": "Ostrya virginiana",
+    "group_id": "hardy_deciduous"
+  },
+  {
+    "commonName": "Pussy Willow",
+    "aliases": [],
+    "scientificName": "Salix discolor",
+    "group_id": "hardy_deciduous"
+  }
+]
