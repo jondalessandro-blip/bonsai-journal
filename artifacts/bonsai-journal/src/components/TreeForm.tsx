@@ -16,6 +16,22 @@ import { useLocation } from "wouter";
 import { useNavigationGuard } from "@/hooks/use-navigation-guard";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { Copy, Sprout } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import {
+  getSpeciesSuggestions,
+  getSpeciesSuggestionsFromTrees,
+  matchSpeciesFromText,
+  matchSpeciesFromTrees,
+  type SpeciesReferenceEntry,
+  type SpeciesTreeInput,
+} from "@/lib/speciesMatcher";
 
 const BONSAI_STAGES = [
   "Establishment",
@@ -111,6 +127,33 @@ function buildDefaultValues(
   };
 }
 
+function speciesEntryMatchesQuery(entry: SpeciesReferenceEntry, query: string): boolean {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return false;
+
+  return [entry.commonName, ...entry.aliases, entry.scientificName].some((phrase) =>
+    phrase.toLowerCase().includes(normalizedQuery)
+  );
+}
+
+function readCachedTrees(queryClient: ReturnType<typeof useQueryClient>): SpeciesTreeInput[] {
+  const cached = queryClient.getQueryData<unknown>(["/api/trees"]);
+  if (Array.isArray(cached)) return cached as SpeciesTreeInput[];
+
+  if (
+    cached &&
+    typeof cached === "object" &&
+    "pages" in cached &&
+    Array.isArray(cached.pages)
+  ) {
+    return cached.pages.flatMap((page) =>
+      Array.isArray(page) ? (page as SpeciesTreeInput[]) : []
+    );
+  }
+
+  return [];
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeForm(
@@ -127,6 +170,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   const [tags, setTags] = useState<string[]>(
     initialData?.tags ?? prefillData?.tags ?? []
   );
+  const [speciesPopoverOpen, setSpeciesPopoverOpen] = useState(false);
 
   // ── Baseline — the "saved" state we compare against for dirty detection ──
   // Updated after every successful save so incremental edits are detected.
@@ -145,6 +189,30 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   // actually changes, which is more reliable than the isDirty proxy for
   // Radix Select (defaultValue/uncontrolled) and date inputs.
   const watched = useWatch({ control: form.control });
+  const cachedTrees = readCachedTrees(queryClient);
+  const speciesQuery = watched.species ?? "";
+  const curatedSpeciesSuggestions = getSpeciesSuggestions(speciesQuery);
+  const seenScientificNames = new Set(
+    curatedSpeciesSuggestions.map((entry) =>
+      entry.scientificName.trim().toLowerCase()
+    )
+  );
+  const collectionSpeciesSuggestions = getSpeciesSuggestionsFromTrees(
+    cachedTrees,
+    Number.MAX_SAFE_INTEGER
+  )
+    .filter((entry) => speciesEntryMatchesQuery(entry, speciesQuery))
+    .filter((entry) => {
+      const key = entry.scientificName.trim().toLowerCase();
+      if (seenScientificNames.has(key)) return false;
+      seenScientificNames.add(key);
+      return true;
+    })
+    .slice(0, 8);
+  const speciesSuggestions = [
+    ...curatedSpeciesSuggestions,
+    ...collectionSpeciesSuggestions,
+  ];
 
   const isDirty = (() => {
     const formKeys = Object.keys(defaultValues) as (keyof FormValues)[];
@@ -317,7 +385,21 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                 <FormItem>
                   <FormLabel>Name / Identifier</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. The Old Elm, Specimen #01" autoComplete="off" {...field} />
+                    <Input
+                      placeholder="e.g. The Old Elm, Specimen #01"
+                      autoComplete="off"
+                      {...field}
+                      onBlur={(event) => {
+                        field.onBlur();
+                        if (form.getValues("species")?.trim()) return;
+
+                        const name = event.currentTarget.value;
+                        const match =
+                          matchSpeciesFromText(name) ??
+                          matchSpeciesFromTrees(name, readCachedTrees(queryClient));
+                        if (match) form.setValue("species", match.scientificName);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -330,9 +412,82 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Species (Botanical or Common)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Acer palmatum" {...field} />
-                  </FormControl>
+                  <Popover
+                    open={speciesPopoverOpen && speciesSuggestions.length > 0}
+                    onOpenChange={setSpeciesPopoverOpen}
+                  >
+                    <PopoverAnchor asChild>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. Acer palmatum"
+                          autoComplete="off"
+                          role="combobox"
+                          aria-expanded={speciesPopoverOpen && speciesSuggestions.length > 0}
+                          value={field.value ?? ""}
+                          name={field.name}
+                          ref={field.ref}
+                          onChange={(event) => {
+                            field.onChange(event);
+                            setSpeciesPopoverOpen(event.target.value.trim().length > 0);
+                          }}
+                          onBlur={field.onBlur}
+                          onFocus={() => {
+                            if (speciesSuggestions.length > 0) setSpeciesPopoverOpen(true);
+                          }}
+                        />
+                      </FormControl>
+                    </PopoverAnchor>
+                    <PopoverContent
+                      align="start"
+                      className="w-[var(--radix-popover-trigger-width)] min-w-72 p-0"
+                      onOpenAutoFocus={(event) => event.preventDefault()}
+                    >
+                      <Command shouldFilter={false}>
+                        <CommandList>
+                          <CommandEmpty>No matching species found.</CommandEmpty>
+                          {curatedSpeciesSuggestions.length > 0 && (
+                            <CommandGroup heading="Reference species">
+                              {curatedSpeciesSuggestions.map((entry) => (
+                                <CommandItem
+                                  key={`curated-${entry.scientificName}`}
+                                  value={entry.scientificName}
+                                  onSelect={() => {
+                                    field.onChange(entry.scientificName);
+                                    if (!form.getValues("name")?.trim()) {
+                                      form.setValue("name", entry.commonName);
+                                    }
+                                    setSpeciesPopoverOpen(false);
+                                  }}
+                                >
+                                  <span>
+                                    {entry.commonName} — {entry.scientificName}
+                                  </span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                          {collectionSpeciesSuggestions.length > 0 && (
+                            <CommandGroup heading="From your collection">
+                              {collectionSpeciesSuggestions.map((entry) => (
+                                <CommandItem
+                                  key={`collection-${entry.scientificName}`}
+                                  value={`collection-${entry.scientificName}`}
+                                  onSelect={() => {
+                                    field.onChange(entry.scientificName);
+                                    setSpeciesPopoverOpen(false);
+                                  }}
+                                >
+                                  <span>
+                                    {entry.commonName} — {entry.scientificName}
+                                  </span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

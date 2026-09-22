@@ -114,3 +114,25 @@ export function getSpeciesSuggestionsFromTrees(
 
   return [...matches.values()].slice(0, limit);
 }
+
+/** Find the best species phrase match among the species represented by saved trees. */
+export function matchSpeciesFromTrees(
+  text: string,
+  trees: SpeciesTreeInput[],
+): Pick<SpeciesReferenceEntry, "scientificName" | "commonName"> | undefined {
+  let best: { entry: SpeciesReferenceEntry; phraseLength: number } | undefined;
+
+  for (const entry of getSpeciesSuggestionsFromTrees(trees, Number.MAX_SAFE_INTEGER)) {
+    const phraseLength = longestMatchingPhrase(text, entry);
+    if (phraseLength > 0 && (!best || phraseLength > best.phraseLength)) {
+      best = { entry, phraseLength };
+    }
+  }
+
+  if (!best) return undefined;
+
+  return {
+    scientificName: best.entry.scientificName,
+    commonName: best.entry.commonName,
+  };
+}
