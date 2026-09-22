@@ -1,0 +1,17 @@
+**Prompt 2 — wire it into the form**
+
+> Update TreeForm.tsx's Species field: replace the current plain Input with a combobox built from the existing Command and Popover components in components/ui, using the speciesMatcher.ts helper from the last change. It must stay fully free-text — whatever's typed is the real field value, suggestions are just an aid, nothing forces picking from the list. Turn off the browser's native autocomplete on this field (autoComplete="off" or equivalent) so it doesn't show its own suggestion list alongside ours.
+>
+> Pull the user's current trees from the cached "/api/trees" query using queryClient.getQueryData(["/api/trees"]) — don't trigger a new fetch, just read whatever's already cached, and treat a cache miss as no matches.
+>
+> As the user types into Species, show a merged, deduplicated suggestion list: curated matches first, then any matches pulled from the user's own collection labeled distinctly, something like "from your collection," formatted as "Common Name — Scientific Name" so entries are easy to tell apart. Selecting a suggestion works differently depending on its source:
+>
+> From the curated list: set Species to just the scientificName, and if the Name field is currently empty, also fill Name with the commonName.
+>
+> From the user's own collection: set Species to that matched scientific name only, and do not touch the Name field at all, even if Name is empty — don't carry another tree's Name text onto a new one.
+>
+> Also add an onBlur handler to the Name field: if Species is currently empty when the user leaves the Name field, run the phrase-match function against whatever's in Name, checking both the curated list and the user's own collection the same way as above, and if there's a match, quietly fill Species with the matched scientific name. If Species already has anything in it, do nothing.
+>
+> None of this should touch the existing Foliage or Climate fields, and none of this should change the tree schema, the API, or openapi.yaml. Once done, commit locally with a clear message and give me the commit hash. Do not push, publish, or modify anything on the remote GitHub branch — I'll push manually.
+
+Same as before — run it, push when it's committed, and send me the hash to verify against `origin/dev`.
