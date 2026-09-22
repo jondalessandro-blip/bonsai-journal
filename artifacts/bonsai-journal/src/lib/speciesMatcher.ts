@@ -91,10 +91,24 @@ export function getSpeciesSuggestionsFromTrees(
   const matches = new Map<string, SpeciesReferenceEntry>();
 
   for (const tree of trees) {
+    let curatedMatch: SpeciesReferenceEntry | undefined;
+
     for (const text of [tree.species, tree.name]) {
       if (!text) continue;
       const match = findBestMatch(text);
-      if (match) matches.set(match.scientificName, match);
+      if (match) {
+        curatedMatch = match;
+        matches.set(match.scientificName, match);
+      }
+    }
+
+    if (!curatedMatch && tree.species?.trim()) {
+      const fallback: SpeciesReferenceEntry = {
+        commonName: tree.name ?? "",
+        aliases: [],
+        scientificName: tree.species,
+      };
+      matches.set(fallback.scientificName, fallback);
     }
   }
 
