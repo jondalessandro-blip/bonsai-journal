@@ -3,7 +3,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import type { Tree } from "@workspace/api-client-react";
-import { useCreateTree, useUpdateTree } from "@workspace/api-client-react";
+import { useCreateTree, useListTrees, useUpdateTree } from "@workspace/api-client-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -186,6 +186,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 ) {
   const [, setLocation] = useLocation();
   const queryClient    = useQueryClient();
+  useListTrees();
   const isEdit         = !!initialData;
 
   const defaultValues = buildDefaultValues(initialData, prefillData);
