@@ -441,7 +441,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
                         setNameBlurSpeciesSuggestions(nameSuggestions);
                         setSpeciesPopoverOpen(true);
-                        form.setFocus("species");
+                        setTimeout(() => form.setFocus("species"), 0);
                       }}
                     />
                   </FormControl>
