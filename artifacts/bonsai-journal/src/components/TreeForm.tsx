@@ -465,7 +465,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                     <PopoverAnchor asChild>
                       <FormControl>
                         <Input
-                          placeholder="e.g. Acer palmatum"
+                          placeholder="e.g. Acer palmatum, Maple, Elm..."
                           autoComplete="off"
                           role="combobox"
                           aria-expanded={speciesPopoverOpen && speciesSuggestions.length > 0}
@@ -473,7 +473,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                           name={field.name}
                           ref={field.ref}
                           onChange={(event) => {
-                            speciesConfirmedRef.current = true;
+                            speciesConfirmedRef.current = event.target.value.trim().length > 0;
                             setNameBlurSpeciesSuggestions(null);
                             field.onChange(event);
                             setSpeciesPopoverOpen(event.target.value.trim().length > 0);
