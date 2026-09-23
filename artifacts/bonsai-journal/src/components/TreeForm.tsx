@@ -441,7 +441,6 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
                         setNameBlurSpeciesSuggestions(nameSuggestions);
                         setSpeciesPopoverOpen(true);
-                        setTimeout(() => form.setFocus("species"), 0);
                       }}
                     />
                   </FormControl>
@@ -458,7 +457,10 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                   <FormLabel>Species (Botanical or Common)</FormLabel>
                   <Popover
                     open={speciesPopoverOpen && speciesSuggestions.length > 0}
-                    onOpenChange={setSpeciesPopoverOpen}
+                    onOpenChange={(open) => {
+                      if (!open && nameBlurSpeciesSuggestions !== null) return;
+                      setSpeciesPopoverOpen(open);
+                    }}
                   >
                     <PopoverAnchor asChild>
                       <FormControl>
