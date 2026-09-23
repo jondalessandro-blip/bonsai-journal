@@ -27,8 +27,6 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import {
   getSpeciesSuggestions,
   getSpeciesSuggestionsFromTrees,
-  matchSpeciesFromText,
-  matchSpeciesFromTrees,
   type SpeciesReferenceEntry,
   type SpeciesTreeInput,
 } from "@/lib/speciesMatcher";
@@ -154,6 +152,32 @@ function readCachedTrees(queryClient: ReturnType<typeof useQueryClient>): Specie
   return [];
 }
 
+type SpeciesSuggestionGroups = {
+  curated: SpeciesReferenceEntry[];
+  collection: SpeciesReferenceEntry[];
+};
+
+function getMergedSpeciesSuggestions(
+  query: string,
+  trees: SpeciesTreeInput[],
+): SpeciesSuggestionGroups {
+  const curated = getSpeciesSuggestions(query);
+  const seenScientificNames = new Set(
+    curated.map((entry) => entry.scientificName.trim().toLowerCase())
+  );
+  const collection = getSpeciesSuggestionsFromTrees(trees, Number.MAX_SAFE_INTEGER)
+    .filter((entry) => speciesEntryMatchesQuery(entry, query))
+    .filter((entry) => {
+      const key = entry.scientificName.trim().toLowerCase();
+      if (seenScientificNames.has(key)) return false;
+      seenScientificNames.add(key);
+      return true;
+    })
+    .slice(0, 8);
+
+  return { curated, collection };
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeForm(
@@ -171,6 +195,10 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
     initialData?.tags ?? prefillData?.tags ?? []
   );
   const [speciesPopoverOpen, setSpeciesPopoverOpen] = useState(false);
+  const [nameBlurSpeciesSuggestions, setNameBlurSpeciesSuggestions] =
+    useState<SpeciesSuggestionGroups | null>(null);
+  const speciesConfirmedRef = useRef(Boolean(defaultValues.species?.trim()));
+  const baselineSpeciesConfirmedRef = useRef(speciesConfirmedRef.current);
 
   // ── Baseline — the "saved" state we compare against for dirty detection ──
   // Updated after every successful save so incremental edits are detected.
@@ -191,28 +219,12 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   const watched = useWatch({ control: form.control });
   const cachedTrees = readCachedTrees(queryClient);
   const speciesQuery = watched.species ?? "";
-  const curatedSpeciesSuggestions = getSpeciesSuggestions(speciesQuery);
-  const seenScientificNames = new Set(
-    curatedSpeciesSuggestions.map((entry) =>
-      entry.scientificName.trim().toLowerCase()
-    )
-  );
-  const collectionSpeciesSuggestions = getSpeciesSuggestionsFromTrees(
-    cachedTrees,
-    Number.MAX_SAFE_INTEGER
-  )
-    .filter((entry) => speciesEntryMatchesQuery(entry, speciesQuery))
-    .filter((entry) => {
-      const key = entry.scientificName.trim().toLowerCase();
-      if (seenScientificNames.has(key)) return false;
-      seenScientificNames.add(key);
-      return true;
-    })
-    .slice(0, 8);
-  const speciesSuggestions = [
-    ...curatedSpeciesSuggestions,
-    ...collectionSpeciesSuggestions,
-  ];
+  const liveSpeciesSuggestions = getMergedSpeciesSuggestions(speciesQuery, cachedTrees);
+  const activeSpeciesSuggestions =
+    nameBlurSpeciesSuggestions ?? liveSpeciesSuggestions;
+  const curatedSpeciesSuggestions = activeSpeciesSuggestions.curated;
+  const collectionSpeciesSuggestions = activeSpeciesSuggestions.collection;
+  const speciesSuggestions = [...curatedSpeciesSuggestions, ...collectionSpeciesSuggestions];
 
   const isDirty = (() => {
     const formKeys = Object.keys(defaultValues) as (keyof FormValues)[];
@@ -266,6 +278,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
           onSuccess: () => {
             // Advance the baseline so the form is clean relative to saved state
             baselineRef.current = { ...values, tags: [...tags] };
+            baselineSpeciesConfirmedRef.current = speciesConfirmedRef.current;
             form.reset(values);
 
             queryClient.invalidateQueries({ queryKey: ["/api/trees", initialData.id] });
@@ -282,6 +295,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
           onSuccess: (tree) => {
             // Advance baseline to saved values and clear saving flag
             baselineRef.current = { ...values, tags: [...tags] };
+            baselineSpeciesConfirmedRef.current = speciesConfirmedRef.current;
             form.reset(values);
             isSavingRef.current = false;
 
@@ -353,6 +367,8 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
     const { tags: baseTags, ...baseFormVals } = baselineRef.current;
     form.reset(baseFormVals as FormValues);
     setTags([...baseTags]);
+    speciesConfirmedRef.current = baselineSpeciesConfirmedRef.current;
+    setNameBlurSpeciesSuggestions(null);
     setGuardState(null);
     resume();
   };
@@ -391,13 +407,40 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                       {...field}
                       onBlur={(event) => {
                         field.onBlur();
-                        if (form.getValues("species")?.trim()) return;
+                        if (speciesConfirmedRef.current) return;
 
-                        const name = event.currentTarget.value;
-                        const match =
-                          matchSpeciesFromText(name) ??
-                          matchSpeciesFromTrees(name, readCachedTrees(queryClient));
-                        if (match) form.setValue("species", match.scientificName);
+                        const nameSuggestions = getMergedSpeciesSuggestions(
+                          event.currentTarget.value,
+                          readCachedTrees(queryClient),
+                        );
+                        const matches = [
+                          ...nameSuggestions.curated,
+                          ...nameSuggestions.collection,
+                        ];
+
+                        if (matches.length === 0) {
+                          setNameBlurSpeciesSuggestions(null);
+                          setSpeciesPopoverOpen(false);
+                          return;
+                        }
+
+                        if (matches.length === 1) {
+                          const [match] = matches;
+                          speciesConfirmedRef.current = false;
+                          form.setValue("species", match.scientificName);
+                          if (
+                            nameSuggestions.curated.length === 1 &&
+                            !form.getValues("name")?.trim()
+                          ) {
+                            form.setValue("name", match.commonName);
+                          }
+                          setNameBlurSpeciesSuggestions(null);
+                          setSpeciesPopoverOpen(false);
+                          return;
+                        }
+
+                        setNameBlurSpeciesSuggestions(nameSuggestions);
+                        setSpeciesPopoverOpen(true);
                       }}
                     />
                   </FormControl>
@@ -427,6 +470,8 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                           name={field.name}
                           ref={field.ref}
                           onChange={(event) => {
+                            speciesConfirmedRef.current = true;
+                            setNameBlurSpeciesSuggestions(null);
                             field.onChange(event);
                             setSpeciesPopoverOpen(event.target.value.trim().length > 0);
                           }}
@@ -452,6 +497,8 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                                   key={`curated-${entry.scientificName}`}
                                   value={entry.scientificName}
                                   onSelect={() => {
+                                    speciesConfirmedRef.current = true;
+                                    setNameBlurSpeciesSuggestions(null);
                                     field.onChange(entry.scientificName);
                                     if (!form.getValues("name")?.trim()) {
                                       form.setValue("name", entry.commonName);
@@ -473,6 +520,8 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                                   key={`collection-${entry.scientificName}`}
                                   value={`collection-${entry.scientificName}`}
                                   onSelect={() => {
+                                    speciesConfirmedRef.current = true;
+                                    setNameBlurSpeciesSuggestions(null);
                                     field.onChange(entry.scientificName);
                                     setSpeciesPopoverOpen(false);
                                   }}
