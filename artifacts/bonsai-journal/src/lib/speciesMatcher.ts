@@ -85,7 +85,12 @@ export function getSpeciesSuggestionsFromTrees(
       const match = findBestMatch(text);
       if (match) {
         curatedMatch = match;
-        matches.set(match.scientificName, match);
+        const existing = matches.get(match.scientificName);
+        const aliases = [...new Set([...(match.aliases ?? []), ...(existing?.aliases ?? [])])];
+        if (tree.name?.trim() && !aliases.includes(tree.name)) {
+          aliases.push(tree.name);
+        }
+        matches.set(match.scientificName, { ...match, aliases });
       }
     }
 
