@@ -24,6 +24,10 @@ const helpSections = [
     body: "Tap Add Tree and fill in what you know: name, species, style, stage, status, when you acquired it, and any notes. You don't need every field filled in to save it.",
   },
   {
+    title: "The Species field",
+    body: "As you type in the Species field, the app suggests matches so you don't have to remember exact names or spellings. Suggestions come from a built-in list of common bonsai species, plus any species you've already used elsewhere in your own collection. Pick one and it fills in Species for you, and if Name is still blank, it fills that in too using the common name. You can also just type a species name straight into the Name field, when you tap away, the app checks whether it matches a known species and offers to fill in Species for you. If Species already has something in it, changing Name won't overwrite it, that's on purpose, so the app never quietly changes something you've already set.",
+  },
+  {
     title: "A tree's detail page",
     body: "This is where you manage one tree. From here you can edit any of its info, set a cover photo, add photos to track its progress, log care, set reminders, and see a running journal of everything that's happened to the tree, newest first.",
   },
@@ -42,6 +46,10 @@ const helpSections = [
   {
     title: "Completing a scheduled task",
     body: "There are two ways to mark a planned task done. Tap the circle icon next to it in the journal for a one-tap shortcut, it logs the care and, if it's a recurring task, moves it forward to its next due date automatically. Or open the task by tapping its pencil icon, check Task completed, confirm the date it was actually done, and save. That same dialog also lets you Skip a recurring task instead, moving it to its next occurrence without logging any care.",
+  },
+  {
+    title: "The Care Calendar",
+    body: "The Care Calendar gives you a general month-by-month guide to typical bonsai care, based on where you live and what kinds of trees you grow. Open it from the menu, then pick your grow zone and the tree groups that match your collection, such as hardy deciduous trees, pines, junipers, or tropical trees. The calendar will show you, month by month, the kind of care those trees typically need, like watering changes, fertilizing, pruning, repotting, and wiring windows. It's a general guide, not an exact schedule for your specific trees, your own care logs and reminders are still the best record of what your trees actually need.",
   },
   {
     title: "Plant Another Tree and Add Duplicate Tree",
