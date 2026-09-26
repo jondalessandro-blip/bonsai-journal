@@ -511,7 +511,10 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                                   }}
                                 >
                                   <span>
-                                    {entry.commonName} — {entry.scientificName}
+                                    {entry.commonName.trim().toLowerCase() ===
+                                    entry.scientificName.trim().toLowerCase()
+                                      ? entry.scientificName
+                                      : `${entry.commonName} — ${entry.scientificName}`}
                                   </span>
                                 </CommandItem>
                               ))}

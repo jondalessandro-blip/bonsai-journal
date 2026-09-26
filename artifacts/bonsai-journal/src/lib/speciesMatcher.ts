@@ -47,6 +47,18 @@ export function getSpeciesSuggestionsFromTrees(
 ): SpeciesReferenceEntry[] {
   if (limit <= 0) return [];
 
+  const speciesCounts = new Map<string, number>();
+
+  for (const tree of trees) {
+    const normalizedSpecies = tree.species?.trim().toLowerCase();
+    if (!normalizedSpecies) continue;
+
+    speciesCounts.set(
+      normalizedSpecies,
+      (speciesCounts.get(normalizedSpecies) ?? 0) + 1,
+    );
+  }
+
   const matches = new Map<string, SpeciesReferenceEntry>();
 
   for (const tree of trees) {
@@ -55,7 +67,12 @@ export function getSpeciesSuggestionsFromTrees(
     if (!species || !normalizedSpecies || matches.has(normalizedSpecies)) continue;
 
     matches.set(normalizedSpecies, {
-      commonName: tree.name?.trim() ? tree.name : species,
+      commonName:
+        (speciesCounts.get(normalizedSpecies) ?? 0) > 1
+          ? species
+          : tree.name?.trim()
+            ? tree.name
+            : species,
       aliases: [],
       scientificName: species,
     });
