@@ -23,33 +23,6 @@ function phrasesFor(entry: SpeciesReferenceEntry): string[] {
   return [entry.commonName, ...entry.aliases, entry.scientificName];
 }
 
-function longestMatchingPhrase(text: string, entry: SpeciesReferenceEntry): number {
-  const normalizedText = normalize(text);
-  let longest = 0;
-
-  for (const phrase of phrasesFor(entry)) {
-    const normalizedPhrase = normalize(phrase).trim();
-    if (normalizedPhrase && normalizedText.includes(` ${normalizedPhrase} `)) {
-      longest = Math.max(longest, normalizedPhrase.length);
-    }
-  }
-
-  return longest;
-}
-
-function findBestMatch(text: string): SpeciesReferenceEntry | undefined {
-  let best: { entry: SpeciesReferenceEntry; phraseLength: number } | undefined;
-
-  for (const entry of speciesReference) {
-    const phraseLength = longestMatchingPhrase(text, entry);
-    if (phraseLength > 0 && (!best || phraseLength > best.phraseLength)) {
-      best = { entry, phraseLength };
-    }
-  }
-
-  return best?.entry;
-}
-
 /** Filter the reference list for Species-field autocomplete suggestions. */
 export function getSpeciesSuggestions(
   query: string,
@@ -66,8 +39,7 @@ export function getSpeciesSuggestions(
 }
 
 /**
- * Find unique reference entries mentioned in existing trees' name or species text.
- * Results are suitable for autocomplete lists and name-blur matching.
+ * Return each unique species from the existing collection without changing its stored text.
  */
 export function getSpeciesSuggestionsFromTrees(
   trees: SpeciesTreeInput[],
@@ -78,30 +50,15 @@ export function getSpeciesSuggestionsFromTrees(
   const matches = new Map<string, SpeciesReferenceEntry>();
 
   for (const tree of trees) {
-    let curatedMatch: SpeciesReferenceEntry | undefined;
+    const species = tree.species;
+    const normalizedSpecies = species?.trim().toLowerCase();
+    if (!species || !normalizedSpecies || matches.has(normalizedSpecies)) continue;
 
-    for (const text of [tree.species, tree.name]) {
-      if (!text) continue;
-      const match = findBestMatch(text);
-      if (match) {
-        curatedMatch = match;
-        const existing = matches.get(match.scientificName);
-        const aliases = [...new Set([...(match.aliases ?? []), ...(existing?.aliases ?? [])])];
-        if (tree.name?.trim() && !aliases.includes(tree.name)) {
-          aliases.push(tree.name);
-        }
-        matches.set(match.scientificName, { ...match, aliases });
-      }
-    }
-
-    if (!curatedMatch && tree.species?.trim()) {
-      const fallback: SpeciesReferenceEntry = {
-        commonName: tree.name ?? "",
-        aliases: [],
-        scientificName: tree.species,
-      };
-      matches.set(fallback.scientificName, fallback);
-    }
+    matches.set(normalizedSpecies, {
+      commonName: tree.name?.trim() ? tree.name : species,
+      aliases: [],
+      scientificName: species,
+    });
   }
 
   return [...matches.values()].slice(0, limit);
