@@ -125,33 +125,6 @@ function buildDefaultValues(
   };
 }
 
-function speciesEntryMatchesQuery(entry: SpeciesReferenceEntry, query: string): boolean {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) return false;
-
-  return [entry.commonName, ...entry.aliases, entry.scientificName].some((phrase) =>
-    phrase.toLowerCase().includes(normalizedQuery)
-  );
-}
-
-function readCachedTrees(queryClient: ReturnType<typeof useQueryClient>): SpeciesTreeInput[] {
-  const cached = queryClient.getQueryData<unknown>(["/api/trees"]);
-  if (Array.isArray(cached)) return cached as SpeciesTreeInput[];
-
-  if (
-    cached &&
-    typeof cached === "object" &&
-    "pages" in cached &&
-    Array.isArray(cached.pages)
-  ) {
-    return cached.pages.flatMap((page) =>
-      Array.isArray(page) ? (page as SpeciesTreeInput[]) : []
-    );
-  }
-
-  return [];
-}
-
 type SpeciesSuggestionGroups = {
   curated: SpeciesReferenceEntry[];
   collection: SpeciesReferenceEntry[];
@@ -165,8 +138,7 @@ function getMergedSpeciesSuggestions(
   const seenScientificNames = new Set(
     curated.map((entry) => entry.scientificName.trim().toLowerCase())
   );
-  const collection = getSpeciesSuggestionsFromTrees(trees, Number.MAX_SAFE_INTEGER)
-    .filter((entry) => speciesEntryMatchesQuery(entry, query))
+  const collection = getSpeciesSuggestionsFromTrees(trees, query, Number.MAX_SAFE_INTEGER)
     .filter((entry) => {
       const key = entry.scientificName.trim().toLowerCase();
       if (seenScientificNames.has(key)) return false;
@@ -186,7 +158,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 ) {
   const [, setLocation] = useLocation();
   const queryClient    = useQueryClient();
-  useListTrees();
+  const { data: suggestionTrees = [] } = useListTrees({ limit: 200 });
   const isEdit         = !!initialData;
 
   const defaultValues = buildDefaultValues(initialData, prefillData);
@@ -218,9 +190,8 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
   // actually changes, which is more reliable than the isDirty proxy for
   // Radix Select (defaultValue/uncontrolled) and date inputs.
   const watched = useWatch({ control: form.control });
-  const cachedTrees = readCachedTrees(queryClient);
   const speciesQuery = watched.species ?? "";
-  const liveSpeciesSuggestions = getMergedSpeciesSuggestions(speciesQuery, cachedTrees);
+  const liveSpeciesSuggestions = getMergedSpeciesSuggestions(speciesQuery, suggestionTrees);
   const activeSpeciesSuggestions =
     nameBlurSpeciesSuggestions ?? liveSpeciesSuggestions;
   const curatedSpeciesSuggestions = activeSpeciesSuggestions.curated;
@@ -412,7 +383,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
 
                         const nameSuggestions = getMergedSpeciesSuggestions(
                           event.currentTarget.value,
-                          readCachedTrees(queryClient),
+                          suggestionTrees,
                         );
                         const matches = [
                           ...nameSuggestions.curated,

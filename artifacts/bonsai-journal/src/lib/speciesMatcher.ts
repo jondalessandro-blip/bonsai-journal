@@ -15,12 +15,18 @@ export type SpeciesTreeInput = {
 const speciesReference = speciesReferenceData as SpeciesReferenceEntry[];
 const DEFAULT_SUGGESTION_LIMIT = 8;
 
-function normalize(value: string): string {
-  return ` ${value.toLowerCase().replace(/[^a-z]+/g, " ").trim()} `;
-}
-
 function matchesAtWordStart(phrase: string, normalizedQuery: string): boolean {
-  return normalize(phrase).includes(` ${normalizedQuery}`);
+  const lowerPhrase = phrase.toLowerCase();
+  let index = lowerPhrase.indexOf(normalizedQuery);
+
+  while (index !== -1) {
+    if (index === 0 || !/[\p{L}\p{N}\p{M}]/u.test(lowerPhrase[index - 1])) {
+      return true;
+    }
+    index = lowerPhrase.indexOf(normalizedQuery, index + 1);
+  }
+
+  return false;
 }
 
 function phrasesFor(entry: SpeciesReferenceEntry): string[] {
@@ -32,7 +38,7 @@ export function getSpeciesSuggestions(
   query: string,
   limit = DEFAULT_SUGGESTION_LIMIT,
 ): SpeciesReferenceEntry[] {
-  const normalizedQuery = normalize(query).trim();
+  const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery || limit <= 0) return [];
 
   return speciesReference
@@ -50,7 +56,7 @@ export function getSpeciesSuggestionsFromTrees(
   query: string,
   limit = DEFAULT_SUGGESTION_LIMIT,
 ): SpeciesReferenceEntry[] {
-  const normalizedQuery = normalize(query).trim();
+  const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery || limit <= 0) return [];
 
   const speciesCounts = new Map<string, number>();
