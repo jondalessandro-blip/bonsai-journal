@@ -19,6 +19,10 @@ function normalize(value: string): string {
   return ` ${value.toLowerCase().replace(/[^a-z]+/g, " ").trim()} `;
 }
 
+function matchesAtWordStart(phrase: string, normalizedQuery: string): boolean {
+  return normalize(phrase).includes(` ${normalizedQuery}`);
+}
+
 function phrasesFor(entry: SpeciesReferenceEntry): string[] {
   return [entry.commonName, ...entry.aliases, entry.scientificName];
 }
@@ -28,24 +32,26 @@ export function getSpeciesSuggestions(
   query: string,
   limit = DEFAULT_SUGGESTION_LIMIT,
 ): SpeciesReferenceEntry[] {
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = normalize(query).trim();
   if (!normalizedQuery || limit <= 0) return [];
 
   return speciesReference
     .filter((entry) =>
-      phrasesFor(entry).some((phrase) => phrase.toLowerCase().includes(normalizedQuery)),
+      phrasesFor(entry).some((phrase) => matchesAtWordStart(phrase, normalizedQuery)),
     )
     .slice(0, limit);
 }
 
 /**
- * Return each unique species from the existing collection without changing its stored text.
+ * Match each tree's name and species before grouping the results by species.
  */
 export function getSpeciesSuggestionsFromTrees(
   trees: SpeciesTreeInput[],
+  query: string,
   limit = DEFAULT_SUGGESTION_LIMIT,
 ): SpeciesReferenceEntry[] {
-  if (limit <= 0) return [];
+  const normalizedQuery = normalize(query).trim();
+  if (!normalizedQuery || limit <= 0) return [];
 
   const speciesCounts = new Map<string, number>();
 
@@ -65,6 +71,10 @@ export function getSpeciesSuggestionsFromTrees(
     const species = tree.species;
     const normalizedSpecies = species?.trim().toLowerCase();
     if (!species || !normalizedSpecies || matches.has(normalizedSpecies)) continue;
+    const treeMatchesQuery = [tree.name, species].some(
+      (value) => value && matchesAtWordStart(value, normalizedQuery),
+    );
+    if (!treeMatchesQuery) continue;
 
     matches.set(normalizedSpecies, {
       commonName:
