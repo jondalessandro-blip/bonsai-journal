@@ -9,6 +9,7 @@ import {
   Trash2,
   Check,
   X as XIcon,
+  StickyNote,
 } from "lucide-react";
 import {
   useListTreePhotos,
@@ -162,6 +163,15 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
         },
       },
     );
+  };
+
+  const savePhotoNote = async (photoId: string, note: string) => {
+    await updatePhoto.mutateAsync({
+      id: treeId,
+      photoId,
+      data: { note: note.trim() ? note : null },
+    });
+    invalidate();
   };
 
   const handleDelete = (photoId: string) => {
@@ -431,16 +441,27 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
                     )}
                   </div>
                 ) : (
-                  <button
-                    className="group/date flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-left"
-                    onClick={() => startEdit(photo)}
-                    title="Click to edit date"
-                  >
-                    <time dateTime={photo.takenAt}>
-                      {format(parseISO(photo.takenAt), "MMM d, yyyy")}
-                    </time>
-                    <Pencil className="w-2.5 h-2.5 opacity-0 group-hover/date:opacity-50 transition-opacity shrink-0" />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      className="group/date flex min-w-0 flex-1 items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
+                      onClick={() => startEdit(photo)}
+                      title="Click to edit date"
+                    >
+                      <time dateTime={photo.takenAt}>
+                        {format(parseISO(photo.takenAt), "MMM d, yyyy")}
+                      </time>
+                      <Pencil className="w-2.5 h-2.5 opacity-0 group-hover/date:opacity-50 transition-opacity shrink-0" />
+                    </button>
+                    {photo.note && (
+                      <span
+                        aria-label="Photo has a note"
+                        title="This photo has a note"
+                        className="inline-flex shrink-0 text-muted-foreground/70"
+                      >
+                        <StickyNote className="h-3.5 w-3.5" />
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -451,6 +472,7 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
       {/* Lightbox */}
       {currentLightboxPhoto && (
         <Lightbox
+          key={currentLightboxPhoto.id}
           src={currentLightboxPhoto.photoUrl}
           alt={`Progression — ${format(parseISO(currentLightboxPhoto.takenAt), "MMM d, yyyy")}`}
           onClose={() => setLightboxIndex(null)}
@@ -458,6 +480,9 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
           onNext={() => setLightboxIndex((index) => index !== null && index < photos.length - 1 ? index + 1 : index)}
           hasPrev={lightboxIndex !== null && lightboxIndex > 0}
           hasNext={lightboxIndex !== null && lightboxIndex < photos.length - 1}
+          note={currentLightboxPhoto.note ?? null}
+          onSaveNote={(note) => savePhotoNote(currentLightboxPhoto.id, note)}
+          isSavingNote={updatePhoto.isPending}
         />
       )}
     </section>

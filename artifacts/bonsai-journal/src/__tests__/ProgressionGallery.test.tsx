@@ -29,14 +29,26 @@ vi.mock("@/components/Lightbox", () => ({
   Lightbox: ({
     src,
     alt,
+    note,
+    onSaveNote,
     onClose,
   }: {
     src: string;
     alt?: string;
+    note?: string | null;
+    onSaveNote?: (note: string) => Promise<void>;
     onClose: () => void;
   }) => (
-    <div data-testid="lightbox" data-src={src} data-alt={alt ?? ""}>
+    <div
+      data-testid="lightbox"
+      data-src={src}
+      data-alt={alt ?? ""}
+      data-note={note ?? ""}
+    >
       <button aria-label="Close lightbox" onClick={onClose} />
+      {onSaveNote && (
+        <button onClick={() => void onSaveNote("saved note")}>Save lightbox note</button>
+      )}
     </div>
   ),
 }));
@@ -48,34 +60,41 @@ vi.mock("@/components/Lightbox", () => ({
 const {
   mockCreateMutate,
   mockUpdateMutate,
+  mockUpdateMutateAsync,
   mockDeleteMutate,
   mockUpdateTreeMutate,
   mockUploadPhoto,
   mockInvalidateQueries,
+  mockPhoto,
 } = vi.hoisted(() => ({
   mockCreateMutate: vi.fn(),
   mockUpdateMutate: vi.fn(),
+  mockUpdateMutateAsync: vi.fn(),
   mockDeleteMutate: vi.fn(),
   mockUpdateTreeMutate: vi.fn(),
   mockUploadPhoto: vi.fn(),
   mockInvalidateQueries: vi.fn(),
-}));
-
-// Mock the entire api-client-react so no real HTTP calls are made.
-vi.mock("@workspace/api-client-react", () => {
-  const photo = {
+  mockPhoto: {
     id: "photo-1",
     treeId: "tree-abc",
     photoUrl: "https://example.com/photo.jpg",
     photoThumb: null,
     takenAt: "2024-03-15",
+    note: null as string | null,
     createdAt: "2024-03-15T00:00:00Z",
-  };
+  },
+}));
 
+// Mock the entire api-client-react so no real HTTP calls are made.
+vi.mock("@workspace/api-client-react", () => {
   return {
-    useListTreePhotos: () => ({ data: [photo], isLoading: false }),
+    useListTreePhotos: () => ({ data: [mockPhoto], isLoading: false }),
     useCreateTreePhoto: () => ({ mutate: mockCreateMutate, isPending: false }),
-    useUpdateTreePhoto: () => ({ mutate: mockUpdateMutate, isPending: false }),
+    useUpdateTreePhoto: () => ({
+      mutate: mockUpdateMutate,
+      mutateAsync: mockUpdateMutateAsync,
+      isPending: false,
+    }),
     useDeleteTreePhoto: () => ({ mutate: mockDeleteMutate, isPending: false }),
     useUpdateTree: () => ({ mutate: mockUpdateTreeMutate, isPending: false }),
   };
@@ -115,6 +134,10 @@ function renderGallery(treePhotoUrl?: string | null) {
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
+
+beforeEach(() => {
+  mockPhoto.note = null;
+});
 
 describe("ProgressionGallery — date edit flow", () => {
   beforeEach(() => {
@@ -553,6 +576,41 @@ describe("ProgressionGallery — lightbox", () => {
     expect(lightbox).toBeInTheDocument();
     expect(lightbox).toHaveAttribute("data-src", "https://example.com/photo.jpg");
     expect(lightbox).toHaveAttribute("data-alt", "Progression — Mar 15, 2024");
+  });
+
+  it("passes the current note to the lightbox and saves only the note field", async () => {
+    const user = userEvent.setup();
+    mockPhoto.note = "Repotted after the spring flush";
+    mockUpdateMutateAsync.mockResolvedValue(mockPhoto);
+    renderGallery();
+
+    expect(screen.getByLabelText("Photo has a note")).toHaveAttribute(
+      "title",
+      "This photo has a note",
+    );
+    const tile = screen
+      .getByRole("img", { name: /progression/i })
+      .closest("div[class*='cursor-zoom-in']") as HTMLElement;
+    await user.click(tile);
+    expect(screen.getByTestId("lightbox")).toHaveAttribute(
+      "data-note",
+      "Repotted after the spring flush",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save lightbox note" }));
+    await waitFor(() => {
+      expect(mockUpdateMutateAsync).toHaveBeenCalledWith({
+        id: "tree-abc",
+        photoId: "photo-1",
+        data: { note: "saved note" },
+      });
+    });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["/api/trees", "tree-abc", "photos"],
+    });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["/api/trees"],
+    });
   });
 
   it("does NOT open the lightbox when the tile is clicked while delete-confirm is active for that photo", async () => {

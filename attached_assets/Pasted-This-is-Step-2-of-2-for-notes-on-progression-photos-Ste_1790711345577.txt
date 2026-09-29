@@ -1,0 +1,23 @@
+This is Step 2 of 2 for notes on progression photos. Step 1 (database, API and generated client) is already done, committed and published. This step is website only. Please do not touch the mobile app, the API server, the database or the OpenAPI spec.
+
+Goal: in the full-screen photo view, show each photo's note under the picture and let the person add, edit or clear it. On the thumbnails, show a small icon when a photo has a note.
+
+The photo API already returns note (a string, or null when there is none). To save a note, use the existing useUpdateTreePhoto hook and send only the note field, for example data: { note: "..." }. Do not send takenAt when saving a note, because the server now changes only what is sent. Use the same query invalidation the gallery already uses after a date edit so the new note appears right away.
+
+The full-screen view is the Lightbox component at artifacts/bonsai-journal/src/components/Lightbox.tsx, and ProgressionGallery.tsx is the only place that uses it. Please extend Lightbox with a few new optional props instead of copying it: the current note, a function to save a note, and a saving flag. Photos without these props should look and behave exactly as they do today.
+
+What the note area should look like and do:
+1. It sits at the bottom of the full-screen view as a semi-transparent dark panel over the picture, with light text that reads well on any photo. It must not cover or block the previous and next buttons, the close button, or the desktop zoom buttons. Move the zoom buttons up if you need to. It has to work on a phone-sized screen too.
+2. When a photo has a note, show it with line breaks preserved, plus a small pencil to edit it. When a photo has no note, show a quiet "Add a note" prompt instead.
+3. Editing uses a textarea with a limit of 500 characters and a live counter, plus Save and Cancel buttons. Saving a blank note clears it.
+4. Careful with the existing behaviors in Lightbox, because they will fight with typing. Clicking anywhere in the note panel must not close the full-screen view, so stop the click from reaching the backdrop. While the person is typing, the left and right arrow keys must move the cursor in the text and must not switch photos. While editing, pressing Escape should cancel the edit only and should not close the full-screen view. When not editing, Escape and the arrow keys keep working as they do now.
+5. If someone has typed a change and then closes the full-screen view or moves to another photo, save the change first so nothing they typed is lost. Cancel and Escape discard the change. Show a brief saving state, and if a save fails, keep their text in the box and show an error message.
+6. When the person moves to a different photo, the note area must show that photo's note and leave editing mode.
+
+Thumbnails in the gallery in ProgressionGallery.tsx: when a photo has a note, show a small note icon from lucide-react, with a tooltip, next to its date or in a corner of the thumbnail. Show nothing when there is no note. Do not show note text on the thumbnails, and do not change the existing date editing, cover photo or delete behavior.
+
+Verification: please run the app and actually test this yourself with a real photo on a tree in the development app. Add a note, reload the page, and confirm it is still there. Edit it, clear it, hit the 500 character limit, move between photos with both the buttons and the arrow keys, type with the arrow keys and Escape while editing, and check a narrow phone-sized window. Tell me what you actually saw and what you could not test. Do not tell me it works based only on reading the code.
+
+Run the typecheck and report the result. Known older errors in calendar.tsx, spinner.tsx and the mobile useColors.ts can be ignored, but tell me about anything new.
+
+Commit locally only and report the real commit hash. Do not push, publish, rebase or modify the remote GitHub branch. I will push and publish manually.
