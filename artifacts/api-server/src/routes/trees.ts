@@ -754,9 +754,23 @@ router.patch("/trees/:id/photos/:photoId", requireAuth, async (req, res): Promis
     return;
   }
 
+  const updates: { takenAt?: string; note?: string | null } = {};
+  if (parsed.data.takenAt !== undefined) {
+    updates.takenAt = parsed.data.takenAt;
+  }
+  if (parsed.data.note !== undefined) {
+    updates.note =
+      parsed.data.note === null ? null : parsed.data.note.trim() || null;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "At least one photo field must be provided" });
+    return;
+  }
+
   const [photo] = await db
     .update(treePhotosTable)
-    .set({ takenAt: parsed.data.takenAt })
+    .set(updates)
     .where(
       and(
         eq(treePhotosTable.id, params.data.photoId),
@@ -935,6 +949,7 @@ function formatPhoto(p: typeof treePhotosTable.$inferSelect) {
     photoUrl: p.photoUrl,
     photoThumb: p.photoThumb ?? null,
     takenAt: p.takenAt,
+    note: p.note ?? null,
     createdAt: p.createdAt.toISOString(),
   };
 }

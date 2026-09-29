@@ -577,6 +577,7 @@ export const ListTreePhotosResponseItem = zod.object({
   "photoUrl": zod.string(),
   "photoThumb": zod.string().nullish(),
   "takenAt": zod.string(),
+  "note": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListTreePhotosResponse = zod.array(ListTreePhotosResponseItem)
@@ -601,6 +602,7 @@ export const CreateTreePhotoResponse = zod.object({
   "photoUrl": zod.string(),
   "photoThumb": zod.string().nullish(),
   "takenAt": zod.string(),
+  "note": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -613,8 +615,13 @@ export const UpdateTreePhotoParams = zod.object({
   "photoId": zod.coerce.string()
 })
 
+export const updateTreePhotoBodyNoteMax = 500;
+
+
+
 export const UpdateTreePhotoBody = zod.object({
-  "takenAt": zod.string()
+  "takenAt": zod.string().optional(),
+  "note": zod.string().max(updateTreePhotoBodyNoteMax).nullish()
 })
 
 export const UpdateTreePhotoResponse = zod.object({
@@ -623,6 +630,7 @@ export const UpdateTreePhotoResponse = zod.object({
   "photoUrl": zod.string(),
   "photoThumb": zod.string().nullish(),
   "takenAt": zod.string(),
+  "note": zod.string().nullish(),
   "createdAt": zod.string()
 })
 

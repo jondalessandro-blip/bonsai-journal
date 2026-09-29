@@ -247,6 +247,8 @@ export interface TreePhoto {
   /** @nullable */
   photoThumb?: string | null;
   takenAt: string;
+  /** @nullable */
+  note?: string | null;
   createdAt: string;
 }
 
@@ -257,7 +259,12 @@ export interface TreePhotoInput {
 }
 
 export interface TreePhotoUpdate {
-  takenAt: string;
+  takenAt?: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  note?: string | null;
 }
 
 export type ListTreesParams = {

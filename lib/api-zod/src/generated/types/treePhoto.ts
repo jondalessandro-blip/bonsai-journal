@@ -13,5 +13,7 @@ export interface TreePhoto {
   /** @nullable */
   photoThumb?: string | null;
   takenAt: string;
+  /** @nullable */
+  note?: string | null;
   createdAt: string;
 }

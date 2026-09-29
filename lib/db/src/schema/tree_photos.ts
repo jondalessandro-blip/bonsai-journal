@@ -11,6 +11,7 @@ export const treePhotosTable = pgTable(
     photoUrl: text("photo_url").notNull(),
     photoThumb: text("photo_thumb"),
     takenAt: text("taken_at").notNull(), // "YYYY-MM-DD"
+    note: text("note"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

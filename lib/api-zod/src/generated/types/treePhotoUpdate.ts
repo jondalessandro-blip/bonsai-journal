@@ -7,5 +7,10 @@
  */
 
 export interface TreePhotoUpdate {
-  takenAt: string;
+  takenAt?: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  note?: string | null;
 }

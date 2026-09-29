@@ -1,0 +1,17 @@
+This is Step 1 of 2 for a new feature: notes on progression photos. This step is backend only. Please do not touch any frontend files or the mobile app in this step.
+
+Goal: each progression photo can carry an optional short text note. Photos that already exist simply have no note.
+
+Please make these changes in this order.
+
+First, the database. In lib/db/src/schema/tree_photos.ts, add one new nullable text column called note (database column name note) to the tree_photos table. Do not change, rename or remove any existing column or index. Apply the schema change to the development database the same way earlier schema changes in this project were applied.
+
+Second, the OpenAPI spec at lib/api-spec/openapi.yaml. On the TreePhoto schema, add an optional property called note whose type is string or null, and do not add it to the required list. On the TreePhotoUpdate schema, make takenAt optional instead of required, and add an optional property called note that is a string or null with a maximum length of 500 characters. Leave TreePhotoInput exactly as it is, because notes are added after upload, not during it. Then regenerate the client and Zod code with pnpm --filter @workspace/api-spec run codegen. Never hand-edit anything under lib/api-zod or lib/api-client-react.
+
+Third, the server route. In artifacts/api-server/src/routes/trees.ts, update the PATCH handler for /trees/:id/photos/:photoId so it only changes the fields that were actually sent. If only takenAt is sent, only the date changes and the note is left alone. If only note is sent, only the note changes and the date is left alone. If both are sent, both change. If neither is sent, return a 400 error. When a note is sent, trim leading and trailing whitespace, and treat an empty or whitespace-only note as a request to clear it, storing null. The existing ownership check, the not-found handling and the way takenAt is validated today must all keep working the same way. Also update the formatPhoto function near the bottom of the file so every photo returned by the API includes note, returning null when there is none. This covers the list, create and update responses.
+
+Fourth, check that the existing callers still compile. The website and the mobile app currently send only takenAt when editing a photo, which must keep working now that takenAt is optional. Run the typecheck and tell me the result. Two failures in calendar.tsx and spinner.tsx and one in TreeDetailPage.tsx about tagsMode already existed before this work, so those can be ignored, but tell me about anything new.
+
+When you finish, tell me in plain language exactly how the new note column will reach the production database when I press Publish, or whether I need to do something extra. Please only explain this. Do not touch, migrate or modify the production database in any way.
+
+Commit your work locally only and report the real commit hash. Do not push, publish, rebase or modify anything on the remote GitHub branch. I will push manually.

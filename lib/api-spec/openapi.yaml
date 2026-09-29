@@ -1034,6 +1034,8 @@ components:
           type: ["string", "null"]
         takenAt:
           type: string
+        note:
+          type: ["string", "null"]
         createdAt:
           type: string
 
@@ -1050,7 +1052,9 @@ components:
 
     TreePhotoUpdate:
       type: object
-      required: [takenAt]
       properties:
         takenAt:
           type: string
+        note:
+          type: ["string", "null"]
+          maxLength: 500
