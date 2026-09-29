@@ -117,7 +117,7 @@ export function Lightbox({
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [hasNext, hasPrev, isEditingNote, onClose, onNext, onPrev, noteDraft, savedNote, isBusy]);
+  }, [hasNext, hasPrev, isEditingNote, onClose, onNext, onPrev, onSaveNote, noteDraft, savedNote, isBusy]);
 
   const notePanel = onSaveNote ? (
     <section
@@ -264,7 +264,7 @@ export function Lightbox({
                * close handler either (they sit inside the stop-prop div via
                * the DOM tree, but explicit stops are a cleaner guard).
                */}
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 hidden sm:flex items-center gap-2">
+              <div className={`absolute ${onSaveNote ? "top-4" : "bottom-6"} left-1/2 -translate-x-1/2 z-10 hidden sm:flex items-center gap-2`}>
                 <button
                   className="rounded-full bg-black/50 p-2.5 text-white hover:bg-black/70 transition-colors"
                   onClick={(e) => { e.stopPropagation(); zoomOut(); }}

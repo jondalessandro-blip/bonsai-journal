@@ -334,6 +334,16 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
                   </div>
                 )}
 
+                {photo.note && (
+                  <span
+                    aria-label="Photo has a note"
+                    title="This photo has a note"
+                    className="absolute bottom-1.5 left-1.5 inline-flex rounded-full bg-black/65 p-1.5 text-white shadow"
+                  >
+                    <StickyNote className="h-3.5 w-3.5" />
+                  </span>
+                )}
+
                 {/* Delete button — always visible on mobile, hover-only on desktop */}
                 <div className="absolute top-1.5 right-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:transition-opacity flex gap-1 z-10">
                   {confirmDeleteId === photo.id ? (
@@ -441,27 +451,16 @@ export function ProgressionGallery({ treeId, treePhotoUrl }: Props) {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      className="group/date flex min-w-0 flex-1 items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
-                      onClick={() => startEdit(photo)}
-                      title="Click to edit date"
-                    >
-                      <time dateTime={photo.takenAt}>
-                        {format(parseISO(photo.takenAt), "MMM d, yyyy")}
-                      </time>
-                      <Pencil className="w-2.5 h-2.5 opacity-0 group-hover/date:opacity-50 transition-opacity shrink-0" />
-                    </button>
-                    {photo.note && (
-                      <span
-                        aria-label="Photo has a note"
-                        title="This photo has a note"
-                        className="inline-flex shrink-0 text-muted-foreground/70"
-                      >
-                        <StickyNote className="h-3.5 w-3.5" />
-                      </span>
-                    )}
-                  </div>
+                  <button
+                    className="group/date flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-left"
+                    onClick={() => startEdit(photo)}
+                    title="Click to edit date"
+                  >
+                    <time dateTime={photo.takenAt}>
+                      {format(parseISO(photo.takenAt), "MMM d, yyyy")}
+                    </time>
+                    <Pencil className="w-2.5 h-2.5 opacity-0 group-hover/date:opacity-50 transition-opacity shrink-0" />
+                  </button>
                 )}
               </div>
             </div>

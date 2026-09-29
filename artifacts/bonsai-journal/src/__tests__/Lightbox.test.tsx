@@ -127,4 +127,20 @@ describe("Lightbox photo notes", () => {
     fireEvent.click(screen.getByText("Add a note").closest("section")!);
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it("keeps the original lightbox layout when note controls are omitted", () => {
+    render(
+      <Lightbox
+        src="https://example.com/tree.jpg"
+        onClose={onClose}
+        onPrev={onPrev}
+        onNext={onNext}
+        hasPrev={false}
+        hasNext={false}
+      />,
+    );
+
+    expect(screen.queryByRole("region", { name: "Photo note" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Zoom in" }).parentElement).toHaveClass("bottom-6");
+  });
 });
