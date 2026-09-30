@@ -1,0 +1,19 @@
+I'm adding the February entry to the Monthly Guide. Work in artifacts/bonsai-journal only. Do not touch or report on the mobile app. Do not copy this prompt or any attachments into attached_assets.
+
+In src/data/monthlyGuide.json, add a second entry for February after the existing January entry. Do not change the January entry in any way. Keep the wording exactly as written below, including punctuation. Same shape as January: month, title, intro, sections (each with heading and items), and focus.
+
+February entry. Month: 2. Title: February Bonsai Checklist. Intro: February marks the beginning of the transition toward spring. In some areas, repotting can begin this month, but timing should be based on the individual species, local temperatures and the tree's stage of dormancy.
+
+Section "Repotting Preparation", items: Start reviewing which trees will need repotting this spring. / Prioritize trees that are root-bound, have deteriorating soil, poor drainage or have simply outgrown their current containers. / Don't repot solely because the calendar says it's February. Wait until each species shows early spring activity, like swelling buds. / Deciduous trees are generally repotted as their buds begin to swell, before significant new growth emerges. / Most conifers follow soon after, once their buds swell and begin to move. Timing varies by species.
+
+Section "Bonsai Soil", items: Prepare your soil mixes ahead of time so everything is ready when repotting begins. / Use a mix appropriate to the species, container size and watering conditions rather than relying on one universal recipe. / Screen and grade your soil components before mixing. / Prepare enough soil for the trees you expect to repot, with some extra on hand for unexpected needs. / Store prepared soil somewhere dry and protected from freezing and excessive moisture.
+
+Section "Supplies", items: Check your supply of bonsai pots, drainage mesh, wire and tie-down materials. / Have pruning tools clean and ready to use.
+
+Section "Winter Protection", items: Continue protecting dormant trees from severe cold. / Keep monitoring moisture levels, particularly for trees kept under cover. / Check your shelters and containers after thaws and refreezes to make sure trees are still well protected. / Don't move trees into warm conditions prematurely. The goal is to protect them while allowing them to follow their natural seasonal cycle.
+
+Focus: Get ready for repotting rather than rushing into it. Prepare your soil, tools and containers now, then repot each tree when its species and local conditions indicate the timing is right.
+
+Existing tests assume February has no guide yet, so update them to use December (month 12) as the example of a month with no guide. That means the getMonthlyGuide(2) check in src/__tests__/monthlyGuide.test.ts, and the two places in src/__tests__/CalendarPage.test.tsx that click or open month 2 and expect "The guide for February is on its way." Update those to month 12 and December. Add a check that getMonthlyGuide(2) returns the February entry with the title "February Bonsai Checklist". The existing structure test should cover the new entry automatically. Also confirm the Calendar tab now shows a "Read the February guide" link, in the same test style as the January link.
+
+Do not change any page, component, the backend or the OpenAPI spec other than the data file and the tests. Run the website tests and typecheck and tell me the results. Commit locally only, report the real commit hash, and do not push, publish, or modify anything on the remote GitHub branch. I will push manually.
