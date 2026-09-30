@@ -1,0 +1,21 @@
+I'm adding a "Monthly Guide" feature to the Care Calendar page. This first step is data only, and nothing on screen should change yet. Work in artifacts/bonsai-journal only. Do not touch or report on the mobile app. Do not copy this prompt or any attachments into attached_assets.
+
+Create src/data/monthlyGuide.json containing an array of month entries. Each entry has: month (number 1 to 12), title (string), intro (string), sections (array of objects, each with heading as a string and items as an array of strings), and focus (string). Include exactly one entry for now, January, with the content below. Keep the wording exactly as written, including punctuation.
+
+January entry. Month: 1. Title: January Bonsai Checklist. Intro: January is generally the heart of winter, with very little active work to do on dormant bonsai. The priority now is protecting trees from extreme cold while keeping an eye on moisture and winter conditions.
+
+Section "Winter Protection", items: Make sure all trees that need winter protection are safely sheltered. / A cold greenhouse is ideal, but a simple winter shelter can work just as well. / Protect trees from prolonged exposure to extreme cold, strong winds, frost and heavy snow. / Keep in mind that bonsai containers are much more vulnerable to freezing than trees growing in the ground. / Check your shelters after major storms to make sure they are still secure and providing adequate protection. / Avoid allowing the shelter to become too warm on sunny days. Trees that require winter dormancy should remain cold and dormant.
+
+Section "Watering", items: Dormant trees still need occasional moisture. / Check the soil periodically, particularly on trees that have been under cover for several weeks. / If the soil is becoming completely dry, water enough to bring it back to a slightly moist condition. / Don't keep dormant trees saturated. Good drainage is just as important in winter as it is during the growing season.
+
+Section "Planning for Spring", items: January is a great time to plan your spring repotting work. / Make a list of trees that need repotting and prioritize them based on species, age, health and root condition. / Make sure you have your soil components ready before spring arrives. / Order any bonsai pots, mesh, wire or other supplies you'll need. / Take the opportunity to review each tree and think about whether its current pot, soil and root system are still appropriate.
+
+Section "Winter Observation", items: Use the quiet period to study your trees rather than constantly working on them. / Look at branch structure and start thinking about your spring pruning and styling plans. / Check for damaged branches, rodents, pests or other winter problems when conditions allow.
+
+Focus: Protect, monitor and plan. There isn't much hands-on work to do, so use the downtime to keep your trees safely dormant and get organized for spring.
+
+Also create src/lib/monthlyGuide.ts that exports a MonthlyGuideEntry type, and a function getMonthlyGuide(month: number) that returns the matching entry from the JSON or undefined if that month has not been written yet. Do not import it anywhere yet.
+
+Add a test file in src/__tests__ that checks: every entry has a unique month between 1 and 12, and every entry has a non-empty title, intro and focus, at least one section, and at least one non-empty item in every section. Also check that getMonthlyGuide(1) returns the January entry and getMonthlyGuide(2) returns undefined. Run the website tests and typecheck and tell me the results.
+
+Do not change the OpenAPI spec, the backend, or any existing page or component. Commit locally only, report the real commit hash, and do not push, publish, or modify anything on the remote GitHub branch. I will push manually.
