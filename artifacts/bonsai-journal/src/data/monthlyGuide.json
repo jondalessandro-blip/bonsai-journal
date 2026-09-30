@@ -390,5 +390,72 @@
       }
     ],
     "focus": "Growth is at its peak and summer heat has arrived. Water carefully, feed steadily, and shape new growth as it comes, while staying alert for pests."
+  },
+  {
+    "month": 7,
+    "title": "July Bonsai Checklist",
+    "intro": "July is usually the hottest stretch of the year. Most trees are growing well, and the main job is to keep them comfortable and steady through the heat.",
+    "sections": [
+      {
+        "heading": "Heat and Sun",
+        "items": [
+          "Strong afternoon sun can scorch the leaves of delicate species such as maples and beeches. Give them morning sun and some shade in the hottest part of the day.",
+          "Shade cloth or a bench in the shadow of a larger plant can help where there is no natural shade.",
+          "Pots heat up in direct sun, which can stress the roots. Shade the containers, or set trees where the pots stay cooler.",
+          "Keep good air movement around trees so heat and humidity don't build up."
+        ]
+      },
+      {
+        "heading": "Watering",
+        "items": [
+          "Check trees at least once a day and more often during heat waves. Small pots and shallow containers dry out the fastest.",
+          "Water thoroughly, and in hot weather water in the early morning and again in the evening if needed.",
+          "On very hot days, avoid wetting foliage in direct midday sun."
+        ]
+      },
+      {
+        "heading": "Fertilizing",
+        "items": [
+          "Continue your regular feeding through July.",
+          "Skip feeding for weak, dry or freshly repotted trees, and plan to stop nitrogen by mid-August so growth hardens before winter."
+        ]
+      },
+      {
+        "heading": "Pinching and Shaping",
+        "items": [
+          "Keep pinching new shoots on deciduous trees to maintain their shape and build finer branching, unless the tree is being grown out for thickness.",
+          "Pinch juniper tips as they regrow, and never strip a branch bare.",
+          "Check existing wire regularly. Fast summer growth can make wire bite into the bark, so remove or adjust it early."
+        ]
+      },
+      {
+        "heading": "Pests and Disease",
+        "items": [
+          "Keep checking for aphids, mites, caterpillars and scale, especially under leaves. Treat early, before they spread.",
+          "Watch for fungal problems in warm, humid weather, and improve airflow where leaves stay damp.",
+          "Junipers near apple or crabapple trees can still get cedar-apple rust in damp weather."
+        ]
+      },
+      {
+        "heading": "Propagation",
+        "items": [
+          "Softwood cuttings can still be taken in early summer. Once rooted, they are usually best left undisturbed until the following spring, since moving them late in the season gives them little time to establish before winter.",
+          "Check air layers for roots through the wrap. When they are well rooted, separate and pot them in a free-draining mix, and protect them from harsh sun and wind while they settle. Begin light feeding once they show new growth."
+        ]
+      },
+      {
+        "heading": "Advanced Work With a Closing Window",
+        "items": [
+          "If you are doing leaf pruning (defoliation) on strong, healthy deciduous trees, or candle cutting on strong two-flush pines, the window closes around mid-July. Skip it for weak or recently repotted trees, and don't start it late in the month."
+        ]
+      },
+      {
+        "heading": "Looking Ahead",
+        "items": [
+          "Late summer is a good time to think about autumn repotting for junipers and other suitable trees, and to order any soil or pots you'll need."
+        ]
+      }
+    ],
+    "focus": "Keep trees cool, watered and fed through the heat, keep shaping with light pinching, and finish any late summer leaf or candle work before the window closes."
   }
 ]
