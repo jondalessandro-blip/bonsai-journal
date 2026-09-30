@@ -1,0 +1,25 @@
+I'm adding the May entry to the Monthly Guide. Work in artifacts/bonsai-journal only. Do not touch or report on the mobile app. Do not copy this prompt or any attachments into attached_assets.
+
+In src/data/monthlyGuide.json, add an entry for May after the existing entries. Do not change any existing entry in any way. Keep the wording exactly as written below, including punctuation. Same shape as the others: month, title, intro, sections (each with heading and items), and focus. Plain text only, with no markdown or asterisks anywhere.
+
+May entry. Month: 5. Title: May Bonsai Checklist. Intro: May is when growth takes off. Trees that looked quiet a few weeks ago are now pushing shoots, leaves and candles quickly, and each day brings something new to watch. Frost can still return in many regions, so keep protection handy until the danger has passed.
+
+Section "Watering and Sun", items: As growth speeds up, trees use much more water. Check the soil every day and water whenever it starts to dry. / Water thoroughly so it runs through the drainage holes, and avoid a light sprinkle that only wets the surface. / Watch trees under cover or in a greenhouse closely during warm spells, since they can dry out quickly. / Make sure any greenhouse vents and shade cloth work properly so sunny days don't overheat the space.
+
+Section "Late Frost Protection", items: New leaves are tender and can be damaged by a late frost, and the marks can stay on the leaves for the rest of the season. / Keep an eye on the forecast and be ready to move tender trees under cover on cold nights. / Trees with very early or soft growth, such as many maples, are the most vulnerable. / Bring tropical trees outdoors only once nights stay reliably warm.
+
+Section "Pinching and Shoot Care", items: Pinch back long, vigorous shoots on deciduous trees with your fingers as they extend, to keep the branch structure compact. / Pinch the candles on single-flush pines once they have stretched but before the needles open. / Pinch the soft growth tips on junipers as new shoots reach a few centimetres. / Let trees you are building up grow more freely, and save refinement for trees that are already developed.
+
+Section "Fertilizing", items: Keep feeding established trees. Start deciduous trees once their first leaves have firmed up. / Begin junipers as growth starts, and feed pines as their candles grow. / Hold off on strong fertilizer for trees that were repotted recently, until they show healthy new growth.
+
+Section "Seeds and Cuttings", items: Sowing is getting late in many regions, since seeds sown later in the season have less time to establish before winter. / Cuttings from many species can still be taken. Use clean, healthy shoots and keep them evenly moist.
+
+Section "Air-Layering", items: Air-layering deciduous trees can begin once they are in active growth and continue through summer. / Continue with evergreen layers already started, and keep every layer consistently moist.
+
+Section "Pests and Disease", items: Check new growth regularly for aphids, caterpillars and other early pests. / Check junipers for cedar-apple rust in damp weather, especially if apple or crabapple trees are nearby.
+
+Focus: Growth is fast and the weather is still unsettled. Water consistently, guard tender new leaves against a late frost, and pinch and feed as each tree's growth calls for it.
+
+Tests: in src/__tests__/monthlyGuide.test.ts, add a check that getMonthlyGuide(5) returns the entry titled "May Bonsai Checklist" with 7 sections, in the same style as the existing checks for the other months. The existing structure test and the no-asterisks test should cover the new entry automatically. In src/__tests__/CalendarPage.test.tsx, confirm the Calendar tab now shows a "Read the May guide" link, in the same style as the existing link checks for the other months. December should remain the example of a month with no guide.
+
+Do not change any page, component, the backend or the OpenAPI spec other than the data file and the tests. Run the website tests and typecheck and tell me the results. Commit locally only, report the real commit hash, and do not push, publish, or modify anything on the remote GitHub branch. I will push manually.
