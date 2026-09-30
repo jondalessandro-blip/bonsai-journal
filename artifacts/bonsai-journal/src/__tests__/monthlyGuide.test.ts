@@ -40,7 +40,12 @@ describe("getMonthlyGuide", () => {
     expect(getMonthlyGuide(1)?.title).toBe("January Bonsai Checklist");
   });
 
+  it("returns the February entry", () => {
+    expect(getMonthlyGuide(2)).toEqual(entries.find((entry) => entry.month === 2));
+    expect(getMonthlyGuide(2)?.title).toBe("February Bonsai Checklist");
+  });
+
   it("returns undefined for a month that has not been written", () => {
-    expect(getMonthlyGuide(2)).toBeUndefined();
+    expect(getMonthlyGuide(12)).toBeUndefined();
   });
 });

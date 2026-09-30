@@ -88,16 +88,16 @@ describe("Care Calendar tabs", () => {
     const user = userEvent.setup();
     const routing = renderCalendar("/calendar?tab=guide&month=1&source=test");
 
-    await user.click(screen.getByTestId("button-month-2"));
+    await user.click(screen.getByTestId("button-month-12"));
 
     expect(screen.getByTestId("text-guide-missing")).toHaveTextContent(
-      "The guide for February is on its way.",
+      "The guide for December is on its way.",
     );
-    expect(screen.getByTestId("button-month-2")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("button-month-12")).toHaveAttribute("aria-pressed", "true");
     expect(routing.history).toHaveLength(1);
     const params = new URLSearchParams(routing.history![0].split("?")[1]);
     expect(params.get("tab")).toBe("guide");
-    expect(params.get("month")).toBe("2");
+    expect(params.get("month")).toBe("12");
     expect(params.get("source")).toBe("test");
   });
 
@@ -131,8 +131,9 @@ describe("Care Calendar tabs", () => {
     const routing = renderCalendar();
 
     const links = screen.getAllByRole("link", { name: /^Read the .+ guide$/ });
-    expect(links).toHaveLength(1);
+    expect(links).toHaveLength(2);
     expect(links[0]).toHaveTextContent("Read the January guide");
+    expect(links[1]).toHaveTextContent("Read the February guide");
     await user.click(links[0]);
 
     expect(screen.getByTestId("text-guide-title")).toHaveTextContent("January Bonsai Checklist");
@@ -140,13 +141,26 @@ describe("Care Calendar tabs", () => {
     expect(routing.history).toEqual(["/calendar?tab=guide&month=1"]);
   });
 
+  it("opens February from its month header link", async () => {
+    const user = userEvent.setup();
+    const routing = renderCalendar();
+
+    await user.click(screen.getByRole("link", { name: "Read the February guide" }));
+
+    expect(screen.getByTestId("text-guide-title")).toHaveTextContent("February Bonsai Checklist");
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: "smooth" });
+    expect(routing.history).toEqual(["/calendar?tab=guide&month=2"]);
+  });
+
   it("responds to tab and month changes made through navigation", () => {
     const routing = renderCalendar();
 
     act(() => routing.navigate("/calendar?tab=guide&month=1"));
     expect(screen.getByTestId("text-guide-title")).toHaveTextContent("January Bonsai Checklist");
-    act(() => routing.navigate("/calendar?tab=guide&month=2"));
-    expect(screen.getByTestId("text-guide-missing")).toHaveTextContent("February");
+    act(() => routing.navigate("/calendar?tab=guide&month=12"));
+    expect(screen.getByTestId("text-guide-missing")).toHaveTextContent(
+      "The guide for December is on its way.",
+    );
     act(() => routing.navigate("/calendar"));
     expect(screen.getByText("Build your calendar")).toBeInTheDocument();
   });

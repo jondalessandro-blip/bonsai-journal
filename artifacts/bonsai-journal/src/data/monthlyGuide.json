@@ -44,5 +44,49 @@
       }
     ],
     "focus": "Protect, monitor and plan. There isn't much hands-on work to do, so use the downtime to keep your trees safely dormant and get organized for spring."
+  },
+  {
+    "month": 2,
+    "title": "February Bonsai Checklist",
+    "intro": "February marks the beginning of the transition toward spring. In some areas, repotting can begin this month, but timing should be based on the individual species, local temperatures and the tree's stage of dormancy.",
+    "sections": [
+      {
+        "heading": "Repotting Preparation",
+        "items": [
+          "Start reviewing which trees will need repotting this spring.",
+          "Prioritize trees that are root-bound, have deteriorating soil, poor drainage or have simply outgrown their current containers.",
+          "Don't repot solely because the calendar says it's February. Wait until each species shows early spring activity, like swelling buds.",
+          "Deciduous trees are generally repotted as their buds begin to swell, before significant new growth emerges.",
+          "Most conifers follow soon after, once their buds swell and begin to move. Timing varies by species."
+        ]
+      },
+      {
+        "heading": "Bonsai Soil",
+        "items": [
+          "Prepare your soil mixes ahead of time so everything is ready when repotting begins.",
+          "Use a mix appropriate to the species, container size and watering conditions rather than relying on one universal recipe.",
+          "Screen and grade your soil components before mixing.",
+          "Prepare enough soil for the trees you expect to repot, with some extra on hand for unexpected needs.",
+          "Store prepared soil somewhere dry and protected from freezing and excessive moisture."
+        ]
+      },
+      {
+        "heading": "Supplies",
+        "items": [
+          "Check your supply of bonsai pots, drainage mesh, wire and tie-down materials.",
+          "Have pruning tools clean and ready to use."
+        ]
+      },
+      {
+        "heading": "Winter Protection",
+        "items": [
+          "Continue protecting dormant trees from severe cold.",
+          "Keep monitoring moisture levels, particularly for trees kept under cover.",
+          "Check your shelters and containers after thaws and refreezes to make sure trees are still well protected.",
+          "Don't move trees into warm conditions prematurely. The goal is to protect them while allowing them to follow their natural seasonal cycle."
+        ]
+      }
+    ],
+    "focus": "Get ready for repotting rather than rushing into it. Prepare your soil, tools and containers now, then repot each tree when its species and local conditions indicate the timing is right."
   }
 ]
