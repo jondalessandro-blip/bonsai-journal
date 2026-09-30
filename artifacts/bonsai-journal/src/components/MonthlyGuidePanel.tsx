@@ -140,7 +140,7 @@ export function MonthlyGuidePanel({
         className="text-sm text-muted-foreground"
         data-testid="text-guide-disclaimer"
       >
-        General guidance for cold-winter climates. Always go by what your tree is actually doing.
+        Written for cold-winter climates, so timing may differ where you live.
       </p>
     </div>
   );

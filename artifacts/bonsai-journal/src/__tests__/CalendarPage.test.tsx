@@ -56,10 +56,30 @@ describe("Care Calendar tabs", () => {
     expect(screen.getAllByTestId(/^section-guide-/)).toHaveLength(4);
     expect(screen.getByTestId("callout-guide-focus")).toHaveTextContent("January focus");
     expect(screen.getByTestId("text-guide-disclaimer")).toHaveTextContent(
-      "General guidance for cold-winter climates. Always go by what your tree is actually doing.",
+      "Written for cold-winter climates, so timing may differ where you live.",
     );
     expect(screen.queryByText("Build your calendar")).not.toBeInTheDocument();
     expect(screen.queryByTestId("badge-this-month")).not.toBeInTheDocument();
+  });
+
+  it("changes the intro text with the selected tab", async () => {
+    const user = userEvent.setup();
+    renderCalendar();
+
+    const calendarIntro =
+      "These are typical timings for your climate zone. Dates are approximate, so always go by what your tree is actually doing.";
+    const guideIntro =
+      "General month-by-month guidance for cold-winter climates. Timing varies with your region and the season, so always go by what your trees are actually doing.";
+
+    expect(screen.getByText(calendarIntro)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Monthly Guide" }));
+    expect(screen.getByText(guideIntro)).toBeInTheDocument();
+    expect(screen.queryByText(calendarIntro)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Calendar" }));
+    expect(screen.getByText(calendarIntro)).toBeInTheDocument();
+    expect(screen.queryByText(guideIntro)).not.toBeInTheDocument();
   });
 
   it.each(["", "&month=", "&month=0", "&month=13", "&month=nope", "&month=1.5", "&month=03"])(

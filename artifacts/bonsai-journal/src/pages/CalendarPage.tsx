@@ -183,8 +183,9 @@ export default function CalendarPage() {
       <header className="space-y-2">
         <h1 className="font-serif text-3xl text-foreground">Care Calendar</h1>
         <p className="max-w-3xl text-muted-foreground">
-          These are typical timings for your climate zone. Dates are
-          approximate, so always go by what your tree is actually doing.
+          {activeTab === "guide"
+            ? "General month-by-month guidance for cold-winter climates. Timing varies with your region and the season, so always go by what your trees are actually doing."
+            : "These are typical timings for your climate zone. Dates are approximate, so always go by what your tree is actually doing."}
         </p>
       </header>
 
