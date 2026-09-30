@@ -32,6 +32,17 @@ describe("monthly guide data", () => {
       }
     }
   });
+
+  it("has no doubled asterisks in guide text", () => {
+    const text = entries.flatMap((entry) => [
+      entry.title,
+      entry.intro,
+      entry.focus,
+      ...entry.sections.flatMap((section) => [section.heading, ...section.items]),
+    ]);
+
+    expect(text.every((value) => !value.includes("**"))).toBe(true);
+  });
 });
 
 describe("getMonthlyGuide", () => {
@@ -43,6 +54,13 @@ describe("getMonthlyGuide", () => {
   it("returns the February entry", () => {
     expect(getMonthlyGuide(2)).toEqual(entries.find((entry) => entry.month === 2));
     expect(getMonthlyGuide(2)?.title).toBe("February Bonsai Checklist");
+  });
+
+  it("returns the March entry with eight sections", () => {
+    const march = getMonthlyGuide(3);
+
+    expect(march?.title).toBe("March Bonsai Checklist");
+    expect(march?.sections).toHaveLength(8);
   });
 
   it("returns undefined for a month that has not been written", () => {
