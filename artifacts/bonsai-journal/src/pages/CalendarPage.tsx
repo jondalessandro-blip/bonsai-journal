@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useSearch } from "wouter";
 import {
   generateCalendar,
   mergeIdenticalTasks,
@@ -29,6 +30,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { getMonthlyGuide } from "@/lib/monthlyGuide";
+import { MonthlyGuidePanel } from "@/components/MonthlyGuidePanel";
 
 const zones = zonesJson as Zone[];
 const groups = groupsJson as unknown as Group[];
@@ -104,6 +113,8 @@ export default function CalendarPage() {
   const [preferences, setPreferences] = useState<CalendarPreferences>(
     readPreferences,
   );
+  const search = useSearch();
+  const [location, setLocation] = useLocation();
 
   useEffect(() => {
     try {
@@ -135,6 +146,28 @@ export default function CalendarPage() {
   );
 
   const currentMonth = new Date().getMonth() + 1;
+  const searchParams = new URLSearchParams(search);
+  const activeTab = searchParams.get("tab") === "guide" ? "guide" : "calendar";
+  const monthParam = searchParams.get("month");
+  const selectedMonth =
+    monthParam !== null && /^(?:[1-9]|1[0-2])$/.test(monthParam)
+      ? Number(monthParam)
+      : currentMonth;
+
+  const calendarHref = (tab: string, month = selectedMonth) => {
+    const params = new URLSearchParams(search);
+    if (tab === "guide") {
+      params.set("tab", "guide");
+    } else {
+      params.delete("tab");
+    }
+    params.set("month", String(month));
+    return `${location}?${params.toString()}`;
+  };
+
+  const changeCalendarView = (tab: string, month = selectedMonth) => {
+    setLocation(calendarHref(tab, month), { replace: true });
+  };
 
   const handleGroupChange = (groupId: string, checked: boolean) => {
     setPreferences((current) => ({
@@ -155,6 +188,17 @@ export default function CalendarPage() {
         </p>
       </header>
 
+      <Tabs value={activeTab} onValueChange={changeCalendarView}>
+        <TabsList aria-label="Care calendar views">
+          <TabsTrigger value="calendar" data-testid="tab-calendar">
+            Calendar
+          </TabsTrigger>
+          <TabsTrigger value="guide" data-testid="tab-monthly-guide">
+            Monthly Guide
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="calendar" className="mt-6 space-y-8">
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">Build your calendar</CardTitle>
@@ -326,9 +370,24 @@ export default function CalendarPage() {
                 <Card key={month.month}>
                   <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
                     <CardTitle className="text-xl">{month.monthName}</CardTitle>
-                    {month.month === currentMonth && (
-                      <Badge variant="secondary">This month</Badge>
-                    )}
+                    <div className="flex flex-wrap items-center justify-end gap-3">
+                      {month.month === currentMonth && (
+                        <Badge variant="secondary">This month</Badge>
+                      )}
+                      {getMonthlyGuide(month.month) && (
+                        <Link
+                          href={calendarHref("guide", month.month)}
+                          replace
+                          onClick={() =>
+                            window.scrollTo({ top: 0, behavior: "smooth" })
+                          }
+                          className="text-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          data-testid={`link-monthly-guide-${month.month}`}
+                        >
+                          Read the {month.monthName} guide
+                        </Link>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {month.tasks.length === 0 ? (
@@ -411,6 +470,15 @@ export default function CalendarPage() {
           )}
         </div>
       </section>
+        </TabsContent>
+        <TabsContent value="guide" className="mt-6">
+          <MonthlyGuidePanel
+            selectedMonth={selectedMonth}
+            currentMonth={currentMonth}
+            onMonthChange={(month) => changeCalendarView("guide", month)}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
