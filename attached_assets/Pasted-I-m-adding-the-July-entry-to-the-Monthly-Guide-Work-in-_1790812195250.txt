@@ -1,0 +1,27 @@
+I'm adding the July entry to the Monthly Guide. Work in artifacts/bonsai-journal only. Do not touch or report on the mobile app. Do not copy this prompt or any attachments into attached_assets.
+
+In src/data/monthlyGuide.json, add an entry for July after the existing entries. Do not change any existing entry in any way. Keep the wording exactly as written below, including punctuation. Same shape as the others: month, title, intro, sections (each with heading and items), and focus. Plain text only, with no markdown or asterisks anywhere.
+
+July entry. Month: 7. Title: July Bonsai Checklist. Intro: July is usually the hottest stretch of the year. Most trees are growing well, and the main job is to keep them comfortable and steady through the heat.
+
+Section "Heat and Sun", items: Strong afternoon sun can scorch the leaves of delicate species such as maples and beeches. Give them morning sun and some shade in the hottest part of the day. / Shade cloth or a bench in the shadow of a larger plant can help where there is no natural shade. / Pots heat up in direct sun, which can stress the roots. Shade the containers, or set trees where the pots stay cooler. / Keep good air movement around trees so heat and humidity don't build up.
+
+Section "Watering", items: Check trees at least once a day and more often during heat waves. Small pots and shallow containers dry out the fastest. / Water thoroughly, and in hot weather water in the early morning and again in the evening if needed. / On very hot days, avoid wetting foliage in direct midday sun.
+
+Section "Fertilizing", items: Continue your regular feeding through July. / Skip feeding for weak, dry or freshly repotted trees, and plan to stop nitrogen by mid-August so growth hardens before winter.
+
+Section "Pinching and Shaping", items: Keep pinching new shoots on deciduous trees to maintain their shape and build finer branching, unless the tree is being grown out for thickness. / Pinch juniper tips as they regrow, and never strip a branch bare. / Check existing wire regularly. Fast summer growth can make wire bite into the bark, so remove or adjust it early.
+
+Section "Pests and Disease", items: Keep checking for aphids, mites, caterpillars and scale, especially under leaves. Treat early, before they spread. / Watch for fungal problems in warm, humid weather, and improve airflow where leaves stay damp. / Junipers near apple or crabapple trees can still get cedar-apple rust in damp weather.
+
+Section "Propagation", items: Softwood cuttings can still be taken in early summer. Once rooted, they are usually best left undisturbed until the following spring, since moving them late in the season gives them little time to establish before winter. / Check air layers for roots through the wrap. When they are well rooted, separate and pot them in a free-draining mix, and protect them from harsh sun and wind while they settle. Begin light feeding once they show new growth.
+
+Section "Advanced Work With a Closing Window", items: If you are doing leaf pruning (defoliation) on strong, healthy deciduous trees, or candle cutting on strong two-flush pines, the window closes around mid-July. Skip it for weak or recently repotted trees, and don't start it late in the month.
+
+Section "Looking Ahead", items: Late summer is a good time to think about autumn repotting for junipers and other suitable trees, and to order any soil or pots you'll need.
+
+Focus: Keep trees cool, watered and fed through the heat, keep shaping with light pinching, and finish any late summer leaf or candle work before the window closes.
+
+Tests: in src/__tests__/monthlyGuide.test.ts, add a check that getMonthlyGuide(7) returns the entry titled "July Bonsai Checklist" with 8 sections, in the same style as the existing checks for the other months. The existing structure test and the no-asterisks test should cover the new entry automatically. In src/__tests__/CalendarPage.test.tsx, confirm the Calendar tab now shows a "Read the July guide" link, in the same style as the existing link checks for the other months. December should remain the example of a month with no guide.
+
+Do not change any page, component, the backend or the OpenAPI spec other than the data file and the tests. Run the website tests and typecheck and tell me the results. Commit locally only, report the real commit hash, and do not push, publish, or modify anything on the remote GitHub branch. I will push manually.
