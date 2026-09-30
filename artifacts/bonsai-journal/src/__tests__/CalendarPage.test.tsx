@@ -151,12 +151,13 @@ describe("Care Calendar tabs", () => {
     const routing = renderCalendar();
 
     const links = screen.getAllByRole("link", { name: /^Read the .+ guide$/ });
-    expect(links).toHaveLength(5);
+    expect(links).toHaveLength(6);
     expect(links[0]).toHaveTextContent("Read the January guide");
     expect(links[1]).toHaveTextContent("Read the February guide");
     expect(links[2]).toHaveTextContent("Read the March guide");
     expect(links[3]).toHaveTextContent("Read the April guide");
     expect(links[4]).toHaveTextContent("Read the May guide");
+    expect(links[5]).toHaveTextContent("Read the June guide");
     await user.click(links[0]);
 
     expect(screen.getByTestId("text-guide-title")).toHaveTextContent("January Bonsai Checklist");
@@ -206,6 +207,17 @@ describe("Care Calendar tabs", () => {
     expect(screen.getByTestId("text-guide-title")).toHaveTextContent("May Bonsai Checklist");
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: "smooth" });
     expect(routing.history).toEqual(["/calendar?tab=guide&month=5"]);
+  });
+
+  it("opens June from its month header link", async () => {
+    const user = userEvent.setup();
+    const routing = renderCalendar();
+
+    await user.click(screen.getByRole("link", { name: "Read the June guide" }));
+
+    expect(screen.getByTestId("text-guide-title")).toHaveTextContent("June Bonsai Checklist");
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: "smooth" });
+    expect(routing.history).toEqual(["/calendar?tab=guide&month=6"]);
   });
 
   it("responds to tab and month changes made through navigation", () => {

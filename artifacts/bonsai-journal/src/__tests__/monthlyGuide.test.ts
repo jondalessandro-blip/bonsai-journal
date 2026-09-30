@@ -77,6 +77,13 @@ describe("getMonthlyGuide", () => {
     expect(may?.sections).toHaveLength(7);
   });
 
+  it("returns the June entry with eight sections", () => {
+    const june = getMonthlyGuide(6);
+
+    expect(june?.title).toBe("June Bonsai Checklist");
+    expect(june?.sections).toHaveLength(8);
+  });
+
   it("returns undefined for a month that has not been written", () => {
     expect(getMonthlyGuide(12)).toBeUndefined();
   });
