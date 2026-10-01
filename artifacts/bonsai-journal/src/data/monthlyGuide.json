@@ -701,5 +701,69 @@
       }
     ],
     "focus": "Let the trees slow down naturally. Reduce watering and feeding as conditions dictate, complete important pruning and pest-control work, clean up the collection, and make sure your winter protection is ready, keeping hardy trees cold and outdoors, before the serious cold arrives."
+  },
+  {
+    "month": 11,
+    "title": "November Bonsai Checklist",
+    "intro": "November is the month when most deciduous trees are settling into full dormancy. Leaves are falling or already gone, while evergreens remain biologically active but at a much slower pace. The focus now is protecting the collection without interrupting the natural dormancy cycle.",
+    "sections": [
+      {
+        "heading": "Deciduous Trees",
+        "items": [
+          "Most deciduous bonsai should be fully or nearly fully bare by now.",
+          "Once the leaves have fallen, take advantage of the clear structure to inspect branches and identify any dead, damaged or unwanted growth.",
+          "Don't rush dormant trees into warm conditions. They still need their period of cold dormancy.",
+          "However, don't wait for an arbitrary date to provide protection. Move trees into winter shelter when sustained cold or severe weather makes it necessary."
+        ]
+      },
+      {
+        "heading": "Evergreens & Conifers",
+        "items": [
+          "Evergreens continue to function through the winter, although growth and water consumption slow considerably.",
+          "Continue checking soil moisture rather than following a fixed watering schedule.",
+          "Protect trees from drying winds and extreme temperature swings.",
+          "Small bonsai containers require particular attention because their roots are much more exposed to freezing than trees planted in the ground."
+        ]
+      },
+      {
+        "heading": "Watering",
+        "items": [
+          "Check sheltered trees regularly for moisture.",
+          "Water only when the soil is beginning to dry and conditions are suitable for watering.",
+          "Avoid keeping dormant trees constantly wet.",
+          "Trees under cover may need more attention than those exposed to natural precipitation."
+        ]
+      },
+      {
+        "heading": "Winter Protection",
+        "items": [
+          "November is a good time to have your winter protection fully operational.",
+          "Use a cold greenhouse, sheltered area or other appropriate winter setup depending on the species.",
+          "The objective is to protect the roots and branches from prolonged extreme cold while still allowing trees that require dormancy to remain cold.",
+          "Watch for sudden temperature drops, strong winds and prolonged freezing periods.",
+          "Don't assume that a greenhouse will always remain warmer than the outdoor environment; on very cold nights, additional insulation may be necessary."
+        ]
+      },
+      {
+        "heading": "Fall Cleanup",
+        "items": [
+          "Remove fallen leaves and other debris from benches, pots and growing areas.",
+          "Diseased foliage and branches should be removed from the collection and disposed of appropriately.",
+          "Avoid burning material unless local regulations and conditions permit it.",
+          "Don't add clearly diseased plant material to compost where the pathogens may survive.",
+          "Clean tools and work surfaces before winter."
+        ]
+      },
+      {
+        "heading": "Planning & Observation",
+        "items": [
+          "November is a good time to review the year's growth and make notes for next season.",
+          "Photograph trees while deciduous branches are bare so you can evaluate their structure over winter.",
+          "Make a list of trees that may need repotting, pruning, wiring or other work in spring.",
+          "Check pots, benches, labels and winter-storage equipment while everything is still accessible."
+        ]
+      }
+    ],
+    "focus": "Let the trees settle into dormancy, keep them appropriately protected without keeping them warm, monitor moisture, clean up diseased material, and use the bare structure to plan your spring work."
   }
 ]

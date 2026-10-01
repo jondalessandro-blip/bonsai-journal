@@ -62,6 +62,23 @@ describe("Care Calendar tabs", () => {
     expect(screen.queryByTestId("badge-this-month")).not.toBeInTheDocument();
   });
 
+  it("opens November directly from the web address and displays its complete guide", () => {
+    renderCalendar("/calendar?tab=guide&month=11");
+
+    expect(screen.getByTestId("button-month-11")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("heading", { name: "November Bonsai Checklist" })).toBeInTheDocument();
+    expect(screen.getByTestId("text-guide-intro")).toHaveTextContent(
+      "November is the month when most deciduous trees are settling into full dormancy.",
+    );
+    expect(screen.getAllByTestId(/^section-guide-/)).toHaveLength(6);
+    expect(screen.getByTestId("callout-guide-focus")).toHaveTextContent(
+      "November focus",
+    );
+    expect(screen.getByTestId("callout-guide-focus")).toHaveTextContent(
+      "use the bare structure to plan your spring work",
+    );
+  });
+
   it("changes the intro text with the selected tab", async () => {
     const user = userEvent.setup();
     renderCalendar();
@@ -151,7 +168,7 @@ describe("Care Calendar tabs", () => {
     const routing = renderCalendar();
 
     const links = screen.getAllByRole("link", { name: /^Read the .+ guide$/ });
-    expect(links).toHaveLength(10);
+    expect(links).toHaveLength(11);
     expect(links[0]).toHaveTextContent("Read the January guide");
     expect(links[1]).toHaveTextContent("Read the February guide");
     expect(links[2]).toHaveTextContent("Read the March guide");
@@ -162,6 +179,7 @@ describe("Care Calendar tabs", () => {
     expect(links[7]).toHaveTextContent("Read the August guide");
     expect(links[8]).toHaveTextContent("Read the September guide");
     expect(links[9]).toHaveTextContent("Read the October guide");
+    expect(links[10]).toHaveTextContent("Read the November guide");
     expect(screen.queryByRole("link", { name: "Read the December guide" })).not.toBeInTheDocument();
     await user.click(links[0]);
 

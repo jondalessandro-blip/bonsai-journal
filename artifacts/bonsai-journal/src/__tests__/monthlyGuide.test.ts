@@ -105,6 +105,21 @@ describe("getMonthlyGuide", () => {
     expect(october?.sections).toHaveLength(7);
   });
 
+  it("returns the November entry with six sections", () => {
+    const november = getMonthlyGuide(11);
+
+    expect(november?.title).toBe("November Bonsai Checklist");
+    expect(november?.sections).toHaveLength(6);
+    expect(november?.sections.map((section) => section.heading)).toEqual([
+      "Deciduous Trees",
+      "Evergreens & Conifers",
+      "Watering",
+      "Winter Protection",
+      "Fall Cleanup",
+      "Planning & Observation",
+    ]);
+  });
+
   it("returns undefined for a month that has not been written", () => {
     expect(getMonthlyGuide(12)).toBeUndefined();
   });
