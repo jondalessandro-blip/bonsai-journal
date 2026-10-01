@@ -623,5 +623,83 @@
       }
     ],
     "focus": "Keep watering as needed, gradually reduce feeding, finish important propagation work, pull old pine needles and bring tropical trees indoors as the calendar calls for, remove or adjust wire"
+  },
+  {
+    "month": 10,
+    "title": "October Bonsai Checklist",
+    "intro": "October is the point where the collection begins making the full transition into dormancy. Deciduous trees are displaying their fall colour and dropping their leaves, while evergreens are gradually slowing down. The focus now shifts from active growth to winter preparation.",
+    "sections": [
+      {
+        "heading": "Winter Preparation",
+        "items": [
+          "Check that your winter shelter, greenhouse and insulation are ready before serious cold arrives.",
+          "Wait for several frosts, and for the leaves to drop on deciduous trees, before moving trees into winter storage, so they go fully dormant.",
+          "Identify trees that need additional protection and organize them according to their winter requirements.",
+          "Hardy trees, and especially pines and junipers, need a cold winter rest. Never bring them into a warm house.",
+          "Protect the pot by burying it in mulch, using a windbreak, or using an unheated garage or shed with some light. Keep junipers out of harsh winter sun.",
+          "Remember that bonsai roots are much more vulnerable to freezing than the portions of the tree above ground. A potted tree is roughly two zones less hardy than the same tree planted in the ground.",
+          "Keep sheltered trees cold enough to remain dormant while protecting them from extreme temperature swings. Repeated freezing and thawing is hard on roots in pots."
+        ]
+      },
+      {
+        "heading": "Watering",
+        "items": [
+          "Continue checking soil moisture, but expect watering requirements to decrease as temperatures fall and growth slows.",
+          "Don't stop watering simply because the calendar says October. Let the weather, soil and individual tree determine when water is needed.",
+          "Trees protected from rain, particularly those in a greenhouse, may still require occasional watering.",
+          "Avoid keeping dormant trees excessively wet, but never allow the root ball to become completely dry."
+        ]
+      },
+      {
+        "heading": "Pruning and Styling",
+        "items": [
+          "Don't prune simply because it's October. Use the month to evaluate structure, remove problem growth, and do significant pruning only when the species, the tree's health and the timing make it appropriate.",
+          "Dead, damaged and diseased wood can be removed when you find it. Light cleanup is generally fine on healthy trees.",
+          "Established, healthy pines: fall is a good time for structural pruning and removing larger branches, since sap flow is slowing. Provide winter protection afterward.",
+          "Junipers: late fall to early spring is the best window for structural work. Wire carefully, remove no more than about a third of the foliage at once, and never strip a branch bare.",
+          "Deciduous trees: bare branches make the structure easy to see, so October is good for evaluating and planning. Timing for major cuts varies by species, so consider wound response before cutting large branches. Japanese maple bleeds if cut once sap is running, so leave larger cuts for dormancy.",
+          "Avoid combining heavy root work with heavy top pruning unless there is a compelling reason.",
+          "For recently collected, repotted or weak trees, prioritize recovery over styling.",
+          "In milder regions, two-flush pines can still have their old needles pulled in early October, once the new needles have hardened. Thin gradually."
+        ]
+      },
+      {
+        "heading": "Pests and Disease",
+        "items": [
+          "Give the entire collection a thorough inspection before winter.",
+          "Look for scale, aphids, mites, fungal problems and other signs of pests or disease.",
+          "A suitable fall or dormant treatment can help reduce overwintering pest populations and fungal problems.",
+          "Use treatments only when appropriate for the species and follow the product label.",
+          "Apply sprays on a dry, relatively mild day when there is enough time for them to dry before temperatures drop."
+        ]
+      },
+      {
+        "heading": "Fall Cleanup",
+        "items": [
+          "Remove fallen leaves and other debris from benches, pots and the growing area.",
+          "Clean up diseased foliage rather than leaving it around the trees.",
+          "Inspect pots, benches and greenhouse areas for pests that may use the debris as winter shelter.",
+          "Give tools and working areas a good cleanup before winter."
+        ]
+      },
+      {
+        "heading": "Fertilizing",
+        "items": [
+          "Gradually wind down regular feeding as trees enter dormancy.",
+          "Avoid pushing new growth with high-nitrogen fertilizer this late in the season.",
+          "Trees should be allowed to mature and harden their existing growth rather than being encouraged to produce another flush.",
+          "Resume regular feeding when active growth begins again in spring."
+        ]
+      },
+      {
+        "heading": "Tropical Trees",
+        "items": [
+          "In colder regions, tropical trees should already be indoors. If not, bring them in before nights drop below about 12°C.",
+          "Move them gradually to a bright spot or under grow lights for about 12 to 14 hours a day, since sudden moves can cause leaf drop.",
+          "Check for spider mites and scale before bringing trees inside."
+        ]
+      }
+    ],
+    "focus": "Let the trees slow down naturally. Reduce watering and feeding as conditions dictate, complete important pruning and pest-control work, clean up the collection, and make sure your winter protection is ready, keeping hardy trees cold and outdoors, before the serious cold arrives."
   }
 ]

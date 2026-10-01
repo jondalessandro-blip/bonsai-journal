@@ -151,7 +151,7 @@ describe("Care Calendar tabs", () => {
     const routing = renderCalendar();
 
     const links = screen.getAllByRole("link", { name: /^Read the .+ guide$/ });
-    expect(links).toHaveLength(9);
+    expect(links).toHaveLength(10);
     expect(links[0]).toHaveTextContent("Read the January guide");
     expect(links[1]).toHaveTextContent("Read the February guide");
     expect(links[2]).toHaveTextContent("Read the March guide");
@@ -161,6 +161,7 @@ describe("Care Calendar tabs", () => {
     expect(links[6]).toHaveTextContent("Read the July guide");
     expect(links[7]).toHaveTextContent("Read the August guide");
     expect(links[8]).toHaveTextContent("Read the September guide");
+    expect(links[9]).toHaveTextContent("Read the October guide");
     expect(screen.queryByRole("link", { name: "Read the December guide" })).not.toBeInTheDocument();
     await user.click(links[0]);
 
