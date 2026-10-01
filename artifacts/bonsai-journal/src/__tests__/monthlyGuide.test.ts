@@ -43,6 +43,14 @@ describe("monthly guide data", () => {
 
     expect(text.every((value) => !value.includes("**"))).toBe(true);
   });
+
+  it("has no ampersands in section headings", () => {
+    const headings = entries.flatMap((entry) =>
+      entry.sections.map((section) => section.heading),
+    );
+
+    expect(headings.every((heading) => !heading.includes("&"))).toBe(true);
+  });
 });
 
 describe("getMonthlyGuide", () => {
@@ -105,19 +113,26 @@ describe("getMonthlyGuide", () => {
     expect(october?.sections).toHaveLength(7);
   });
 
-  it("returns the November entry with six sections", () => {
+  it("returns the November entry with its requested sections and cleanup guidance", () => {
     const november = getMonthlyGuide(11);
 
     expect(november?.title).toBe("November Bonsai Checklist");
     expect(november?.sections).toHaveLength(6);
     expect(november?.sections.map((section) => section.heading)).toEqual([
-      "Deciduous Trees",
-      "Evergreens & Conifers",
-      "Watering",
       "Winter Protection",
-      "Fall Cleanup",
-      "Planning & Observation",
+      "Deciduous Trees",
+      "Evergreens and Conifers",
+      "Watering",
+      "Finishing Fall Cleanup",
+      "Planning and Observation",
     ]);
+
+    const fallCleanup = november?.sections.find(
+      (section) => section.heading === "Finishing Fall Cleanup",
+    );
+    expect(fallCleanup?.items).toContain(
+      "Depending on local rules, that may mean sealed bags in household garbage, a municipal yard waste program that accepts diseased material, or burning where it is permitted. Check what is allowed where you live, since open burning is restricted in many areas.",
+    );
   });
 
   it("returns undefined for a month that has not been written", () => {
