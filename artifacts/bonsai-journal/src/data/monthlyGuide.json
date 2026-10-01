@@ -540,5 +540,88 @@
       }
     ],
     "focus": "Stay on top of watering, protect trees from excessive heat, monitor pests and wire closely, thin foliage and needles as the calendar calls for, and begin shifting from soft, nitrogen-driven growth toward mature late-season growth."
+  },
+  {
+    "month": 9,
+    "title": "September Bonsai Checklist",
+    "intro": "September marks the transition from summer growth toward autumn and dormancy. Trees are still active, but growth is beginning to slow, and the focus shifts toward helping them mature properly and preparing them for winter.",
+    "sections": [
+      {
+        "heading": "Watering",
+        "items": [
+          "Continue monitoring soil moisture closely. Warm, dry weather can continue well into September.",
+          "Don't assume that cooler temperatures mean trees no longer need regular watering.",
+          "Adjust watering as temperatures and daylight decrease and the trees begin using less moisture.",
+          "Trees in small containers can still dry out quickly, particularly during warm or windy weather."
+        ]
+      },
+      {
+        "heading": "Fertilizing",
+        "items": [
+          "By now, high-nitrogen feeding should be finished. If you keep feeding, use a balanced or low-nitrogen fertilizer, and reduce the amount and frequency as growth slows.",
+          "Avoid heavy applications of nitrogen late in the season, particularly on trees that need time to harden off before winter.",
+          "A balanced or lower-nitrogen fertilizer may be appropriate during the transition into autumn.",
+          "Don't try to force additional soft growth. The goal now is healthy, mature growth that can enter winter properly."
+        ]
+      },
+      {
+        "heading": "Pine Needle Work",
+        "items": [
+          "Once the new needles on two-flush pines have hardened, pull the oldest, browning needles, usually two or more years old, to let light and air into the inner buds.",
+          "In many regions this falls in early to mid September. In the coldest regions it is done in late August.",
+          "Thin gradually, and don't strip weak branches all at once."
+        ]
+      },
+      {
+        "heading": "Tropical Trees",
+        "items": [
+          "In colder regions, bring tropical trees indoors before nights drop below about 12°C.",
+          "Move them gradually to a bright spot or under grow lights for about 12 to 14 hours a day, since sudden moves can cause leaf drop.",
+          "Check for spider mites and scale before bringing trees inside."
+        ]
+      },
+      {
+        "heading": "Wiring",
+        "items": [
+          "Inspect all wired trees regularly as branches continue to thicken.",
+          "Pines and other vigorous trees can put on significant girth during late summer and early fall.",
+          "Remove wire from branches that have developed enough structure to hold their position.",
+          "Loosen or remove any wire that is beginning to mark the bark.",
+          "Don't wait until the tree enters full dormancy to discover that wire has already become embedded."
+        ]
+      },
+      {
+        "heading": "Cuttings",
+        "items": [
+          "September can be a useful time to take semi-ripe (semi-hardwood) cuttings from suitable species.",
+          "Select healthy, mature shoots from strong parent plants.",
+          "Keep newly prepared cuttings consistently moist and protected from excessive drying.",
+          "True hardwood cuttings are taken later, when the tree is dormant.",
+          "Cuttings that rooted earlier in the season are best left undisturbed until spring.",
+          "Remember that propagation timing varies considerably between species, so check the requirements of the individual plant."
+        ]
+      },
+      {
+        "heading": "Air-Layering",
+        "items": [
+          "Check air layers carefully for adequate root development.",
+          "If an air layer has produced a strong enough root system, early fall may still provide an opportunity to separate and pot it.",
+          "Don't remove a layer simply because it has produced a few roots. It needs enough healthy roots to establish itself before winter.",
+          "As the growing season comes to an end, avoid starting or separating air layers that are unlikely to establish before cold weather arrives.",
+          "Newly separated layers should receive extra protection and careful moisture management."
+        ]
+      },
+      {
+        "heading": "Winter Preparation",
+        "items": [
+          "Begin thinking about winter protection now rather than waiting for the first serious frost.",
+          "Inspect your greenhouse, shelters and insulation materials and make any necessary repairs.",
+          "Identify trees that will require additional protection and decide where each one will spend the winter.",
+          "Check trees for pests and disease before moving them under cover, so problems don't spend the winter with them.",
+          "Watch the forecast as nights become colder, particularly for recently repotted trees, young plants and bonsai in small containers."
+        ]
+      }
+    ],
+    "focus": "Keep watering as needed, gradually reduce feeding, finish important propagation work, pull old pine needles and bring tropical trees indoors as the calendar calls for, remove or adjust wire"
   }
 ]
