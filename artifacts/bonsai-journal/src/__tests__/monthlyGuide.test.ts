@@ -135,7 +135,31 @@ describe("getMonthlyGuide", () => {
     );
   });
 
-  it("returns undefined for a month that has not been written", () => {
-    expect(getMonthlyGuide(12)).toBeUndefined();
+  it("returns the December entry with its requested sections", () => {
+    const december = getMonthlyGuide(12);
+
+    expect(december?.title).toBe("December Bonsai Checklist");
+    expect(december?.sections).toHaveLength(8);
+    expect(december?.sections.map((section) => section.heading)).toEqual([
+      "Winter Protection",
+      "Watering",
+      "Shelter Management",
+      "Winter Monitoring",
+      "Pests and Disease",
+      "Winter Styling (Advanced, Optional)",
+      "Tropical Trees",
+      "Planning Ahead",
+    ]);
+  });
+
+  it("returns an entry for every month from 1 to 12", () => {
+    for (let month = 1; month <= 12; month += 1) {
+      expect(getMonthlyGuide(month)).toBeDefined();
+    }
+  });
+
+  it("returns undefined for month values outside 1 to 12", () => {
+    expect(getMonthlyGuide(0)).toBeUndefined();
+    expect(getMonthlyGuide(13)).toBeUndefined();
   });
 });

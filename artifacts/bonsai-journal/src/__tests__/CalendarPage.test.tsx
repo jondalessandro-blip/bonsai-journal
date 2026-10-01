@@ -3,7 +3,15 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
+import * as monthlyGuide from "@/lib/monthlyGuide";
 import CalendarPage from "@/pages/CalendarPage";
+
+function mockMissingDecemberGuide() {
+  const getMonthlyGuide = monthlyGuide.getMonthlyGuide;
+  vi.spyOn(monthlyGuide, "getMonthlyGuide").mockImplementation((month) =>
+    month === 12 ? undefined : getMonthlyGuide(month),
+  );
+}
 
 function renderCalendar(path = "/calendar") {
   const routing = memoryLocation({ path, record: true });
@@ -123,6 +131,7 @@ describe("Care Calendar tabs", () => {
 
   it("changes months through the URL without adding history entries", async () => {
     const user = userEvent.setup();
+    mockMissingDecemberGuide();
     const routing = renderCalendar("/calendar?tab=guide&month=1&source=test");
 
     await user.click(screen.getByTestId("button-month-12"));
@@ -168,7 +177,7 @@ describe("Care Calendar tabs", () => {
     const routing = renderCalendar();
 
     const links = screen.getAllByRole("link", { name: /^Read the .+ guide$/ });
-    expect(links).toHaveLength(11);
+    expect(links).toHaveLength(12);
     expect(links[0]).toHaveTextContent("Read the January guide");
     expect(links[1]).toHaveTextContent("Read the February guide");
     expect(links[2]).toHaveTextContent("Read the March guide");
@@ -180,7 +189,7 @@ describe("Care Calendar tabs", () => {
     expect(links[8]).toHaveTextContent("Read the September guide");
     expect(links[9]).toHaveTextContent("Read the October guide");
     expect(links[10]).toHaveTextContent("Read the November guide");
-    expect(screen.queryByRole("link", { name: "Read the December guide" })).not.toBeInTheDocument();
+    expect(links[11]).toHaveTextContent("Read the December guide");
     await user.click(links[0]);
 
     expect(screen.getByTestId("text-guide-title")).toHaveTextContent("January Bonsai Checklist");
@@ -255,6 +264,7 @@ describe("Care Calendar tabs", () => {
   });
 
   it("responds to tab and month changes made through navigation", () => {
+    mockMissingDecemberGuide();
     const routing = renderCalendar();
 
     act(() => routing.navigate("/calendar?tab=guide&month=1"));
