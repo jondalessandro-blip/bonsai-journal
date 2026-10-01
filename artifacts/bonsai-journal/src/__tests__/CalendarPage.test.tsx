@@ -61,7 +61,7 @@ describe("Care Calendar tabs", () => {
     expect(screen.getByTestId("text-guide-intro")).toHaveTextContent(
       "January is generally the heart of winter",
     );
-    expect(screen.getAllByTestId(/^section-guide-/)).toHaveLength(4);
+    expect(screen.getAllByTestId(/^section-guide-/)).toHaveLength(5);
     expect(screen.getByTestId("callout-guide-focus")).toHaveTextContent("January focus");
     expect(screen.getByTestId("text-guide-disclaimer")).toHaveTextContent(
       "Written for cold-winter climates, so timing may differ where you live.",

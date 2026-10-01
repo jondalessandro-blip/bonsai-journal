@@ -55,8 +55,18 @@ describe("monthly guide data", () => {
 
 describe("getMonthlyGuide", () => {
   it("returns the January entry", () => {
-    expect(getMonthlyGuide(1)).toEqual(entries.find((entry) => entry.month === 1));
-    expect(getMonthlyGuide(1)?.title).toBe("January Bonsai Checklist");
+    const january = getMonthlyGuide(1);
+
+    expect(january).toEqual(entries.find((entry) => entry.month === 1));
+    expect(january?.title).toBe("January Bonsai Checklist");
+    expect(january?.sections).toHaveLength(5);
+    expect(january?.sections.map((section) => section.heading)).toEqual([
+      "Winter Protection",
+      "Watering",
+      "Winter Pruning",
+      "Planning for Spring",
+      "Winter Observation",
+    ]);
   });
 
   it("returns the February entry", () => {
@@ -92,11 +102,14 @@ describe("getMonthlyGuide", () => {
     expect(june?.sections).toHaveLength(8);
   });
 
-  it("returns the July entry with eight sections", () => {
+  it("returns the July entry with seven sections and no Looking Ahead section", () => {
     const july = getMonthlyGuide(7);
 
     expect(july?.title).toBe("July Bonsai Checklist");
-    expect(july?.sections).toHaveLength(8);
+    expect(july?.sections).toHaveLength(7);
+    expect(july?.sections.some((section) => section.heading === "Looking Ahead")).toBe(
+      false,
+    );
   });
 
   it("returns the August entry with eight sections", () => {
@@ -111,6 +124,9 @@ describe("getMonthlyGuide", () => {
 
     expect(october?.title).toBe("October Bonsai Checklist");
     expect(october?.sections).toHaveLength(7);
+    expect(
+      october?.sections.find((section) => section.heading === "Tropical Trees")?.items,
+    ).toHaveLength(1);
   });
 
   it("returns the November entry with its requested sections and cleanup guidance", () => {
@@ -126,6 +142,15 @@ describe("getMonthlyGuide", () => {
       "Finishing Fall Cleanup",
       "Planning and Observation",
     ]);
+
+    const deciduousTrees = november?.sections.find(
+      (section) => section.heading === "Deciduous Trees",
+    );
+    expect(
+      deciduousTrees?.items.some((item) =>
+        item.includes("Never bring hardy trees into a heated house."),
+      ),
+    ).toBe(true);
 
     const fallCleanup = november?.sections.find(
       (section) => section.heading === "Finishing Fall Cleanup",
