@@ -71,7 +71,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
         </div>
 
         {/* Scrollable pill list */}
-        <div className="px-4 pb-3.5 overflow-y-auto max-h-28 space-y-1.5 scrollbar-thin">
+        <div className="px-4 pb-4 overflow-y-auto max-h-[8.125rem] space-y-1.5 scrollbar-thin">
           {reminders.map(r => (
             <Link
               key={r.id}

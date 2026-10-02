@@ -1,0 +1,13 @@
+Please make one small visual adjustment to the "Upcoming Care Needed" pane on the dashboard. Find it by searching the website code for the text "Upcoming Care Needed". Only change the website, and do not touch the mobile app.
+
+Right now the pane shows three task rows, but the third row sits too close to the bottom border of the pane. It looks cramped, and the bottom edge of the third row is almost touching the pane border, as if the pane is cutting it off. Nothing else about the pane needs to change.
+
+What I want: the pane should show exactly three task rows, each fully visible, with clean even spacing. The gap between the bottom of the third row and the bottom border of the pane should match the gap at the top (between the header and the first row) and the padding on the left and right sides. The spacing between the rows should stay as it is now.
+
+If the pane has a fixed or maximum height, or hides overflow, please fix that so the third row has proper room at the bottom. A good approach is to give the pane bottom padding that matches the other sides, and to size the pane to fit its content instead of forcing a height that clips the third row. If there are more than three tasks, keep the existing behavior for the rest (the "View all" link and whatever it already does).
+
+Please check that the layout looks right on both a wide desktop view and a narrow phone-sized view in the Replit preview. Do not change colors, fonts, the header, the "25 upcoming tasks" text, the "View all" link, or the content of the task rows. Do not change any other page or component.
+
+Please run the typecheck and tests and tell me honestly what the results were. Known unrelated typecheck errors in calendar.tsx and spinner.tsx can be ignored. Tell me exactly which file or files you changed and what you changed in them.
+
+Commit locally only, with a short clear commit message, and tell me the real commit hash from git. Do not push, publish, rebase, or modify anything on the remote GitHub branch. I will push manually.
