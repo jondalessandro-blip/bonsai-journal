@@ -71,21 +71,24 @@ export function UpcomingCarePanel({ reminders }: Props) {
         </div>
 
         {/* Scrollable pill list */}
-        <div className="px-4 pb-4 overflow-y-auto max-h-[8.125rem] space-y-1.5 scrollbar-thin">
-          {reminders.map(r => (
-            <Link
-              key={r.id}
-              href={`/trees/${r.treeId}`}
-              className={`flex items-center justify-between gap-2 text-xs border rounded-md px-3 py-2 hover:opacity-80 transition-opacity ${urgencyClass(r.daysUntilDue)}`}
-            >
-              <span className="font-medium truncate">{r.treeName}</span>
-              <span className="flex items-center gap-2 shrink-0">
-                <span className="opacity-70">{r.type}</span>
-                <span className="font-semibold">{daysLabel(r.daysUntilDue)}</span>
-                <ArrowRight className="w-3 h-3 opacity-40" />
-              </span>
-            </Link>
-          ))}
+        <div className="px-4 pt-2 pb-4">
+          {/* Three 2.125rem rows plus two 0.375rem gaps; padding stays outside the scroll area. */}
+          <div className="overflow-y-auto max-h-[7.125rem] space-y-1.5 scrollbar-thin">
+            {reminders.map(r => (
+              <Link
+                key={r.id}
+                href={`/trees/${r.treeId}`}
+                className={`flex items-center justify-between gap-2 text-xs border rounded-md px-3 py-2 hover:opacity-80 transition-opacity ${urgencyClass(r.daysUntilDue)}`}
+              >
+                <span className="font-medium truncate">{r.treeName}</span>
+                <span className="flex items-center gap-2 shrink-0">
+                  <span className="opacity-70">{r.type}</span>
+                  <span className="font-semibold">{daysLabel(r.daysUntilDue)}</span>
+                  <ArrowRight className="w-3 h-3 opacity-40" />
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 

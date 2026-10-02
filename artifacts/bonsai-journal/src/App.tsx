@@ -9,8 +9,6 @@ import NotFound from "@/pages/not-found";
 import { Route, Switch, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { Layout } from "@/components/Layout";
 import CollectionPage from "@/pages/CollectionPage";
-import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
-import type { UpcomingReminder } from "@workspace/api-client-react";
 import TreeDetailPage from "@/pages/TreeDetailPage";
 import NewTreePage from "@/pages/NewTreePage";
 import StatsPage from "@/pages/StatsPage";
@@ -174,32 +172,9 @@ function HomeRoute() {
   );
 }
 
-function UpcomingPanelVisualCheck() {
-  if (!import.meta.env.DEV) return <NotFound />;
-
-  const reminders: UpcomingReminder[] = Array.from({ length: 25 }, (_, index) => ({
-    id: `visual-check-${index}`,
-    treeId: `tree-${index}`,
-    treeName: ["Japanese Maple", "Sierra Juniper", "Chinese Elm"][index % 3],
-    type: ["Watering", "Fertilizing", "Wiring"][index % 3],
-    dueDate: "2026-10-10",
-    completed: false,
-    daysUntilDue: index + 1,
-  }));
-
-  return (
-    <main className="min-h-screen bg-background p-4 sm:p-8">
-      <div className="mx-auto max-w-5xl">
-        <UpcomingCarePanel reminders={reminders} />
-      </div>
-    </main>
-  );
-}
-
 function Router() {
   return (
     <Switch>
-      <Route path="/_visual-check/upcoming" component={UpcomingPanelVisualCheck} />
       <Route path="/" component={HomeRoute} />
       {/* REQUIRED — /*? optional wildcard matches bare URL and Clerk OAuth sub-paths */}
       <Route path="/sign-in/*?" component={SignInPage} />
