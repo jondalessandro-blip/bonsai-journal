@@ -1,9 +1,9 @@
-import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTreeReminder, useCreateTreeLog, useUpdateTreeLog, useDeleteTreeLog, useDeleteTreeReminder, listTrees } from "@workspace/api-client-react";
+import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTree, useUpdateTreeReminder, useCreateTreeLog, useUpdateTreeLog, useDeleteTreeLog, useDeleteTreeReminder, listTrees, type Tree } from "@workspace/api-client-react";
 import { useParams, useLocation, Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, Check, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, Check, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { TreeForm, type TreeFormHandle } from "@/components/TreeForm";
@@ -71,6 +71,13 @@ export default function TreeDetailPage() {
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
+  const [isNotesEditing, setIsNotesEditing] = useState(false);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [notesSaveError, setNotesSaveError] = useState<string | null>(null);
+  const [showNotesGuard, setShowNotesGuard] = useState(false);
+  const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const currentTreeIdRef = useRef(id);
+  currentTreeIdRef.current = id;
   const [careExpanded, setCareExpanded] = useState(false);
   const [editingLog, setEditingLog] = useState<{ id: string; type: string; date: string; notes?: string | null } | null>(null);
   const [editingReminder, setEditingReminder] = useState<{
@@ -98,15 +105,6 @@ export default function TreeDetailPage() {
     return () => { document.body.style.overflow = ""; };
   }, [notesExpanded, careExpanded]);
 
-  useEffect(() => {
-    if (!notesExpanded && !careExpanded) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { setNotesExpanded(false); setCareExpanded(false); }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [notesExpanded, careExpanded]);
-
   const { data: tree, isLoading: isTreeLoading } = useGetTree(id!, {
     query: { enabled: !!id, queryKey: ["/api/trees", id] }
   });
@@ -131,9 +129,105 @@ export default function TreeDetailPage() {
   const updateLog = useUpdateTreeLog();
   const deleteLog = useDeleteTreeLog();
   const deleteReminder = useDeleteTreeReminder();
+  const updateNotes = useUpdateTree();
+
+  // A closed overlay or a different tree must never inherit an old draft.
+  useEffect(() => {
+    setNotesExpanded(false);
+    setIsNotesEditing(false);
+    setNotesDraft("");
+    setNotesSaveError(null);
+    setShowNotesGuard(false);
+  }, [id]);
+
+  useEffect(() => {
+    if (notesExpanded) return;
+    setIsNotesEditing(false);
+    setNotesDraft("");
+    setNotesSaveError(null);
+    setShowNotesGuard(false);
+  }, [notesExpanded]);
+
+  useEffect(() => {
+    if (notesExpanded && isNotesEditing) notesTextareaRef.current?.focus();
+  }, [notesExpanded, isNotesEditing]);
+
+  useEffect(() => {
+    if (!notesExpanded && !careExpanded) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented || showNotesGuard) return;
+      if (notesExpanded && isNotesEditing) {
+        e.preventDefault();
+        if (updateNotes.isPending) return;
+        setIsNotesEditing(false);
+        setNotesDraft("");
+        setNotesSaveError(null);
+        return;
+      }
+      setNotesExpanded(false);
+      setCareExpanded(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [notesExpanded, careExpanded, isNotesEditing, showNotesGuard, updateNotes.isPending]);
 
   if (isTreeLoading) return <div className="p-8 animate-pulse text-center">Loading...</div>;
   if (!tree) return <div className="p-8 text-center">Tree not found.</div>;
+
+  const startNotesEditing = () => {
+    setNotesDraft(tree.notes ?? "");
+    setNotesSaveError(null);
+    setIsNotesEditing(true);
+  };
+
+  const cancelNotesEditing = () => {
+    if (updateNotes.isPending) return;
+    setIsNotesEditing(false);
+    setNotesDraft("");
+    setNotesSaveError(null);
+  };
+
+  const closeNotes = () => {
+    if (updateNotes.isPending) return;
+    if (isNotesEditing && notesDraft !== (tree.notes ?? "")) {
+      setShowNotesGuard(true);
+    } else {
+      setNotesExpanded(false);
+    }
+  };
+
+  const saveNotes = (closeAfterSave = false) => {
+    if (updateNotes.isPending) return;
+    const treeId = tree.id;
+    const notes = notesDraft;
+    setNotesSaveError(null);
+    setShowNotesGuard(false);
+
+    updateNotes.mutate(
+      { id: treeId, data: { notes } },
+      {
+        onSuccess: () => {
+          // Refresh both notes views immediately, then reconcile with the server.
+          queryClient.setQueryData<Tree>(["/api/trees", treeId], (current) =>
+            current ? { ...current, notes } : current,
+          );
+          queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId] });
+          queryClient.invalidateQueries({ queryKey: ["/api/trees"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId, "timeline"] });
+
+          if (currentTreeIdRef.current !== treeId) return;
+          setIsNotesEditing(false);
+          setNotesDraft("");
+          setNotesSaveError(null);
+          if (closeAfterSave || notes === "") setNotesExpanded(false);
+        },
+        onError: () => {
+          if (currentTreeIdRef.current !== treeId) return;
+          setNotesSaveError("Could not save notes. Your text is still here. Please try again.");
+        },
+      },
+    );
+  };
 
   const handleDelete = () => setConfirmDeleteTree(true);
 
@@ -474,6 +568,15 @@ export default function TreeDetailPage() {
           )}
 
           {/* Notes full-screen overlay */}
+          <UnsavedChangesDialog
+            open={showNotesGuard}
+            onSaveAndLeave={() => saveNotes(true)}
+            onDiscard={() => {
+              setShowNotesGuard(false);
+              setNotesExpanded(false);
+            }}
+            onCancel={() => setShowNotesGuard(false)}
+          />
           {notesExpanded && tree.notes && (
             <div
               className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col animate-in fade-in duration-200"
@@ -481,26 +584,62 @@ export default function TreeDetailPage() {
               aria-modal="true"
               aria-label="Notes (Markdown supported) — full view"
             >
-              <div className="flex items-center justify-between px-5 py-4 border-b bg-card shrink-0">
-                <div className="flex items-center gap-2.5 text-primary">
-                  <ScrollText className="w-5 h-5" />
-                  <div>
-                    <h2 className="font-serif text-lg leading-tight">Notes (Markdown supported)</h2>
-                    <p className="text-xs text-muted-foreground">{tree.name}</p>
+              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b bg-card shrink-0">
+                <div className="flex items-center gap-2.5 text-primary min-w-0">
+                  <ScrollText className="w-5 h-5 shrink-0" />
+                  <div className="min-w-0">
+                    <h2 className="font-serif text-lg leading-tight truncate">Notes (Markdown supported)</h2>
+                    <p className="text-xs text-muted-foreground truncate">{tree.name}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setNotesExpanded(false)}
-                  className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                  aria-label="Close full-screen notes"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto px-6 py-6 max-w-3xl w-full mx-auto">
-                <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-a:text-primary">
-                  <ReactMarkdown>{tree.notes}</ReactMarkdown>
+                <div className="flex items-center gap-2 shrink-0">
+                  {isNotesEditing ? (
+                    <>
+                      <Button variant="ghost" size="sm" onClick={cancelNotesEditing} disabled={updateNotes.isPending}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={() => saveNotes()} disabled={updateNotes.isPending}>
+                        {updateNotes.isPending && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
+                        {updateNotes.isPending ? "Saving..." : "Save"}
+                      </Button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={startNotesEditing}
+                      className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                      aria-label="Edit notes"
+                    >
+                      <Pencil className="w-5 h-5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={closeNotes}
+                    disabled={updateNotes.isPending}
+                    className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    aria-label="Close full-screen notes"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 max-w-3xl w-full mx-auto flex flex-col">
+                {isNotesEditing ? (
+                  <>
+                    {notesSaveError && <p role="alert" className="text-sm text-destructive mb-3">{notesSaveError}</p>}
+                    <textarea
+                      ref={notesTextareaRef}
+                      aria-label="Notes"
+                      value={notesDraft}
+                      onChange={(e) => setNotesDraft(e.target.value)}
+                      readOnly={updateNotes.isPending}
+                      className="flex-1 min-h-0 w-full resize-none rounded-md border border-input bg-background px-3 py-3 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </>
+                ) : (
+                  <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-a:text-primary">
+                    <ReactMarkdown>{tree.notes}</ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
           )}
