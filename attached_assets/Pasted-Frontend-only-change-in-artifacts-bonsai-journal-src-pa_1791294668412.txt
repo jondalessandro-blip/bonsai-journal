@@ -1,0 +1,19 @@
+Frontend-only change in artifacts/bonsai-journal/src/pages/TreeDetailPage.tsx. Do not touch the backend, the OpenAPI spec, any generated files, or the bonsai-mobile app, and do not report on the mobile app.
+
+Goal: when the user scrolls down a tree record, a slim sticky navigation bar appears just under the main site navbar, so Back to Collection, Previous, Next and Edit stay reachable on long records. At the very top of the page nothing should look different from today.
+
+Keep the existing top row (Back to Collection, Previous, Next) and the existing action row (Edit, Plant Another Tree, Add Duplicate Tree, Delete) exactly as they are. Do not move or remove them. Add the new bar in addition.
+
+Behavior: the new bar is hidden while the original Back/Previous/Next row is visible on screen. Once that original row has scrolled out of view, the bar appears. Use an IntersectionObserver watching the original top row (or a small sentinel element placed just above it), not a scroll event listener. When the user scrolls back to the top, the bar hides again. Use a short fade and slide transition, and skip the animation when the user prefers reduced motion.
+
+Layout: the main Navbar is sticky top-0, z-50, and h-16. Make the new bar sticky at top-16 with z-40 so it sits directly below the Navbar, full width of the content container, with the same translucent blurred background and thin bottom border style the Navbar uses, so it looks like part of the same header. Keep it compact, about 40px tall. Check that no ancestor in Layout.tsx or this page has an overflow setting that would break position sticky, and fix it only if needed, reporting what you changed.
+
+Contents of the bar, left to right: a Back to Collection button using the same link target as the existing one (the href that preserves the search string, so filters and selection are restored), then in the middle the tree name in small text, truncated with an ellipsis so it never wraps, then Previous and Next buttons that use the same prevTreeId, nextTreeId, goToTree logic and the same disabled-at-the-ends behavior as the existing ones, and finally an Edit button that opens the existing Edit Tree dialog by calling setIsEditOpen(true) so the existing unsaved-changes guard keeps working. Do not duplicate the dialog.
+
+Responsive: on small screens show icons only (arrow left, chevron left, chevron right, pencil) with accessible aria-labels, and hide the tree name if there is not enough room. On wider screens show icons plus text labels. Use the ghost small button style already used in the original row.
+
+Do not add Plant Another Tree, Add Duplicate Tree or Delete to the sticky bar. Do not render the bar while the full-screen Care Journal or Notes overlays are open, or make sure it sits underneath them.
+
+Add a small test if the existing test setup makes that practical, for example that the sticky bar's Previous and Next are disabled when the original ones are. If it is not practical, skip it and say so. Run the website typecheck and tests and report the results honestly, including any failures, without fixing unrelated pre-existing ones.
+
+Commit locally only with a clear message and report the real commit hash. Do not push, publish, rebase, or modify anything on the remote GitHub branch. Do not attach or create files in attached_assets.

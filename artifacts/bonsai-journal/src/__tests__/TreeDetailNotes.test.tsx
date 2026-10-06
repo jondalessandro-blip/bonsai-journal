@@ -46,8 +46,45 @@ import TreeDetailPage from "@/pages/TreeDetailPage";
 
 const overlayName = "Notes (Markdown supported) — full view";
 const clients: QueryClient[] = [];
+const intersectionObservers: MockIntersectionObserver[] = [];
+
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin: string;
+  readonly thresholds: ReadonlyArray<number>;
+  private target: Element | null = null;
+
+  constructor(
+    private readonly callback: IntersectionObserverCallback,
+    options?: IntersectionObserverInit,
+  ) {
+    this.rootMargin = options?.rootMargin ?? "0px";
+    this.thresholds = Array.isArray(options?.threshold)
+      ? options.threshold
+      : [options?.threshold ?? 0];
+    intersectionObservers.push(this);
+  }
+
+  observe(target: Element) {
+    this.target = target;
+  }
+
+  unobserve() {}
+  disconnect() {}
+  takeRecords(): IntersectionObserverEntry[] { return []; }
+
+  setIntersecting(isIntersecting: boolean) {
+    if (!this.target) throw new Error("No observed element");
+    this.callback(
+      [{ isIntersecting, target: this.target, intersectionRatio: Number(isIntersecting) } as IntersectionObserverEntry],
+      this,
+    );
+  }
+}
 
 beforeEach(() => {
+  intersectionObservers.length = 0;
+  vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
   trees["tree-1"] = {
     id: "tree-1",
     name: "Maple",
@@ -67,6 +104,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   clients.splice(0).forEach((client) => client.clear());
+  vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
@@ -95,6 +133,20 @@ async function editNotes(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("Tree detail expanded Notes editing", () => {
+  it("keeps sticky Previous and Next disabled states in sync with the original controls", async () => {
+    await renderTree();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Next" })).toBeEnabled());
+
+    act(() => intersectionObservers[0].setIntersecting(false));
+
+    const originalPrevious = screen.getByRole("button", { name: "Previous" });
+    const originalNext = screen.getByRole("button", { name: "Next" });
+    const stickyPrevious = screen.getByRole("button", { name: "Previous tree" });
+    const stickyNext = screen.getByRole("button", { name: "Next tree" });
+    expect(stickyPrevious.hasAttribute("disabled")).toBe(originalPrevious.hasAttribute("disabled"));
+    expect(stickyNext.hasAttribute("disabled")).toBe(originalNext.hasAttribute("disabled"));
+  });
+
   it("focuses the current notes and saves only notes, updating both views without closing", async () => {
     const user = userEvent.setup();
     const { client, invalidateQueries } = await renderTree();
