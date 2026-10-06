@@ -382,6 +382,80 @@ export default function TreeDetailPage() {
   };
 
   return (
+    <div>
+      {/* A zero-height sticky host leaves the original page spacing unchanged. */}
+      <div className="sticky top-16 z-40 h-0">
+        {!notesExpanded && !careExpanded && (
+          <nav
+            aria-label="Tree record navigation"
+            aria-hidden={!showStickyNavigation}
+            className={`absolute top-0 -left-4 -right-4 md:-left-6 md:-right-6 lg:-left-8 lg:-right-8 h-10 border-b border-border/40 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:px-6 lg:px-8 transition-[opacity,transform] duration-150 motion-reduce:transition-none ${
+              showStickyNavigation
+                ? "translate-y-0 opacity-100"
+                : "pointer-events-none -translate-y-2 opacity-0"
+            }`}
+            inert={!showStickyNavigation}
+          >
+            <div className="mx-auto flex h-full max-w-5xl items-center gap-1">
+              <Link href={searchString ? `/?${searchString}` : "/"}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="px-2 sm:px-3"
+                  aria-label="Back to Collection"
+                  title="Back to Collection"
+                >
+                  <ArrowLeft className="h-4 w-4 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Back to Collection</span>
+                </Button>
+              </Link>
+
+              <span className="hidden min-w-0 flex-1 truncate px-2 text-center text-xs text-muted-foreground min-[360px]:block">
+                {tree.name}
+              </span>
+
+              <div className="ml-auto flex shrink-0 items-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="px-2 sm:px-3"
+                  aria-label="Previous tree"
+                  title="Previous"
+                  disabled={!prevTreeId}
+                  onClick={() => prevTreeId && goToTree(prevTreeId)}
+                >
+                  <ChevronLeft className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Previous</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="px-2 sm:px-3"
+                  aria-label="Next tree"
+                  title="Next"
+                  disabled={!nextTreeId}
+                  onClick={() => nextTreeId && goToTree(nextTreeId)}
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="h-4 w-4 sm:ml-1" />
+                </Button>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="px-2 sm:px-3"
+                aria-label="Edit tree"
+                title="Edit"
+                onClick={() => setIsEditOpen(true)}
+              >
+                <Pencil className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Edit</span>
+              </Button>
+            </div>
+          </nav>
+        )}
+      </div>
     <div className="space-y-8 pb-20 animate-in fade-in duration-500">
       {/* Top bar */}
       <div ref={topNavigationRef} className="flex justify-between items-center">
@@ -409,75 +483,6 @@ export default function TreeDetailPage() {
           >
             Next
             <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </div>
-      </div>
-
-      <div
-        aria-hidden={!showStickyNavigation}
-        className={`sticky top-16 z-40 -mx-4 md:-mx-6 lg:-mx-8 h-10 border-b border-border/40 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:px-6 lg:px-8 transition-[opacity,transform] duration-150 motion-reduce:transition-none ${
-          showStickyNavigation
-            ? "translate-y-0 opacity-100"
-            : "pointer-events-none -translate-y-2 opacity-0"
-        }`}
-        inert={!showStickyNavigation}
-        style={{ marginTop: "-2rem", marginBottom: "-2.5rem" }}
-      >
-        <div className="mx-auto flex h-full max-w-5xl items-center gap-1">
-          <Link href={searchString ? `/?${searchString}` : "/"}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-2 sm:px-3"
-              aria-label="Back to Collection"
-              title="Back to Collection"
-            >
-              <ArrowLeft className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Back to Collection</span>
-            </Button>
-          </Link>
-
-          <span className="hidden min-w-0 flex-1 truncate px-2 text-center text-xs text-muted-foreground min-[360px]:block">
-            {tree.name}
-          </span>
-
-          <div className="ml-auto flex shrink-0 items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-2 sm:px-3"
-              aria-label="Previous tree"
-              title="Previous"
-              disabled={!prevTreeId}
-              onClick={() => prevTreeId && goToTree(prevTreeId)}
-            >
-              <ChevronLeft className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Previous</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-2 sm:px-3"
-              aria-label="Next tree"
-              title="Next"
-              disabled={!nextTreeId}
-              onClick={() => nextTreeId && goToTree(nextTreeId)}
-            >
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRight className="h-4 w-4 sm:ml-1" />
-            </Button>
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="px-2 sm:px-3"
-            aria-label="Edit tree"
-            title="Edit"
-            onClick={() => setIsEditOpen(true)}
-          >
-            <Pencil className="h-4 w-4 sm:mr-1.5" />
-            <span className="hidden sm:inline">Edit</span>
           </Button>
         </div>
       </div>
@@ -1151,6 +1156,7 @@ export default function TreeDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
     </div>
   );
 }
