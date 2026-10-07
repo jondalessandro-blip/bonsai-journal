@@ -42,6 +42,9 @@ export function Lightbox({
   const [isSubmittingNote, setIsSubmittingNote] = useState(false);
   const [noteError, setNoteError] = useState<string | null>(null);
   const transitionInProgress = useRef(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const wasDragged = useRef(false);
   const isBusy = isSavingNote || isSubmittingNote;
 
   const cancelNoteEdit = () => {
@@ -237,12 +240,40 @@ export function Lightbox({
 
       {/*
        * Zoom/pan wrapper.
-       * - stopPropagation on this container prevents clicks inside the image
-       *   area from bubbling up to the backdrop's onClose handler, preserving
-       *   the original "click outside the image to close" behaviour.
+       * - The image element fills the viewport, including its contain gutters.
+       *   Hit-test the actual photo bounds to preserve backdrop dismissal.
+       * - A pan must not dismiss the viewer when it ends outside the photo.
        * - key={src} resets transform state whenever the photo changes.
        */}
-      <div onClick={(e) => e.stopPropagation()}>
+      <div
+        onPointerDown={(e) => {
+          pointerStart.current = { x: e.clientX, y: e.clientY };
+          wasDragged.current = false;
+        }}
+        onPointerMove={(e) => {
+          if (pointerStart.current && e.buttons !== 0) {
+            if (Math.hypot(e.clientX - pointerStart.current.x, e.clientY - pointerStart.current.y) > 5) {
+              wasDragged.current = true;
+            }
+          }
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (wasDragged.current) return;
+          const image = imageRef.current;
+          if (!image?.naturalWidth || !image.naturalHeight) return;
+          // getBoundingClientRect includes the current zoom and pan transform.
+          const rect = image.getBoundingClientRect();
+          const fit = Math.min(rect.width / image.naturalWidth, rect.height / image.naturalHeight);
+          const width = image.naturalWidth * fit;
+          const height = image.naturalHeight * fit;
+          const left = rect.left + (rect.width - width) / 2;
+          const top = rect.top + (rect.height - height) / 2;
+          if (e.clientX < left || e.clientX > left + width || e.clientY < top || e.clientY > top + height) {
+            void runAfterSaving(onClose);
+          }
+        }}
+      >
         <TransformWrapper
           key={src}
           initialScale={1}
@@ -281,11 +312,16 @@ export function Lightbox({
                 </button>
               </div>
 
-              <TransformComponent wrapperClass="flex items-center justify-center">
+              <TransformComponent
+                wrapperClass="flex items-center justify-center"
+                wrapperStyle={{ width: "100vw", height: "100dvh" }}
+                contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
                 <img
+                  ref={imageRef}
                   src={src}
                   alt={alt ?? "Photo"}
-                  style={{ maxWidth: "100vw", maxHeight: "100dvh", objectFit: "contain", display: "block" }}
+                  style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                   className="select-none"
                   draggable={false}
                 />

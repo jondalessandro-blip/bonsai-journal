@@ -12,7 +12,11 @@ vi.mock("react-zoom-pan-pinch", () => ({
       zoomIn: vi.fn(),
       zoomOut: vi.fn(),
     }),
-  TransformComponent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  TransformComponent: ({ children, wrapperStyle, contentStyle }: {
+    children: React.ReactNode;
+    wrapperStyle: React.CSSProperties;
+    contentStyle: React.CSSProperties;
+  }) => <div data-testid="zoom-window" style={wrapperStyle}><div data-testid="zoom-content" style={contentStyle}>{children}</div></div>,
 }));
 
 import { Lightbox } from "@/components/Lightbox";
@@ -43,6 +47,73 @@ describe("Lightbox photo notes", () => {
       />,
     );
   }
+
+  function setPhotoBounds(left = 0, width = 1200, top = 0, height = 800) {
+    const image = screen.getByRole("img");
+    Object.defineProperties(image, {
+      naturalWidth: { configurable: true, value: 400 },
+      naturalHeight: { configurable: true, value: 800 },
+    });
+    vi.spyOn(image, "getBoundingClientRect").mockReturnValue({
+      left, top, width, height, right: left + width, bottom: top + height,
+      x: left, y: top, toJSON: () => ({}),
+    });
+    return image;
+  }
+
+  it("uses a full-screen zoom window and enlarges the contained photo to fit", () => {
+    renderLightbox();
+    expect(screen.getByTestId("zoom-window").style.width).toBe("100vw");
+    expect(screen.getByTestId("zoom-window").style.height).toBe("100dvh");
+    expect(screen.getByTestId("zoom-content")).toHaveStyle({
+      width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
+    });
+    const image = screen.getByRole("img");
+    expect(image).toHaveStyle({ width: "100%", height: "100%", objectFit: "contain" });
+    expect(image.style.maxWidth).toBe("");
+    expect(image.style.maxHeight).toBe("");
+  });
+
+  it("closes on contain gutters but not on the visible photo or zoom buttons", () => {
+    renderLightbox();
+    const image = setPhotoBounds();
+    fireEvent.click(image, { clientX: 600, clientY: 400 });
+    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(image, { clientX: 100, clientY: 400 });
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("hit-tests the zoomed and panned photo rather than its initial edges", () => {
+    renderLightbox();
+    const image = setPhotoBounds(-600, 2400, -400, 1600);
+    fireEvent.click(image, { clientX: 300, clientY: 400 });
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(image, { clientX: 100, clientY: 400 });
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("does not dismiss after dragging into a gutter", () => {
+    renderLightbox();
+    const image = setPhotoBounds();
+    // jsdom does not provide PointerEvent; MouseEvent supplies its coordinates.
+    fireEvent(image, new MouseEvent("pointerdown", { bubbles: true, clientX: 600, clientY: 400, buttons: 1 }));
+    fireEvent(image, new MouseEvent("pointermove", { bubbles: true, clientX: 100, clientY: 400, buttons: 1 }));
+    fireEvent.click(image, { clientX: 100, clientY: 400 });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("saves an edited note before dismissing through a gutter", async () => {
+    const user = userEvent.setup();
+    renderLightbox();
+    const image = setPhotoBounds();
+    await user.click(screen.getByRole("button", { name: "Add a note" }));
+    await user.type(screen.getByRole("textbox", { name: "Photo note" }), "Before closing");
+    fireEvent.click(image, { clientX: 100, clientY: 400 });
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(onSaveNote).toHaveBeenCalledWith("Before closing");
+  });
 
   it("lets textarea arrow keys edit text and Escape cancel without closing", async () => {
     const user = userEvent.setup();
