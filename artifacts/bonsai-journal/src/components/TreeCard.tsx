@@ -70,7 +70,7 @@ export const TreeCard = memo(function TreeCard({
             style={{
               objectFit: "cover",
               objectPosition: `${tree.coverPosition?.x ?? 50}% ${tree.coverPosition?.y ?? 50}%`,
-              transform: `scale(${tree.coverPosition?.zoom ?? 1})`,
+              transform: `scale(${Math.max(tree.coverPosition?.zoom ?? 1, 1)})`,
               transformOrigin: `${tree.coverPosition?.x ?? 50}% ${tree.coverPosition?.y ?? 50}%`,
             }}
           />

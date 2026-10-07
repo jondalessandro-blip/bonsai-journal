@@ -9,7 +9,7 @@ import {
   type CoverPosition,
 } from "@/lib/coverPosition";
 
-const MIN_ZOOM = 0.5;
+const MIN_ZOOM = 1;
 const MAX_ZOOM = 2.5;
 
 const DEFAULT_POS = DEFAULT_COVER_POSITION;
@@ -21,9 +21,13 @@ function clamp(v: number, lo: number, hi: number) {
 function loadPosition(treeId: string, serverPos: CoverPosition | null | undefined): CoverPosition {
   try {
     const raw = localStorage.getItem(coverPositionStorageKey(treeId));
-    if (raw) return { ...DEFAULT_POS, ...JSON.parse(raw) };
+    if (raw) {
+      const position = { ...DEFAULT_POS, ...JSON.parse(raw) };
+      return { ...position, zoom: Math.max(position.zoom, MIN_ZOOM) };
+    }
   } catch { /* ignore */ }
-  return serverPos ? { ...DEFAULT_POS, ...serverPos } : DEFAULT_POS;
+  const position = serverPos ? { ...DEFAULT_POS, ...serverPos } : DEFAULT_POS;
+  return { ...position, zoom: Math.max(position.zoom, MIN_ZOOM) };
 }
 
 interface Props {
@@ -66,7 +70,7 @@ export function CoverPhotoHero({ treeId, serverPhotoUrl, serverCoverPosition }: 
   const dragAnchor = useRef<{ clientX: number; clientY: number; posX: number; posY: number } | null>(null);
 
   const startEdit = () => {
-    setDraft({ ...pos });
+    setDraft({ ...pos, zoom: Math.max(pos.zoom, MIN_ZOOM) });
     setIsEditing(true);
   };
 
@@ -105,6 +109,13 @@ export function CoverPhotoHero({ treeId, serverPhotoUrl, serverCoverPosition }: 
     setDraft(d => ({ ...d, ...preset }));
   };
 
+  const adjustZoom = (change: number) => {
+    setDraft(d => ({
+      ...d,
+      zoom: clamp(Number((d.zoom + change).toFixed(2)), MIN_ZOOM, MAX_ZOOM),
+    }));
+  };
+
   // A new designated cover must not inherit the previous cover's focal point
   // or zoom.
   useEffect(() => {
@@ -127,7 +138,7 @@ export function CoverPhotoHero({ treeId, serverPhotoUrl, serverCoverPosition }: 
 
   // Pointer drag
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isEditing || draft.zoom <= 1) return;
+    if (!isEditing) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     isDragging.current = true;
     dragAnchor.current = {
@@ -139,7 +150,7 @@ export function CoverPhotoHero({ treeId, serverPhotoUrl, serverCoverPosition }: 
   }, [isEditing, draft.zoom, draft.x, draft.y]);
 
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isEditing || draft.zoom <= 1 || !isDragging.current || !dragAnchor.current) return;
+    if (!isEditing || !isDragging.current || !dragAnchor.current) return;
     const container = containerRef.current;
     if (!container) return;
     // Capture ref values before entering the async state updater
@@ -182,7 +193,7 @@ export function CoverPhotoHero({ treeId, serverPhotoUrl, serverCoverPosition }: 
         ref={containerRef}
         className={[
           "absolute inset-0 select-none touch-none",
-          isEditing && current.zoom > 1 ? "cursor-grab active:cursor-grabbing" : "",
+          isEditing ? "cursor-grab active:cursor-grabbing" : "",
         ].join(" ")}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -195,8 +206,8 @@ export function CoverPhotoHero({ treeId, serverPhotoUrl, serverCoverPosition }: 
           draggable={false}
           className="w-full h-full pointer-events-none"
           style={{
-            objectFit: current.zoom <= 1 ? "contain" : "cover",
-            objectPosition: current.zoom <= 1 ? "50% 50%" : `${current.x}% ${current.y}%`,
+            objectFit: "cover",
+            objectPosition: `${current.x}% ${current.y}%`,
             transform: `scale(${current.zoom})`,
             transformOrigin: `${current.x}% ${current.y}%`,
             transition: isEditing ? "none" : "transform 0.4s ease, object-position 0.4s ease",
@@ -230,21 +241,40 @@ export function CoverPhotoHero({ treeId, serverPhotoUrl, serverCoverPosition }: 
           <>
             {/* Zoom row */}
             <div className="flex items-center gap-2 bg-black/65 backdrop-blur-sm rounded-xl px-3 py-2">
-              <ZoomOut className="w-4 h-4 text-white/80 shrink-0" />
+              <button
+                type="button"
+                aria-label="Zoom out"
+                data-testid="button-zoom-out"
+                disabled={draft.zoom <= MIN_ZOOM}
+                onClick={() => adjustZoom(-0.25)}
+                className="shrink-0 text-white/80 disabled:opacity-40"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
               <Slider
                 min={MIN_ZOOM}
                 max={MAX_ZOOM}
                 step={0.05}
-                // Keep the fitted state visually at the left end. Zoom values
-                // below 1 remain available, but all of them use whole-image
-                // contain mode.
-                value={[draft.zoom <= 1 ? MIN_ZOOM : draft.zoom]}
+                value={[draft.zoom]}
                 onValueChange={([v]) => setDraft(d => ({ ...d, zoom: v }))}
+                data-testid="slider-cover-zoom"
                 className="flex-1"
               />
-              <ZoomIn className="w-4 h-4 text-white/80 shrink-0" />
-              <span className="text-white/80 text-xs font-mono w-9 text-right tabular-nums">
-                {draft.zoom <= 1 ? "Fit" : `${Math.round(draft.zoom * 100)}%`}
+              <button
+                type="button"
+                aria-label="Zoom in"
+                data-testid="button-zoom-in"
+                disabled={draft.zoom >= MAX_ZOOM}
+                onClick={() => adjustZoom(0.25)}
+                className="shrink-0 text-white/80 disabled:opacity-40"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+              <span
+                data-testid="text-cover-zoom"
+                className="text-white/80 text-xs font-mono w-9 text-right tabular-nums"
+              >
+                {Math.round(draft.zoom * 100)}%
               </span>
             </div>
 
@@ -267,9 +297,10 @@ export function CoverPhotoHero({ treeId, serverPhotoUrl, serverCoverPosition }: 
               <button
                 onClick={() => applyPreset({ zoom: 1, x: 50, y: 50 })}
                 className="text-xs bg-black/65 backdrop-blur-sm text-white rounded-lg px-2.5 py-1.5 hover:bg-black/80 transition-colors font-medium"
-                title="Fit Whole Tree"
+                data-testid="button-reset-cover-position"
+                title="Reset cover position"
               >
-                🌳 Fit Whole
+                Reset
               </button>
 
               <div className="ml-auto flex items-center gap-1.5">

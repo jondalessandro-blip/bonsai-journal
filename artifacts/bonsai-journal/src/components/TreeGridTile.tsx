@@ -61,7 +61,7 @@ export const TreeGridTile = memo(function TreeGridTile({
             style={{
               objectFit: "cover",
               objectPosition: `${tree.coverPosition?.x ?? 50}% ${tree.coverPosition?.y ?? 50}%`,
-              transform: `scale(${tree.coverPosition?.zoom ?? 1})`,
+              transform: `scale(${Math.max(tree.coverPosition?.zoom ?? 1, 1)})`,
               transformOrigin: `${tree.coverPosition?.x ?? 50}% ${tree.coverPosition?.y ?? 50}%`,
             }}
           />
