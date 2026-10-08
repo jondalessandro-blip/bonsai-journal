@@ -36,6 +36,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || isExcludedRequest(request)) {
     return;
   }
+  if (request.cache === 'no-store') return;
 
   const isAppShellRequest =
     request.destination === 'document' ||
