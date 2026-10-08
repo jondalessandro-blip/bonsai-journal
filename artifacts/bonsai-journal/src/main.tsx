@@ -1,10 +1,16 @@
 import { createRoot } from 'react-dom/client';
 
 import App from './App';
+import { AppUpdateBanner } from './components/AppUpdateBanner';
 
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(
+  <>
+    <App />
+    {import.meta.env.PROD && <AppUpdateBanner />}
+  </>,
+);
 
 window.addEventListener('load', () => {
   if (!('serviceWorker' in navigator)) {
