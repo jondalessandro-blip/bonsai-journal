@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bonsai-journal-v2';
+const CACHE_NAME = 'bonsai-journal-v3';
 
 function isExcludedRequest(request) {
   const url = new URL(request.url);
@@ -47,7 +47,7 @@ self.addEventListener('fetch', (event) => {
     caches.open(CACHE_NAME).then(async (cache) => {
       if (isAppShellRequest) {
         try {
-          const response = await fetch(request);
+          const response = await fetch(request, { cache: 'no-cache' });
           if (response.ok && response.type === 'basic') {
             await cache.put(request, response.clone());
           }
