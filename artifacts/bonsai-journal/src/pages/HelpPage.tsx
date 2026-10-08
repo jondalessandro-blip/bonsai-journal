@@ -33,7 +33,7 @@ const helpSections = [
   },
   {
     title: "Adding a photo",
-    body: "Add a photo any time from a tree's detail page, it gets added to that tree's photo timeline. Tap any photo to set it as the cover photo shown on the Collection page.",
+    body: "Add a photo any time from a tree's detail page, it gets added to that tree's photo timeline. Photos are arranged by the date taken, oldest first. A new photo gets today's date, but you can change it, which is handy when you're adding older photos: tap the date under a photo, pick the right day, and save, and the photo moves to its proper place in the timeline. To make a photo the cover shown on the Collection page, tap the star on it. Tap the photo itself to open it full screen, where you can zoom in and out and add a note about what was going on, like a repotting or a round of pruning. Photos that have a note show a small note icon.",
   },
   {
     title: "Logging care",
