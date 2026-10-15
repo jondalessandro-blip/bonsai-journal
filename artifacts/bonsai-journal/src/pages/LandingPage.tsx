@@ -43,6 +43,13 @@ export default function LandingPage() {
               Watch the intro
             </Button>
           </WouterLink>
+          <WouterLink
+            href="/showcase"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            data-testid="link-showcase"
+          >
+            See the trees in the journal
+          </WouterLink>
         </div>
       </div>
     </div>

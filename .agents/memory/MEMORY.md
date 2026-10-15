@@ -3,3 +3,4 @@
 - [Exact GitHub commits via connector](github-exact-commit-publishing.md) — preserve trailing message newlines when recreating local Git commits through GitHub’s API.
 - [Drizzle development schema pushes](drizzle-dev-schema-push.md) — a push can fail on the existing bigserial definition; verify and apply narrowly scoped dev-only SQL instead.
 - [PNPM transitive updates](pnpm-transitive-updates.md) — filtered updates can leave the target unchanged while refreshing unrelated optional peers; inspect the full lockfile diff.
+- [Bonsai showcase audience](bonsai-showcase-audience.md) — represent early development and everyday trees so beginners do not feel a bonsai must be finished to belong.
