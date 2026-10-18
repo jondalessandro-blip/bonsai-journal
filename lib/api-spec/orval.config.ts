@@ -13,6 +13,29 @@ const titleTransformer: InputTransformerFn = (config) => {
   return config;
 };
 
+const zod3CompatibleTransformer: InputTransformerFn = (config) => {
+  titleTransformer(config);
+
+  const replaceUuidFormats = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      value.forEach(replaceUuidFormats);
+      return;
+    }
+    if (value === null || typeof value !== "object") return;
+
+    const schema = value as Record<string, unknown>;
+    if (schema.format === "uuid") {
+      delete schema.format;
+      schema.pattern =
+        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
+    }
+    Object.values(schema).forEach(replaceUuidFormats);
+  };
+
+  replaceUuidFormats(config);
+  return config;
+};
+
 export default defineConfig({
   "api-client-react": {
     input: {
@@ -44,7 +67,7 @@ export default defineConfig({
     input: {
       target: "./openapi.yaml",
       override: {
-        transformer: titleTransformer,
+        transformer: zod3CompatibleTransformer,
       },
     },
     output: {

@@ -17,6 +17,7 @@ import {
   CreateTreeReminderParams,
   CreateTreeReminderBody,
   CreateBulkTreeRemindersBody,
+  CompleteRemindersBulkBody,
   UpdateTreeReminderParams,
   UpdateTreeReminderBody,
   DeleteTreeReminderParams,
@@ -30,6 +31,10 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import type { Request } from "express";
+import {
+  computeNextDueDate,
+  type RecurrenceIntervalUnit,
+} from "../lib/care-recurrence";
 
 const router: IRouter = Router();
 
@@ -882,6 +887,154 @@ router.get("/collection/stats", requireAuth, async (req, res): Promise<void> => 
 });
 
 // ---- Upcoming and overdue reminders (scoped to current user) ----
+
+router.post("/reminders/complete-bulk", requireAuth, async (req, res): Promise<void> => {
+  const parsed = CompleteRemindersBulkBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { reminderIds, dateMode, today } = parsed.data;
+  const uniqueReminderIds = [...new Set(reminderIds)];
+  if (
+    !isValidDateOnly(today) ||
+    (dateMode === "single" && !isValidDateOnly(parsed.data.date))
+  ) {
+    res.status(400).json({ error: "Dates must be valid calendar dates in YYYY-MM-DD form" });
+    return;
+  }
+
+  const userId = (req as AuthedRequest).userId;
+  let failure: { status: 400 | 404; error: string } | undefined;
+  let completion:
+    | {
+        completedCount: number;
+        logs: ReturnType<typeof formatLog>[];
+        rescheduled: Array<{ reminderId: string; newDueDate: string }>;
+        deletedReminderIds: string[];
+      }
+    | undefined;
+
+  await db.transaction(async (tx) => {
+    const rows = await tx
+      .select({ reminder: careRemindersTable })
+      .from(careRemindersTable)
+      .innerJoin(treesTable, eq(careRemindersTable.treeId, treesTable.id))
+      .where(
+        and(
+          inArray(careRemindersTable.id, uniqueReminderIds),
+          eq(treesTable.userId, userId),
+          eq(careRemindersTable.completed, false),
+        ),
+      )
+      .for("update", { of: careRemindersTable });
+
+    if (rows.length !== uniqueReminderIds.length) {
+      failure = {
+        status: 404,
+        error: "One or more reminders were not found, are not owned by you, or are already completed",
+      };
+      return;
+    }
+
+    const remindersById = new Map(
+      rows.map(({ reminder }) => [reminder.id, reminder]),
+    );
+    const reminders = uniqueReminderIds.map((id) => remindersById.get(id)!);
+    const prepared = reminders.map((reminder) => ({
+      reminder,
+      logDate: dateMode === "single" ? parsed.data.date : reminder.dueDate,
+    }));
+
+    if (
+      prepared.some(
+        ({ logDate }) => !isValidDateOnly(logDate) || logDate > today,
+      )
+    ) {
+      failure = {
+        status: 400,
+        error: "A reminder cannot be completed with a log date later than today",
+      };
+      return;
+    }
+
+    const rescheduled: Array<{ reminderId: string; newDueDate: string }> = [];
+    const deletedReminderIds: string[] = [];
+    try {
+      for (const { reminder } of prepared) {
+        if (
+          reminder.recurring &&
+          reminder.intervalValue !== null &&
+          reminder.intervalUnit !== null
+        ) {
+          const newDueDate = computeNextDueDate(
+            reminder.dueDate,
+            reminder.intervalValue,
+            reminder.intervalUnit as RecurrenceIntervalUnit,
+            reminder.excludedMonths ?? [],
+            today,
+          );
+          rescheduled.push({ reminderId: reminder.id, newDueDate });
+        } else {
+          deletedReminderIds.push(reminder.id);
+        }
+      }
+    } catch (error) {
+      failure = {
+        status: 400,
+        error:
+          error instanceof Error &&
+          error.message === "At least one month must remain available"
+            ? "Cannot reschedule a reminder because all 12 months are excluded"
+            : "Could not calculate the next due date for a recurring reminder",
+      };
+      return;
+    }
+
+    const logs = await tx
+      .insert(careLogsTable)
+      .values(
+        prepared.map(({ reminder, logDate }) => ({
+          treeId: reminder.treeId,
+          type: reminder.type,
+          date: logDate,
+          notes: reminder.notes,
+        })),
+      )
+      .returning();
+
+    for (const { reminderId, newDueDate } of rescheduled) {
+      await tx
+        .update(careRemindersTable)
+        .set({ dueDate: newDueDate, completed: false })
+        .where(eq(careRemindersTable.id, reminderId));
+    }
+
+    if (deletedReminderIds.length > 0) {
+      await tx
+        .delete(careRemindersTable)
+        .where(inArray(careRemindersTable.id, deletedReminderIds));
+    }
+
+    completion = {
+      completedCount: uniqueReminderIds.length,
+      logs: logs.map(formatLog),
+      rescheduled,
+      deletedReminderIds,
+    };
+  });
+
+  if (failure) {
+    res.status(failure.status).json({ error: failure.error });
+    return;
+  }
+  if (!completion) {
+    res.status(500).json({ error: "Could not complete reminders" });
+    return;
+  }
+  res.json(completion);
+});
 
 router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthedRequest).userId;

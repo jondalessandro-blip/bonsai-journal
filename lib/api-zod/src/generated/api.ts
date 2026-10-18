@@ -565,6 +565,56 @@ export const ListUpcomingRemindersResponse = zod.array(ListUpcomingRemindersResp
 
 
 /**
+ * @summary Complete multiple care reminders atomically
+ */
+export const completeRemindersBulkBodyOneReminderIdsItemRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const completeRemindersBulkBodyOneReminderIdsMax = 200;
+
+export const completeRemindersBulkBodyOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const completeRemindersBulkBodyOneTodayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const completeRemindersBulkBodyTwoReminderIdsItemRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const completeRemindersBulkBodyTwoReminderIdsMax = 200;
+
+export const completeRemindersBulkBodyTwoDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const completeRemindersBulkBodyTwoTodayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
+export const CompleteRemindersBulkBody = zod.union([zod.object({
+  "reminderIds": zod.array(zod.string().regex(completeRemindersBulkBodyOneReminderIdsItemRegExp)).min(1).max(completeRemindersBulkBodyOneReminderIdsMax),
+  "dateMode": zod.enum(['single']),
+  "date": zod.string().regex(completeRemindersBulkBodyOneDateRegExp),
+  "today": zod.string().regex(completeRemindersBulkBodyOneTodayRegExp)
+}),zod.object({
+  "reminderIds": zod.array(zod.string().regex(completeRemindersBulkBodyTwoReminderIdsItemRegExp)).min(1).max(completeRemindersBulkBodyTwoReminderIdsMax),
+  "dateMode": zod.enum(['scheduled']),
+  "date": zod.string().regex(completeRemindersBulkBodyTwoDateRegExp).optional(),
+  "today": zod.string().regex(completeRemindersBulkBodyTwoTodayRegExp)
+})])
+
+export const completeRemindersBulkResponseRescheduledItemReminderIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const completeRemindersBulkResponseRescheduledItemNewDueDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const completeRemindersBulkResponseDeletedReminderIdsItemRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const CompleteRemindersBulkResponse = zod.object({
+  "completedCount": zod.number(),
+  "logs": zod.array(zod.object({
+  "id": zod.string(),
+  "treeId": zod.string(),
+  "type": zod.string(),
+  "date": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "rescheduled": zod.array(zod.object({
+  "reminderId": zod.string().regex(completeRemindersBulkResponseRescheduledItemReminderIdRegExp),
+  "newDueDate": zod.string().regex(completeRemindersBulkResponseRescheduledItemNewDueDateRegExp)
+})),
+  "deletedReminderIds": zod.array(zod.string().regex(completeRemindersBulkResponseDeletedReminderIdsItemRegExp))
+})
+
+
+/**
  * @summary Get progression photos for a tree
  */
 export const ListTreePhotosParams = zod.object({

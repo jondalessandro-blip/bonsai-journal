@@ -184,6 +184,43 @@ export interface BulkCareReminderInput {
   notes?: string;
 }
 
+export type CompleteCareRemindersInput = {
+  /**
+     * @minItems 1
+     * @maxItems 200
+     */
+  reminderIds: string[];
+  dateMode: 'single';
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  date: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  today: string;
+} | {
+  /**
+     * @minItems 1
+     * @maxItems 200
+     */
+  reminderIds: string[];
+  dateMode: 'scheduled';
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  date?: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  today: string;
+};
+
+export type CompleteCareRemindersResponseRescheduledItem = {
+  reminderId: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  newDueDate: string;
+};
+
+export interface CompleteCareRemindersResponse {
+  completedCount: number;
+  logs: CareLog[];
+  rescheduled: CompleteCareRemindersResponseRescheduledItem[];
+  deletedReminderIds: string[];
+}
+
 export interface CareReminderUpdate {
   type?: string;
   dueDate?: string;

@@ -28,6 +28,8 @@ import type {
   CareReminderInput,
   CareReminderUpdate,
   CollectionStats,
+  CompleteCareRemindersInput,
+  CompleteCareRemindersResponse,
   FinalizeUploadRequest,
   FinalizeUploadResult,
   HealthStatus,
@@ -1639,6 +1641,77 @@ export function useListUpcomingReminders<TData = Awaited<ReturnType<typeof listU
 
 
 
+
+export const getCompleteRemindersBulkUrl = () => {
+
+
+
+
+  return `/api/reminders/complete-bulk`
+}
+
+/**
+ * @summary Complete multiple care reminders atomically
+ */
+export const completeRemindersBulk = async (completeCareRemindersInput: CompleteCareRemindersInput, options?: RequestInit): Promise<CompleteCareRemindersResponse> => {
+
+  return customFetch<CompleteCareRemindersResponse>(getCompleteRemindersBulkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(completeCareRemindersInput)
+  }
+);}
+
+
+
+
+
+export const getCompleteRemindersBulkMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeRemindersBulk>>, TError,{data: BodyType<CompleteCareRemindersInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeRemindersBulk>>, TError,{data: BodyType<CompleteCareRemindersInput>}, TContext> => {
+
+const mutationKey = ['completeRemindersBulk'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeRemindersBulk>>, {data: BodyType<CompleteCareRemindersInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  completeRemindersBulk(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteRemindersBulkMutationResult = NonNullable<Awaited<ReturnType<typeof completeRemindersBulk>>>
+    export type CompleteRemindersBulkMutationBody = BodyType<CompleteCareRemindersInput>
+    export type CompleteRemindersBulkMutationError = ErrorType<void>
+
+    /**
+ * @summary Complete multiple care reminders atomically
+ */
+export const useCompleteRemindersBulk = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeRemindersBulk>>, TError,{data: BodyType<CompleteCareRemindersInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof completeRemindersBulk>>,
+        TError,
+        {data: BodyType<CompleteCareRemindersInput>},
+        TContext
+      > => {
+      return useMutation(getCompleteRemindersBulkMutationOptions(options));
+    }
 
 export const getListTreePhotosUrl = (id: string,) => {
 
