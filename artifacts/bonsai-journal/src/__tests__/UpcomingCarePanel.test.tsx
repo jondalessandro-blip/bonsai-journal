@@ -149,6 +149,137 @@ describe("Upcoming Care full-screen bulk completion", () => {
     selectedCount(4);
   });
 
+  it.each([false, true])("explains one automatically unticked task with other selection: %s", async (keepOtherSelected) => {
+    const { user } = await setup();
+    await user.click(checkbox("d"));
+    if (keepOtherSelected) await user.click(checkbox("a"));
+    await user.click(screen.getByLabelText("On each task's scheduled date"));
+
+    const notice = screen.getByTestId("status-care-auto-unticked");
+    expect(notice).toHaveAttribute("role", "status");
+    expect(notice).toHaveTextContent(
+      "1 task that is not yet due was unticked because it cannot be marked done on its scheduled date. Choosing Done on again will bring it back.",
+    );
+    selectedCount(keepOtherSelected ? 1 : 0);
+    expect(checkbox("d")).not.toBeChecked();
+    if (keepOtherSelected) expect(checkbox("a")).toBeChecked();
+    if (keepOtherSelected) expect(screen.getByTestId("button-complete-care")).toBeEnabled();
+    else expect(screen.getByTestId("button-complete-care")).toBeDisabled();
+  });
+
+  it.each([false, true])("explains multiple automatically unticked tasks with other selection: %s", async (keepOtherSelected) => {
+    const { user, rerenderItems } = await setup();
+    const extraFuture = { ...reminders[3], id: "e", treeName: "Juniper" };
+    rerenderItems([...reminders, extraFuture]);
+    await user.click(checkbox("d"));
+    await user.click(checkbox("e"));
+    if (keepOtherSelected) await user.click(checkbox("b"));
+    await user.click(screen.getByLabelText("On each task's scheduled date"));
+
+    expect(screen.getByTestId("status-care-auto-unticked")).toHaveTextContent(
+      "2 tasks that are not yet due were unticked because they cannot be marked done on their scheduled dates. Choosing Done on again will bring them back.",
+    );
+    selectedCount(keepOtherSelected ? 1 : 0);
+    expect(checkbox("d")).not.toBeChecked();
+    expect(checkbox("e")).not.toBeChecked();
+    if (!keepOtherSelected) expect(screen.getByTestId("button-complete-care")).toBeDisabled();
+  });
+
+  it("restores exactly the automatically unticked tasks and removes the notice on Done on", async () => {
+    const { user, rerenderItems } = await setup();
+    rerenderItems([...reminders, { ...reminders[3], id: "e", treeName: "Juniper" }]);
+    await user.click(checkbox("b"));
+    await user.click(checkbox("d"));
+    await user.click(screen.getByLabelText("On each task's scheduled date"));
+    await user.click(screen.getByLabelText("Done on", { exact: true }));
+    selectedCount(2);
+    for (const id of ["b", "d"]) expect(checkbox(id)).toBeChecked();
+    for (const id of ["a", "c", "e"]) expect(checkbox(id)).not.toBeChecked();
+    expect(screen.queryByTestId("status-care-auto-unticked")).not.toBeInTheDocument();
+
+    // A later switch must remember only the new selection, not the previous one.
+    await user.click(checkbox("d"));
+    await user.click(screen.getByLabelText("On each task's scheduled date"));
+    expect(screen.queryByTestId("status-care-auto-unticked")).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText("Done on", { exact: true }));
+    expect(checkbox("d")).not.toBeChecked();
+    selectedCount(1);
+  });
+
+  it("preserves manual additions and removals made in scheduled-date mode", async () => {
+    const { user } = await setup();
+    await user.click(checkbox("a"));
+    await user.click(checkbox("d"));
+    await user.click(screen.getByLabelText("On each task's scheduled date"));
+    await user.click(checkbox("a"));
+    await user.click(checkbox("b"));
+    await user.click(screen.getByLabelText("Done on", { exact: true }));
+
+    expect(checkbox("a")).not.toBeChecked();
+    expect(checkbox("b")).toBeChecked();
+    expect(checkbox("c")).not.toBeChecked();
+    expect(checkbox("d")).toBeChecked();
+    selectedCount(2);
+    expect(screen.queryByTestId("status-care-auto-unticked")).not.toBeInTheDocument();
+  });
+
+  it("counts only remembered tasks still in the list and does not restore removed tasks", async () => {
+    const { user, rerenderItems } = await setup();
+    const extraFuture = { ...reminders[3], id: "e", treeName: "Juniper" };
+    rerenderItems([...reminders, extraFuture]);
+    await user.click(checkbox("d"));
+    await user.click(checkbox("e"));
+    await user.click(screen.getByLabelText("On each task's scheduled date"));
+    rerenderItems(reminders);
+    expect(screen.getByTestId("status-care-auto-unticked")).toHaveTextContent("1 task that is not yet due was unticked");
+    rerenderItems(reminders.slice(0, 3));
+    expect(screen.queryByTestId("status-care-auto-unticked")).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText("Done on", { exact: true }));
+    selectedCount(0);
+    rerenderItems([...reminders, extraFuture]);
+    expect(checkbox("d")).not.toBeChecked();
+    expect(checkbox("e")).not.toBeChecked();
+  });
+
+  it.each(["Clear", "Done selecting", "Escape", "Close full-screen view", "completion"])(
+    "%s forgets automatically unticked tasks",
+    async (reset) => {
+      const { user } = await setup();
+      await user.click(checkbox("d"));
+      if (reset === "completion") await user.click(checkbox("a"));
+      await user.click(screen.getByLabelText("On each task's scheduled date"));
+      expect(screen.getByTestId("status-care-auto-unticked")).toBeInTheDocument();
+
+      if (reset === "Escape") await user.keyboard("{Escape}");
+      else if (reset === "completion") {
+        await user.click(screen.getByRole("button", { name: "Mark 1 done" }));
+        expect(await screen.findByText("Marked 1 task done.")).toBeInTheDocument();
+      } else await user.click(screen.getByRole("button", { name: reset }));
+
+      expect(screen.queryByTestId("status-care-auto-unticked")).not.toBeInTheDocument();
+      if (reset === "Close full-screen view") {
+        await user.click(screen.getByRole("button", { name: "View all upcoming and overdue care tasks" }));
+      }
+      if (reset !== "Clear") await user.click(screen.getByRole("button", { name: "Select" }));
+      await user.click(screen.getByLabelText("Done on", { exact: true }));
+      selectedCount(0);
+      expect(checkbox("d")).not.toBeChecked();
+      expect(screen.getByTestId("button-complete-care")).toBeDisabled();
+      await user.click(screen.getByLabelText("On each task's scheduled date"));
+      expect(screen.queryByTestId("status-care-auto-unticked")).not.toBeInTheDocument();
+      await user.click(screen.getByLabelText("Done on", { exact: true }));
+      selectedCount(0);
+    },
+  );
+
+  it.each([false, true])("shows no notice when no task was automatically unticked, with due selection: %s", async (selectDue) => {
+    const { user } = await setup();
+    if (selectDue) await user.click(checkbox("a"));
+    await user.click(screen.getByLabelText("On each task's scheduled date"));
+    expect(screen.queryByTestId("status-care-auto-unticked")).not.toBeInTheDocument();
+    selectedCount(selectDue ? 1 : 0);
+  });
+
   it("requires a date no later than local today and submits one task without confirmation", async () => {
     const { user, invalidate } = await setup();
     const dateInput = screen.getByLabelText("Done on date");

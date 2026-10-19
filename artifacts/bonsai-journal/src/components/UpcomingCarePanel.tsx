@@ -34,6 +34,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [autoUntickedIds, setAutoUntickedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [dateMode, setDateMode] = useState<"single" | "scheduled">("single");
   const today = format(new Date(), "yyyy-MM-dd");
@@ -46,6 +47,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
   const complete = useCompleteRemindersBulk();
   const hasReminders = reminders.length > 0;
   const selected = reminders.filter(r => selectedIds.has(r.id));
+  const autoUntickedCount = reminders.filter(r => autoUntickedIds.has(r.id)).length;
   const shown = reminders.filter(r =>
     [r.treeName, r.type, r.notes ?? ""].some(value => value.toLowerCase().includes(search.toLowerCase())),
   );
@@ -60,6 +62,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
   function leaveSelectMode() {
     setSelectMode(false);
     setSelectedIds(new Set());
+    setAutoUntickedIds(new Set());
     setSearch("");
     setError("");
     setConfirmOpen(false);
@@ -85,8 +88,16 @@ export function UpcomingCarePanel({ reminders }: Props) {
   function changeDateMode(mode: "single" | "scheduled") {
     setDateMode(mode);
     if (mode === "scheduled") {
+      setAutoUntickedIds(new Set(selected
+        .filter(r => r.daysUntilDue > 0).map(r => r.id)));
       setSelectedIds(previous => new Set(reminders
         .filter(r => previous.has(r.id) && r.daysUntilDue <= 0).map(r => r.id)));
+    } else {
+      setSelectedIds(previous => new Set([
+        ...previous,
+        ...reminders.filter(r => autoUntickedIds.has(r.id)).map(r => r.id),
+      ]));
+      setAutoUntickedIds(new Set());
     }
   }
 
@@ -271,7 +282,10 @@ export function UpcomingCarePanel({ reminders }: Props) {
                   Select all shown
                 </Button>
                 <Button variant="ghost" size="sm" disabled={complete.isPending}
-                  data-testid="button-clear-care" onClick={() => setSelectedIds(new Set())}>Clear</Button>
+                  data-testid="button-clear-care" onClick={() => {
+                    setSelectedIds(new Set());
+                    setAutoUntickedIds(new Set());
+                  }}>Clear</Button>
               </div>
             </div>
           )}
@@ -352,6 +366,15 @@ export function UpcomingCarePanel({ reminders }: Props) {
                   On each task's scheduled date
                 </label>
               </fieldset>
+              {dateMode === "scheduled" && autoUntickedCount > 0 && (
+                <p role="status" data-testid="status-care-auto-unticked"
+                  className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-foreground">
+                  {autoUntickedCount === 1
+                    ? "1 task that is not yet due was unticked because it cannot be marked done on its scheduled date."
+                    : `${autoUntickedCount} tasks that are not yet due were unticked because they cannot be marked done on their scheduled dates.`}
+                  {" "}Choosing Done on again will bring {autoUntickedCount === 1 ? "it" : "them"} back.
+                </p>
+              )}
               <Button className="w-full sm:w-auto" disabled={!canSubmit || complete.isPending}
                 data-testid="button-complete-care"
                 onClick={() => selected.length === 1 ? submit() : setConfirmOpen(true)}>
