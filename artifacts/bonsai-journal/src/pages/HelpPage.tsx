@@ -17,7 +17,7 @@ const helpSections = [
   },
   {
     title: "Selecting multiple trees at once",
-    body: "You can select more than one tree on the Collection page and apply care or a plan to all of them together, handy when a group of trees got the same treatment, like a round of feeding or moving a batch indoors for winter. Switch into selection mode, tap each tree you want to include, then choose Log Care or Plan from the selection toolbar. Fill it in once, and it applies to every tree you selected.",
+    body: "You can select more than one tree on the Collection page and apply care or a plan to all of them together, handy when a group of trees got the same treatment, like a round of feeding or moving a batch indoors for winter. Switch into selection mode, tap each tree you want to include, then choose Log Care or Plan from the selection toolbar. Fill it in once, and it applies to every tree you selected. Plans made this way are one time tasks. When they come due, you can finish many of them together from the Upcoming Care box, as described in Completing many scheduled tasks at once.",
   },
   {
     title: "Adding a tree",
@@ -37,15 +37,19 @@ const helpSections = [
   },
   {
     title: "Logging care",
-    body: "Tap Log Care, pick what you did such as watering, fertilizing, or pruning, add a date and any notes, and save. It shows up in that tree's journal.",
+    body: "Tap Log Care, pick what you did such as watering, fertilizing, or pruning, add a date and any notes, and save. It shows up in that tree's journal. If the same care was done to several trees, you don't have to log it one at a time. Select them on the Collection page and log it once for all of them, as described in Selecting multiple trees at once.",
   },
   {
     title: "Setting reminders",
-    body: "Reminders let you flag something to do in the future, like checking for pests in two weeks. Set a one-time reminder for something that only needs doing once, or make it recurring, such as watering every day or fertilizing every two weeks, and choose months to skip when the tree goes dormant for part of the year. They'll show up in the journal so you don't forget.",
+    body: "Reminders let you flag something to do in the future, like checking for pests in two weeks. Set a one-time reminder for something that only needs doing once, or make it recurring, such as watering every day or fertilizing every two weeks, and choose months to skip when the tree goes dormant for part of the year. They'll show up in the journal so you don't forget. You can also plan a one time task for several trees at once by selecting them on the Collection page. Recurring plans are set up one tree at a time, so open the tree and set it there.",
   },
   {
     title: "Completing a scheduled task",
     body: "There are two ways to mark a planned task done. Tap the circle icon next to it in the journal for a one-tap shortcut, it logs the care and, if it's a recurring task, moves it forward to its next due date automatically. Or open the task by tapping its pencil icon, check Task completed, confirm the date it was actually done, and save. That same dialog also lets you Skip a recurring task instead, moving it to its next occurrence without logging any care.",
+  },
+  {
+    title: "Completing many scheduled tasks at once",
+    body: "When several trees have the same task due, you don't have to visit each one. On the Collection page, open the Upcoming Care box at the top and tap View all to see every overdue and upcoming task, then tap Select and tick the tasks you want to finish. To save time, tap a task type such as Fertilizing to tick every task of that type, or use the search box to narrow the list by tree name, task type, or notes, then tap Select all shown. At the bottom, choose which date to record. Done on lets you pick the day you actually did the work, today or any earlier day, and it applies to every task you ticked. On each task's scheduled date records each task on its own planned date instead, which is handy when you did everything on schedule but never marked it. Tasks that aren't due yet can't be recorded on their scheduled date, so the app unticks them and lets you know, and choosing Done on again brings them back. Tap Mark done, and if you picked more than one task you'll see a short summary to confirm first. Each task is handled the same way as the circle icon: the care is logged with its notes, a one time task is removed from your list, and a recurring task moves forward to its next due date. This only completes tasks exactly as planned. For care you didn't plan, go to the Collection page, select the trees, and choose Log Care.",
   },
   {
     title: "The Care Calendar",
