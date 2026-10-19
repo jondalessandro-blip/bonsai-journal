@@ -255,6 +255,7 @@ export interface UpcomingReminder {
   /** @nullable */
   notes?: string | null;
   completed: boolean;
+  recurring: boolean;
   daysUntilDue: number;
 }
 

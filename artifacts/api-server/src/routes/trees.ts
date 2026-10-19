@@ -1064,6 +1064,7 @@ router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> =
       dueDate: careRemindersTable.dueDate,
       notes: careRemindersTable.notes,
       completed: careRemindersTable.completed,
+      recurring: careRemindersTable.recurring,
     })
     .from(careRemindersTable)
     .innerJoin(treesTable, eq(careRemindersTable.treeId, treesTable.id))
@@ -1079,6 +1080,7 @@ router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> =
   res.json(
     rows.map((r) => ({
       ...r,
+      recurring: r.recurring ?? false,
       daysUntilDue:
         (new Date(`${r.dueDate}T00:00:00.000Z`).getTime() -
           new Date(`${todayStr}T00:00:00.000Z`).getTime()) /

@@ -559,6 +559,7 @@ export const ListUpcomingRemindersResponseItem = zod.object({
   "dueDate": zod.string(),
   "notes": zod.string().nullish(),
   "completed": zod.boolean(),
+  "recurring": zod.boolean(),
   "daysUntilDue": zod.number()
 })
 export const ListUpcomingRemindersResponse = zod.array(ListUpcomingRemindersResponseItem)

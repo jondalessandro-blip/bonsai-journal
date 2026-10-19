@@ -1065,7 +1065,7 @@ components:
 
     UpcomingReminder:
       type: object
-      required: [id, treeId, treeName, type, dueDate, completed, daysUntilDue]
+      required: [id, treeId, treeName, type, dueDate, completed, recurring, daysUntilDue]
       properties:
         id:
           type: string
@@ -1080,6 +1080,8 @@ components:
         notes:
           type: ["string", "null"]
         completed:
+          type: boolean
+        recurring:
           type: boolean
         daysUntilDue:
           type: integer
