@@ -1,0 +1,13 @@
+Frontend only task for the Bonsai Journal website. Do not change any backend, OpenAPI, or generated files, and do not touch or report on the bonsai-mobile app. Work on the dev branch. The only file to change is artifacts/bonsai-journal/src/pages/HelpPage.tsx.
+
+First check that the helpSections array already contains a section titled Completing many scheduled tasks at once. If it does not, stop, change nothing, and tell me.
+
+Then make three small additions. In each case, keep the existing body text exactly as it is and append the new sentences to the end of that section's body string, separated from the existing text by a single space. Do not reword, reorder, or remove anything else, and do not add or remove sections. Keep the file's straight double quote style and plain straight apostrophes.
+
+1. In the section titled Selecting multiple trees at once, append exactly this: Plans made this way are one time tasks. When they come due, you can finish many of them together from the Upcoming Care box, as described in Completing many scheduled tasks at once.
+
+2. In the section titled Logging care, append exactly this: If the same care was done to several trees, you don't have to log it one at a time. Select them on the Collection page and log it once for all of them, as described in Selecting multiple trees at once.
+
+3. In the section titled Setting reminders, append exactly this: You can also plan a one time task for several trees at once by selecting them on the Collection page. Recurring plans are set up one tree at a time, so open the tree and set it there.
+
+After the edit, show me the final full body text of just those three sections so I can confirm the new sentences sit at the end of each and nothing else changed. Run the website typecheck. Known pre-existing typecheck errors in calendar.tsx and spinner.tsx are unrelated; just say whether anything new appears. Report the real commit hash. Commit locally only. Do not push, publish, or modify anything on the remote GitHub branch.
