@@ -1,0 +1,29 @@
+Frontend only task for the Bonsai Journal website. Do not change any backend, OpenAPI, or generated files, and do not touch or report on the bonsai-mobile app. Work on the dev branch. All changes go in artifacts/bonsai-journal/src/components/UpcomingCarePanel.tsx plus one new test file.
+
+Goal: in the full-screen Upcoming Care view only, let the user select several scheduled tasks and mark them all done in one action. The small collapsed banner at the top of the Collection page stays exactly as it is.
+
+The backend already exists. Use the generated hook useCompleteRemindersBulk from @workspace/api-client-react, called with data containing reminderIds, dateMode, today, and date. For dateMode "single" send date; for dateMode "scheduled" do not send date. The today value is the user's local calendar date from format(new Date(), "yyyy-MM-dd"), matching how the Collection page already fetches the list. The UpcomingReminder items now include a recurring true/false field.
+
+Select mode, in the full-screen view:
+Add a Select button in the top bar next to the close button. Tapping it turns on select mode. In select mode each row shows a checkbox (use the existing shadcn Checkbox) instead of the arrow, and tapping a row ticks or unticks it instead of opening the tree. Outside select mode rows behave exactly as today and still link to the tree. Leaving select mode (the same button now labelled Done selecting, or closing the full-screen view) clears the selection. Pressing Escape while in select mode should leave select mode first; pressing Escape when not in select mode closes the view as today.
+
+Helpers shown under the top bar in select mode:
+A small search box that filters the visible rows by tree name, task type, or notes, case-insensitive substring match. Ticked tasks stay ticked even when a search hides them, and the selected count always reflects everything ticked.
+One chip per task type present in the list, each showing how many tasks of that type are currently shown, for example Fertilizing (20) and Other (13). Tapping a chip ticks every selectable shown task of that type; if they are all already ticked, tapping it unticks them. Do not group by notes, only by type.
+A Select all shown button and a Clear button.
+
+Bottom bar in select mode:
+A bar pinned to the bottom of the full-screen view showing the number selected. It has two choices. The first is Done on, with a date input that defaults to today, has max set to today so future dates cannot be picked, and must not be empty. The second is On each task's scheduled date. Then a Mark N done button, disabled when nothing is ticked or when Done on is chosen with no date.
+When On each task's scheduled date is chosen, tasks that are not yet due (daysUntilDue greater than 0) cannot be selected: show them greyed out with a small Not due yet label, make the chips and Select all shown skip them, and untick any of them that were already ticked when the user switches to this choice. When Done on is chosen, any task can be selected, including ones not yet due.
+
+Confirmation:
+If exactly one task is ticked, submit straight away with no confirmation. If two or more are ticked, first open the existing AlertDialog component with a title like Mark 20 tasks done? and a description listing: the number of tasks and the number of distinct trees (use treeId), a breakdown by type such as Fertilizing x 15, Other x 5, the date being used (either the chosen date formatted like Oct 12, or the words each task's scheduled date), and, only when at least one ticked task has recurring true, a line such as 4 of these repeat and will be rescheduled. Buttons are Cancel and Mark done. Disable both while the request is running.
+
+After the request:
+On success, invalidate the query keys the tree detail page already invalidates after completing a reminder, namely ["/api/reminders/upcoming"], ["/api/trees"], and ["/api/collection/stats"]. Then clear the selection, leave select mode, and show a short success message using the same feedback style the Collection page already uses for its other bulk actions; if it has none, show a small inline message at the top of the list that fades after a few seconds. If the list becomes empty the panel will disappear on its own, so make sure the body scroll lock is released in that case. On failure, keep the selection and the dialog state sensible, and show the server's error text, for example telling the user to refresh if a task was already completed.
+
+Keep the notes (two lines max) visible on every row in select mode, because that is how users tell tasks of the same type apart. Make it work well on a phone width, and use plain readable labels, never raw field names.
+
+Tests: add a test file in artifacts/bonsai-journal/src/__tests__ following the style of the existing tests there. Cover at least: Select mode shows checkboxes and rows no longer navigate; type chips tick and untick the right tasks; search narrows the visible rows and ticked rows stay counted; scheduled-date mode greys out and unticks not-yet-due tasks; the date input cannot go past today; one task submits without a confirmation; two or more tasks show the confirmation with the right counts, breakdown and recurring line; the request body has the right dateMode, date and today values for both choices; failure keeps the selection.
+
+Run the website tests and the typecheck for the website. Known pre-existing typecheck errors in calendar.tsx and spinner.tsx are unrelated; just say whether anything new appears. Report real test output and the real commit hash. Commit locally only. Do not push, publish, or modify anything on the remote GitHub branch.
