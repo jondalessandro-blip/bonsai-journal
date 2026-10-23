@@ -142,15 +142,14 @@ export default function CollectionPage() {
       animationFrame = null;
       const scrollY = window.scrollY;
       const filtersCard = filtersCardRef.current;
+      const isStuck = filtersCard
+        ? filtersCard.getBoundingClientRect().top <= 64 && scrollY > 0
+        : false;
 
-      if (filtersCard) {
-        setFiltersCardStuck(
-          filtersCard.getBoundingClientRect().top <= 64 && scrollY > 0,
-        );
-      }
+      setFiltersCardStuck(isStuck);
 
       const shouldKeepVisible =
-        scrollY <= 80 ||
+        !isStuck ||
         window.innerWidth >= 640 ||
         filtersOpen ||
         selectMode ||
@@ -427,9 +426,18 @@ export default function CollectionPage() {
       {/* Filters */}
       <div
         ref={filtersCardRef}
-        className={`sticky top-16 z-30 rounded-lg bg-background shadow-sm transition-[transform,box-shadow] duration-200 motion-reduce:transition-none sm:translate-y-0 ${
-          filtersCardStuck ? "shadow-md" : ""
-        } ${mobileFiltersVisible || filtersOpen || selectMode ? "" : "-translate-y-full"}`}
+        className={`sticky top-16 z-30 rounded-lg transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none ${
+          !mobileFiltersVisible && !filtersOpen && !selectMode
+            ? `bg-transparent shadow-none sm:bg-background ${
+                filtersCardStuck ? "sm:shadow-md" : "sm:shadow-sm"
+              }`
+            : `bg-background ${filtersCardStuck ? "shadow-md" : "shadow-sm"}`
+        }`}
+      >
+      <div
+        className={`transition-transform duration-200 motion-reduce:transition-none sm:translate-y-0 ${
+          mobileFiltersVisible || filtersOpen || selectMode ? "" : "-translate-y-full"
+        }`}
       >
       <div className={`flex flex-col gap-3 bg-card p-3 rounded-lg border transition-colors duration-200 ${!filtersOpen && activeFilterCount > 0 ? "border-primary/40 bg-primary/5" : ""}`}>
         {/* Search — always visible */}
@@ -701,6 +709,7 @@ export default function CollectionPage() {
             </button>
           </div>
         )}
+      </div>
       </div>
       </div>
 
