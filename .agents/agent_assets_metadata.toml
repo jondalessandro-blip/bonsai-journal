@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "gv_h9tRWL_WhNCHoWnzU4"
+uri = "file://generated-artifacts/Bonsai-Journal-Showcase.pdf"
+type = "pdf"
+title = "Bonsai Journal Showcase PDF"
+description = "A seven-page landscape PDF export of the public Bonsai Journal showcase, including the updated mugo pine badge."
+logical_id = "92575bbe-da26-4966-835b-3674215fa491"
+content_hash = "sha256:788057052ad02169564f208944b8e4c12a334e5910787948bd3773b25a0364ee"
+size = 10564498
+mtime_ms = 1792791614105
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:639f7034-c5ca-41de-9a1c-a8cef59f4bd9/92575bbe-da26-4966-835b-3674215fa491/cdf85cf9-ae3b-45dc-b96e-137ac32254f4"
+storage_version_token = "1792791621062614"
+content_type = "application/pdf"
