@@ -130,6 +130,63 @@ export default function CollectionPage() {
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const filtersCardRef = useRef<HTMLDivElement>(null);
+  const [mobileFiltersVisible, setMobileFiltersVisible] = useState(true);
+  const [filtersCardStuck, setFiltersCardStuck] = useState(false);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let animationFrame: number | null = null;
+
+    const updateOnScroll = () => {
+      animationFrame = null;
+      const scrollY = window.scrollY;
+      const filtersCard = filtersCardRef.current;
+
+      if (filtersCard) {
+        setFiltersCardStuck(
+          filtersCard.getBoundingClientRect().top <= 64 && scrollY > 0,
+        );
+      }
+
+      const shouldKeepVisible =
+        scrollY <= 80 ||
+        window.innerWidth >= 640 ||
+        filtersOpen ||
+        selectMode ||
+        document.activeElement === searchInputRef.current;
+
+      if (shouldKeepVisible) {
+        setMobileFiltersVisible(true);
+        lastScrollY = scrollY;
+        return;
+      }
+
+      const movement = scrollY - lastScrollY;
+      if (Math.abs(movement) >= 8) {
+        setMobileFiltersVisible(movement < 0);
+        lastScrollY = scrollY;
+      }
+    };
+
+    const scheduleUpdate = () => {
+      if (animationFrame === null) {
+        animationFrame = window.requestAnimationFrame(updateOnScroll);
+      }
+    };
+
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    scheduleUpdate();
+
+    return () => {
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      if (animationFrame !== null) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [filtersOpen, selectMode]);
 
   // True whenever any filter or search is active
   const hasActiveFilters =
@@ -368,7 +425,13 @@ export default function CollectionPage() {
       </div>
 
       {/* Filters */}
-      <div className={`flex flex-col gap-3 bg-card p-3 rounded-lg border shadow-sm transition-colors duration-200 ${!filtersOpen && activeFilterCount > 0 ? "border-primary/40 bg-primary/5" : ""}`}>
+      <div
+        ref={filtersCardRef}
+        className={`sticky top-16 z-30 rounded-lg bg-background shadow-sm transition-[transform,box-shadow] duration-200 motion-reduce:transition-none sm:translate-y-0 ${
+          filtersCardStuck ? "shadow-md" : ""
+        } ${mobileFiltersVisible || filtersOpen || selectMode ? "" : "-translate-y-full"}`}
+      >
+      <div className={`flex flex-col gap-3 bg-card p-3 rounded-lg border transition-colors duration-200 ${!filtersOpen && activeFilterCount > 0 ? "border-primary/40 bg-primary/5" : ""}`}>
         {/* Search — always visible */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -378,6 +441,7 @@ export default function CollectionPage() {
             className={`pl-9 bg-background border-none shadow-none focus-visible:ring-1${search ? " pr-9" : ""}`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onFocus={() => setMobileFiltersVisible(true)}
             onKeyDown={(e) => {
               if (e.key === "Escape") {
                 setSearch("");
@@ -443,7 +507,10 @@ export default function CollectionPage() {
 
         {/* Collapsible filter panel */}
         {filtersOpen && (
-          <div className="flex gap-2 w-full flex-wrap animate-in fade-in duration-200">
+          <div
+            className="flex max-h-full w-full flex-wrap gap-2 overflow-y-auto overscroll-contain animate-in fade-in duration-200"
+            style={{ maxHeight: "min(60vh, calc(100dvh - 12rem))" }}
+          >
             {([
               ["Climate", "All Climates", climateFilter, setClimateFilter, climateOpen, setClimateOpen, CLIMATE_OPTIONS, CLIMATE_LABELS],
               ["Foliage", "All Foliage", foliageFilter, setFoliageFilter, foliageOpen, setFoliageOpen, FOLIAGE_OPTIONS, FOLIAGE_LABELS],
@@ -634,6 +701,7 @@ export default function CollectionPage() {
             </button>
           </div>
         )}
+      </div>
       </div>
 
       {/* Tree grids */}
