@@ -17,6 +17,7 @@ import HelpPage from "@/pages/HelpPage";
 import FeedbackAdminPage from "@/pages/FeedbackAdminPage";
 import LandingPage from "@/pages/LandingPage";
 import ShowcasePage from "@/pages/ShowcasePage";
+import CareShowcasePage from "@/pages/CareShowcasePage";
 import VideoTemplate from "@/components/video/VideoTemplate";
 import { useSeedSampleTrees } from "@/hooks/useSeedSampleTrees";
 
@@ -178,6 +179,7 @@ function Router() {
     <Switch>
       <Route path="/" component={HomeRoute} />
       <Route path="/showcase" component={ShowcasePage} />
+      <Route path="/care-showcase" component={CareShowcasePage} />
       {/* REQUIRED — /*? optional wildcard matches bare URL and Clerk OAuth sub-paths */}
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />

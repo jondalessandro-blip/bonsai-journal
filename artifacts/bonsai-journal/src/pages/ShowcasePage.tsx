@@ -162,7 +162,7 @@ export default function ShowcasePage() {
           <div className="care-row"><span className="care-icon"><NotebookPen size={18} /></span><div><h3>Care logs</h3><p>Record the work, the observations, and the little details you want to remember.</p></div><Check size={17} className="care-check" /></div>
           <div className="care-row"><span className="care-icon"><CalendarDays size={18} /></span><div><h3>Reminders & calendar</h3><p>Keep upcoming care in view with reminders and a care calendar.</p></div><Check size={17} className="care-check" /></div>
           <div className="care-row"><span className="care-icon"><Camera size={18} /></span><div><h3>A collection that grows with you</h3><p>Bring your trees and their changing photos together in one private place.</p></div><Check size={17} className="care-check" /></div>
-          <div className="care-footnote">A journal, not a set of rules. Your trees and your practice are your own.</div>
+          <div className="care-footnote">A journal, not a set of rules. Your trees and your practice are your own. <Link href="/care-showcase" className="care-showcase-link">Explore the Care Calendar and Monthly Guide <ArrowRight size={13} /></Link></div>
         </div>
       </section>
 
