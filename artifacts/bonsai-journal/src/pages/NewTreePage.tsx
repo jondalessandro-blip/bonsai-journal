@@ -3,7 +3,9 @@ import type { Tree } from "@workspace/api-client-react";
 import { TreeForm } from "@/components/TreeForm";
 import type { TreePrefillData } from "@/components/TreeForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Leaf } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Leaf } from "lucide-react";
+import { Link } from "wouter";
 
 /** Fields duplicated from a saved tree — excludes identity / time-specific values. */
 export function buildTreePrefill(tree: Tree): TreePrefillData {
@@ -50,6 +52,14 @@ export default function NewTreePage() {
 
   return (
     <div className="max-w-2xl mx-auto py-8 animate-in fade-in duration-500">
+      <div className="mb-2">
+        <Link href="/">
+          <Button variant="ghost" size="sm" className="-ml-4 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Collection
+          </Button>
+        </Link>
+      </div>
       <Card className="border-primary/10">
         <CardHeader className="text-center pb-8 border-b bg-muted/20">
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
