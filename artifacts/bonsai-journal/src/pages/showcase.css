@@ -126,8 +126,6 @@
 .care-row p { color: var(--showcase-muted); font-size: 11px; line-height: 1.65; }
 .care-check { color: var(--showcase-rust); margin-top: 8px; }
 .care-footnote { color: #818a7e; font-size: 10px; line-height: 1.6; padding-top: 15px; }
-.care-showcase-link { display: inline-flex; align-items: center; gap: 6px; color: var(--showcase-green); font-weight: 500; text-decoration: underline !important; text-underline-offset: 3px; margin-top: 8px; }
-.care-showcase-link:hover { color: var(--showcase-rust); }
 .season-section { min-height: 520px; background: #e6e8da; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 70px clamp(28px, 13.2vw, 204px); gap: 9vw; }
 .season-art { width: min(100%, 390px); position: relative; justify-self: center; }
 .season-art img { height: 370px; object-fit: cover; object-position: center 34%; }
