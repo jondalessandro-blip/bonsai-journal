@@ -133,6 +133,9 @@ export default function CollectionPage() {
   const filtersCardRef = useRef<HTMLDivElement>(null);
   const [mobileFiltersVisible, setMobileFiltersVisible] = useState(true);
   const [filtersCardStuck, setFiltersCardStuck] = useState(false);
+  const [filtersCardHidden, setFiltersCardHidden] = useState(false);
+  const mobileFiltersHidden =
+    !mobileFiltersVisible && !filtersOpen && !selectMode;
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -186,6 +189,20 @@ export default function CollectionPage() {
       }
     };
   }, [filtersOpen, selectMode]);
+
+  useEffect(() => {
+    if (!mobileFiltersHidden) {
+      setFiltersCardHidden(false);
+      return;
+    }
+
+    const duration = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : 200;
+    const timeout = window.setTimeout(() => setFiltersCardHidden(true), duration);
+
+    return () => window.clearTimeout(timeout);
+  }, [mobileFiltersHidden]);
 
   // True whenever any filter or search is active
   const hasActiveFilters =
@@ -427,8 +444,8 @@ export default function CollectionPage() {
       <div
         ref={filtersCardRef}
         className={`sticky top-16 z-30 rounded-lg transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none ${
-          !mobileFiltersVisible && !filtersOpen && !selectMode
-            ? `bg-transparent shadow-none sm:bg-background ${
+          mobileFiltersHidden
+            ? `pointer-events-none sm:pointer-events-auto bg-transparent shadow-none sm:bg-background ${
                 filtersCardStuck ? "sm:shadow-md" : "sm:shadow-sm"
               }`
             : `bg-background ${filtersCardStuck ? "shadow-md" : "shadow-sm"}`
@@ -437,7 +454,7 @@ export default function CollectionPage() {
       <div
         className={`transition-transform duration-200 motion-reduce:transition-none sm:translate-y-0 ${
           mobileFiltersVisible || filtersOpen || selectMode ? "" : "-translate-y-full"
-        }`}
+        }${mobileFiltersHidden && filtersCardHidden ? " invisible" : ""}`}
       >
       <div className={`flex flex-col gap-3 bg-card p-3 rounded-lg border transition-colors duration-200 ${!filtersOpen && activeFilterCount > 0 ? "border-primary/40 bg-primary/5" : ""}`}>
         {/* Search — always visible */}
