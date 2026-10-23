@@ -528,6 +528,19 @@ export default function CollectionPage() {
           >
             {selectMode ? "Cancel" : "Select"}
           </Button>
+          {!selectMode && (
+            <Link href="/trees/new">
+              <Button
+                type="button"
+                aria-label="Add tree"
+                data-testid="button-add-tree-sticky"
+                className="h-10 w-10 shrink-0 gap-2 bg-primary p-0 text-primary-foreground hover:bg-primary/90 sm:w-auto sm:px-4"
+              >
+                <Plus className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline">Add Tree</span>
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Collapsible filter panel */}
