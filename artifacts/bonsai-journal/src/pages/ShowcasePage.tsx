@@ -86,7 +86,7 @@ export default function ShowcasePage() {
           </div>
           <div className="hero-caption"><span className="caption-dot" /> Mugo pine <span className="caption-separator">/</span> still in development</div>
           <div className="hero-index">01 <span>—</span> 05</div>
-          <div className="hero-stamp">Small<br />Tree /<br /><i>Big potential</i></div>
+          <div className="hero-stamp">Small<br />Tree /<br /><i>Big Potential</i></div>
         </div>
         <div className="hero-side-note">NOT JUST THE FINISHED TREE</div>
       </section>
