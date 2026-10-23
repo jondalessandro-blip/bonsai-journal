@@ -185,6 +185,12 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
     defaultValues,
   });
 
+  useEffect(() => {
+    if (!isEdit) {
+      form.setFocus("name");
+    }
+  }, [form.setFocus, isEdit]);
+
   // ── Dirty detection via deep comparison (not form.formState.isDirty) ───────
   // useWatch subscribes to all field changes and re-renders only when a value
   // actually changes, which is more reliable than the isDirty proxy for
