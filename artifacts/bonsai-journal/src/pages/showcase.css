@@ -121,6 +121,8 @@
 .care-heading > p:last-child { max-width: 410px; font-size: 13px; line-height: 1.8; color: var(--showcase-muted); margin-top: 20px; }
 .care-list { border-top: 1px solid var(--showcase-line); }
 .care-row { display: grid; grid-template-columns: 37px 1fr 18px; gap: 15px; align-items: start; padding: 21px 0; border-bottom: 1px solid var(--showcase-line); }
+.care-sample-label { padding-top: 15px; text-transform: uppercase; }
+.care-sample-month { padding-top: 2px; color: var(--showcase-rust); font-size: 8px; letter-spacing: .15em; }
 .care-icon { height: 34px; width: 34px; display: grid; place-items: center; color: var(--showcase-green); background: #e8e9dd; }
 .care-row h3 { font-size: 16px; letter-spacing: -.02em; margin: 1px 0 5px !important; }
 .care-row p { color: var(--showcase-muted); font-size: 11px; line-height: 1.65; }

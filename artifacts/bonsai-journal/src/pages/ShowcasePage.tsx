@@ -156,7 +156,23 @@ export default function ShowcasePage() {
           <p>Choose your hardiness zone and the kinds of trees you grow. Bonsai Journal builds a calendar of typical care for each month, like pruning, repotting, fertilizing, watering and winter prep. A Monthly Guide explains what each month is really about, in plain words.</p>
         </div>
         <div className="care-list">
-          <p className="care-footnote">Timing is approximate, so always go by what your tree is actually doing.</p>
+          <article className="care-sample" data-testid="card-care-calendar-sample">
+            <p className="eyebrow care-sample-label">A sample, for hardy deciduous trees</p>
+            <div className="care-row" data-testid="row-care-calendar-april">
+              <small className="care-sample-month">April</small>
+              <div><h3>Repot</h3><p>Repot as buds swell. Trim roots lightly and use a fast draining bonsai mix.</p></div>
+            </div>
+            <div className="care-row" data-testid="row-care-calendar-may">
+              <small className="care-sample-month">May</small>
+              <div><h3>Start fertilizing</h3><p>Start feeding once the first leaves have hardened.</p></div>
+            </div>
+            <div className="care-row" data-testid="row-care-calendar-june">
+              <small className="care-sample-month">June</small>
+              <div><h3>Clip and grow</h3><p>Let new shoots grow out, then cut back to build fine, twiggy branching.</p></div>
+            </div>
+            <p className="care-footnote care-sample-caption" data-testid="caption-care-calendar-zone">Timing shifts with your zone.</p>
+          </article>
+          <p className="care-footnote" data-testid="note-care-calendar-timing">Timing is approximate, so always go by what your tree is actually doing.</p>
         </div>
       </section>
 
