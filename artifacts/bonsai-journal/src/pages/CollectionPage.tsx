@@ -528,7 +528,7 @@ export default function CollectionPage() {
           >
             {selectMode ? "Cancel" : "Select"}
           </Button>
-          {!selectMode && (
+          {!selectMode && filtersCardStuck && (
             <Link href="/trees/new">
               <Button
                 type="button"
