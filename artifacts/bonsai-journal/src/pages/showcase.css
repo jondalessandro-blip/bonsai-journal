@@ -18,7 +18,7 @@
 .showcase-page h1, .showcase-page h2, .showcase-page h3, .showcase-page p { margin: 0; }
 .showcase-page h1, .showcase-page h2, .showcase-page h3 { font-family: var(--app-font-serif); font-weight: 400; }
 .showcase-page h1 em, .showcase-page h2 em { color: var(--showcase-green); font-weight: 400; }
-.showcase-page .eyebrow { color: var(--showcase-rust); font-size: 10px; font-weight: 600; letter-spacing: .17em; line-height: 1.4; }
+.showcase-page .eyebrow { color: var(--showcase-rust); font-size: 13px; font-weight: 600; letter-spacing: .14em; line-height: 1.4; }
 .showcase-nav {
   height: 76px; padding: 0 clamp(22px, 6.3vw, 100px); display: flex; align-items: center; justify-content: space-between;
   border-bottom: 1px solid rgba(37,59,50,.12); position: relative; z-index: 2;
@@ -34,7 +34,7 @@
   padding: 66px clamp(28px, 10.4vw, 160px) 84px clamp(28px, 13.2vw, 204px); position: relative; gap: 5vw;
 }
 .hero-copy { max-width: 520px; animation: rise-in .8s both; }
-.eyebrow-line { display: inline-block; vertical-align: middle; width: 28px; height: 1px; background: var(--showcase-rust); margin: 0 9px 3px 0; }
+.eyebrow-line { display: inline-block; vertical-align: middle; width: 32px; height: 1px; background: var(--showcase-rust); margin: 0 9px 3px 0; }
 .hero-copy h1 { font-size: clamp(54px, 6.7vw, 92px); letter-spacing: -.065em; line-height: .99; margin: 23px 0 25px; }
 .hero-copy h1 em { display: block; }
 .hero-intro { max-width: 395px; color: var(--showcase-muted); font-size: 15px; line-height: 1.8; }
@@ -57,7 +57,7 @@
 .hero-stamp i { font-family: var(--app-font-serif); font-size: 14px; font-weight: 400; }
 .hero-side-note { position: absolute; bottom: 61px; left: 3.3vw; writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: .18em; color: #899084; font-size: 9px; }
 .manifesto { background: #e7e9dc; min-height: 405px; padding: 76px clamp(28px, 13.2vw, 204px); display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 4vw; position: relative; }
-.manifesto-number { font-size: 9px; letter-spacing: .14em; color: #7d887b; }
+.manifesto-number { font-size: 12px; font-weight: 600; letter-spacing: .14em; color: var(--showcase-green); }
 .manifesto-content .eyebrow { margin-bottom: 17px; }
 .manifesto-content h2 { font-size: clamp(43px, 5vw, 65px); line-height: 1.03; letter-spacing: -.045em; }
 .manifesto-text { color: var(--showcase-muted); font-size: 14px; line-height: 1.85; max-width: 490px; margin-top: 23px !important; }
