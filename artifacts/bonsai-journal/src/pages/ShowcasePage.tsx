@@ -68,11 +68,10 @@ export default function ShowcasePage() {
 
       <section className="showcase-hero">
         <div className="hero-copy">
-          <p className="eyebrow"><span className="eyebrow-line" />A journal for the trees you have</p>
+          <p className="eyebrow"><span className="eyebrow-line" />A private journal for your bonsai</p>
           <h1>Every tree has a <em>next step.</em></h1>
           <p className="hero-intro">
-            A first nursery find. A branch you are learning to wire. A familiar tree putting out new leaves.
-            Keep a record of the real, ongoing work of growing bonsai.
+            Log your care, follow your trees in photos, and see what is due this month. Made for growers at every stage, including the nursery pot stage.
           </p>
           <div className="hero-actions">
             <Link href="/sign-up" className="button-primary" data-testid="link-hero-start">Start your private journal <ArrowRight size={17} /></Link>
@@ -92,20 +91,18 @@ export default function ShowcasePage() {
       </section>
 
       <section className="manifesto">
-        <div className="manifesto-number">01 / A DIFFERENT KIND OF SHOWCASE</div>
+        <div className="manifesto-number">01 / WHY A JOURNAL</div>
         <div className="manifesto-content">
           <p className="eyebrow">The honest middle</p>
-          <h2>Bonsai is a practice.<br /><em>Not a finish line.</em></h2>
+          <h2>Most of bonsai is the waiting.<br /><em>Keep track of it.</em></h2>
           <p className="manifesto-text">
-            Most trees spend far more time growing than posing. The young ones, the awkward ones,
-            the ones you are still figuring out — they belong in the story too. This is a place to
-            notice what changed, remember what you did, and keep showing up.
+            Most trees spend far more time growing than posing. The young ones, the awkward ones, the ones you are still figuring out all deserve a record. Bonsai Journal helps you remember what you did, notice what changed, and know what comes next.
           </p>
         </div>
         <div className="manifesto-side">
           <span className="hand-drawn">room to grow</span>
           <div className="manifesto-rule" />
-          <p>Small observations<br />add up over seasons.</p>
+          <p>Small notes add up over the seasons.</p>
         </div>
       </section>
 
@@ -115,7 +112,7 @@ export default function ShowcasePage() {
             <p className="eyebrow">02 / THE TREES</p>
             <h2>Five beginnings.<br /><em>All worth keeping.</em></h2>
           </div>
-          <p className="section-aside">A few real examples from the kind of collection that grows one tree at a time.</p>
+          <p className="section-aside">Real trees from a real collection, photographed as they are.</p>
         </div>
         <div className="tree-grid">
           {trees.map((tree, index) => (
@@ -142,7 +139,7 @@ export default function ShowcasePage() {
         <div className="timeline-copy">
           <p className="eyebrow">03 / MAKE A RECORD</p>
           <h2>Today’s photo.<br /><em>Next season’s perspective.</em></h2>
-          <p>Give each tree its own place in your collection. Add photos as it changes, and let the timeline show what a single snapshot cannot.</p>
+          <p>Give each tree its own page. Add photos as it grows, attach a note to any photo, and scroll back through the timeline to see what one snapshot never could.</p>
           <div className="timeline-example">
             <span className="timeline-line" />
             <div className="timeline-entry"><span className="timeline-dot" /><div><small>THEN</small><b>A photo from earlier</b></div></div>
@@ -154,14 +151,26 @@ export default function ShowcasePage() {
 
       <section className="care-section">
         <div className="care-heading">
-          <p className="eyebrow">04 / CARE, REMEMBERED</p>
-          <h2>Less keeping-it-in-your-head.<br /><em>More time with your trees.</em></h2>
-          <p>Care can be ordinary and still worth recording. Keep notes on what you did, and make it easier to pick up where you left off.</p>
+          <p className="eyebrow">04 / THE CARE CALENDAR</p>
+          <h2>What to do this month,<br /><em>for your zone.</em></h2>
+          <p>Choose your hardiness zone and the kinds of trees you grow. Bonsai Journal builds a calendar of typical care for each month, like pruning, repotting, fertilizing, watering and winter prep. A Monthly Guide explains what each month is really about, in plain words.</p>
         </div>
         <div className="care-list">
-          <div className="care-row"><span className="care-icon"><NotebookPen size={18} /></span><div><h3>Care logs</h3><p>Record the work, the observations, and the little details you want to remember.</p></div><Check size={17} className="care-check" /></div>
-          <div className="care-row"><span className="care-icon"><CalendarDays size={18} /></span><div><h3>Reminders & calendar</h3><p>Keep upcoming care in view with reminders and a care calendar.</p></div><Check size={17} className="care-check" /></div>
-          <div className="care-row"><span className="care-icon"><Camera size={18} /></span><div><h3>A collection that grows with you</h3><p>Bring your trees and their changing photos together in one private place.</p></div><Check size={17} className="care-check" /></div>
+          <p className="care-footnote">Timing is approximate, so always go by what your tree is actually doing.</p>
+        </div>
+      </section>
+
+      <section className="care-section">
+        <div className="care-heading">
+          <p className="eyebrow">05 / CARE, REMEMBERED</p>
+          <h2>Stop keeping it all in your head.<br /><em>Spend the time with your trees.</em></h2>
+          <p>Write down what you did and what you noticed, so next year you are not guessing.</p>
+        </div>
+        <div className="care-list">
+          <div className="care-row"><span className="care-icon"><NotebookPen size={18} /></span><div><h3>Care logs</h3><p>Record the work and the little details, so you can look back at what worked.</p></div><Check size={17} className="care-check" /></div>
+          <div className="care-row"><span className="care-icon"><CalendarDays size={18} /></span><div><h3>Reminders</h3><p>Set a one time reminder or a repeating plan, like every two weeks. Pick months to skip when a task does not apply.</p></div><Check size={17} className="care-check" /></div>
+          <div className="care-row"><span className="care-icon"><Check size={18} /></span><div><h3>Done in one tap</h3><p>Tick off several planned tasks across different trees at once.</p></div><Check size={17} className="care-check" /></div>
+          <div className="care-row"><span className="care-icon"><Camera size={18} /></span><div><h3>Your collection</h3><p>Search, filter, and select many trees to log or schedule care for all of them together.</p></div><Check size={17} className="care-check" /></div>
           <div className="care-footnote">A journal, not a set of rules. Your trees and your practice are your own.</div>
         </div>
       </section>
@@ -172,16 +181,16 @@ export default function ShowcasePage() {
           <span className="season-sticker">notice<br />the small<br /><i>changes</i></span>
         </div>
         <div className="season-copy">
-          <p className="eyebrow">05 / OVER TIME</p>
+          <p className="eyebrow">06 / OVER TIME</p>
           <h2>One season<br />is only <em>one page.</em></h2>
-          <p>A new leaf. A pruning note. A stretch of quiet growth. Put those small moments somewhere you can return to. There is no need to know the whole plan before you begin.</p>
+          <p>A new leaf. A pruning note. A stretch of quiet growth. Keep those small moments somewhere you can come back to. You do not need the whole plan before you begin.</p>
           <span className="season-signoff">Start where your tree is.</span>
         </div>
       </section>
 
       <section className="closing-section">
         <div className="closing-orbit" aria-hidden="true"><span /><span /><span /></div>
-        <p className="eyebrow">06 / YOUR TURN</p>
+        <p className="eyebrow">07 / YOUR TURN</p>
         <h2>Make a little room<br />for <em>what’s growing.</em></h2>
         <p>Start with one tree, one photo, or one note from today.</p>
         <Link href="/sign-up" className="button-primary button-light" data-testid="link-bottom-start">Start your private journal <ArrowRight size={17} /></Link>
