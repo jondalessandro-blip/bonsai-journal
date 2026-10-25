@@ -8,6 +8,7 @@ const image = (name: string) => `${basePath}/showcase/${name}`;
 const trees = [
   {
     name: "Mugo pine",
+    species: "Pinus mugo",
     note: "Nursery stock, full of possibility",
     image: "mugo-pine.webp",
     alt: "Young mugo pine growing in a black nursery pot on a wooden table",
@@ -15,6 +16,7 @@ const trees = [
   },
   {
     name: "Alberta spruce",
+    species: "Picea glauca var. albertiana 'Conica'",
     note: "A small evergreen, still finding its shape",
     image: "alberta-spruce.webp",
     alt: "Young Alberta spruce in a nursery pot, photographed against pale siding",
@@ -22,6 +24,7 @@ const trees = [
   },
   {
     name: "Weigela",
+    species: "Weigela florida 'Minor Black'",
     note: "New growth in copper and green",
     image: "weigela.webp",
     alt: "Close view of copper-colored new leaves on a young weigela",
@@ -29,6 +32,7 @@ const trees = [
   },
   {
     name: "Ficus",
+    species: "Ficus microcarpa",
     note: "A developing indoor tree in a training pot",
     image: "ficus.webp",
     alt: "Young ficus with a slender trunk in a dark rectangular training pot",
@@ -36,6 +40,7 @@ const trees = [
   },
   {
     name: "Pomegranate",
+    species: "Punica granatum",
     note: "A young tree, being gently shaped",
     image: "pomegranate.webp",
     alt: "Young pomegranate with wire on its branches, held in a small nursery pot",
@@ -122,7 +127,11 @@ export default function ShowcasePage() {
                 <span className="tree-number">0{index + 1}</span>
               </div>
               <div className="tree-meta">
-                <div><h3>{tree.name}</h3><p>{tree.note}</p></div>
+                <div>
+                  <h3>{tree.name}</h3>
+                  <p className="tree-species"><i>{tree.species}</i></p>
+                  <p>{tree.note}</p>
+                </div>
                 <span className="tree-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
               </div>
             </article>

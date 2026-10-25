@@ -94,6 +94,7 @@
 .tree-meta { display: flex; justify-content: space-between; align-items: center; padding: 14px 1px 0; }
 .tree-meta h3 { font-size: 20px; letter-spacing: -.025em; }
 .tree-meta p { font-size: 11px; color: var(--showcase-muted); margin-top: 4px; }
+.tree-meta .tree-species { color: var(--showcase-ink); font-size: 12px; }
 .tree-arrow { color: var(--showcase-rust); transition: transform .2s; }
 .tree-card:hover .tree-arrow { transform: translateX(4px); }
 .photo-note { margin-top: 52px; border-top: 1px solid var(--showcase-line); padding-top: 15px; text-align: right; color: #7b8478; font-size: 11px; }
