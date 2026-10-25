@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TreeCard } from "@/components/TreeCard";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { TreePine, Droplets, Leaf, Activity, Plus } from "lucide-react";
+import { TreePine, Droplets, Leaf, Activity, Plus, Archive } from "lucide-react";
 import { Link } from "wouter";
 
 const STATUS_ORDER = [
@@ -188,6 +188,66 @@ export default function StatsPage() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+      {stats.archivedTotal > 0 && (() => {
+        const archivedByYear = [...(stats.archivedByYear ?? [])]
+          .sort((a, b) => Number(b.label) - Number(a.label));
+        const archivedByReason = [...(stats.archivedByReason ?? [])]
+          .sort((a, b) => b.count - a.count);
+
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Archive className="w-4 h-4" />
+                Archive
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-4xl font-serif text-foreground">{stats.archivedTotal}</p>
+                  <p className="text-sm font-medium text-muted-foreground">archived trees</p>
+                </div>
+                <Link href="/archive" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                  View archive
+                </Link>
+              </div>
+
+              {(archivedByYear.length > 0 || archivedByReason.length > 0) && (
+                <div className={`grid grid-cols-1 gap-6 ${archivedByYear.length > 0 && archivedByReason.length > 0 ? "md:grid-cols-2" : ""}`}>
+                  {archivedByYear.length > 0 && (
+                    <section aria-labelledby="archive-by-year-heading" className="space-y-2">
+                      <h3 id="archive-by-year-heading" className="text-sm font-medium text-muted-foreground">By year</h3>
+                      <ul className="space-y-1">
+                        {archivedByYear.map(({ label, count }) => (
+                          <li key={label} className="flex items-center justify-between gap-4 border-b border-border/50 py-1.5 text-sm last:border-0">
+                            <span>{label}</span>
+                            <span className="font-medium tabular-nums">{count}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+                  {archivedByReason.length > 0 && (
+                    <section aria-labelledby="archive-by-reason-heading" className="space-y-2">
+                      <h3 id="archive-by-reason-heading" className="text-sm font-medium text-muted-foreground">By reason</h3>
+                      <ul className="space-y-1">
+                        {archivedByReason.map(({ label, count }) => (
+                          <li key={label} className="flex items-center justify-between gap-4 border-b border-border/50 py-1.5 text-sm last:border-0">
+                            <span className="min-w-0 break-words">{label}</span>
+                            <span className="shrink-0 font-medium tabular-nums">{count}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         );
