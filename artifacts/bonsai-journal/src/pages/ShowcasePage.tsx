@@ -40,7 +40,7 @@ const trees = [
   },
   {
     name: "Pomegranate",
-    species: "Punica granatum",
+    species: "Punica granatum var. nana",
     note: "A young tree, being gently shaped",
     image: "pomegranate.webp",
     alt: "Young pomegranate with wire on its branches, held in a small nursery pot",
