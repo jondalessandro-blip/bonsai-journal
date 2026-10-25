@@ -88,7 +88,7 @@ export default function ShowcasePage() {
           <div className="hero-image-wrap">
             <img src={image("mugo-pine.webp")} alt="Young mugo pine in its nursery pot, with fresh needles spreading in every direction" />
           </div>
-          <div className="hero-caption"><span className="caption-dot" /> Mugo pine <span className="caption-separator">/</span> still in development</div>
+          <div className="hero-caption"><span className="caption-dot" /> Mugo pine <span className="caption-separator">/</span> trunk development</div>
           <div className="hero-index">01 <span>—</span> 05</div>
           <div className="hero-stamp">Small<br />Tree /<br /><i>Big Potential</i></div>
         </div>
