@@ -134,6 +134,21 @@ export function Navbar() {
                     Care Calendar
                   </WouterLink>
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  asChild
+                  className={
+                    location === "/archive"
+                      ? "bg-accent text-accent-foreground"
+                      : undefined
+                  }
+                >
+                  <WouterLink
+                    href="/archive"
+                    aria-current={location === "/archive" ? "page" : undefined}
+                  >
+                    Archive
+                  </WouterLink>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </Show>
@@ -178,6 +193,16 @@ export function Navbar() {
                 }`}
               >
                 Care Calendar
+              </WouterLink>
+              <WouterLink
+                href="/archive"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location === "/archive"
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50"
+                }`}
+              >
+                Archive
               </WouterLink>
             </div>
           </Show>
