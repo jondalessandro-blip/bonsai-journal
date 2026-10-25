@@ -6,6 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './archiveTreeInput';
+export * from './archiveTreeResult';
+export * from './archiveTreesPreviewInput';
+export * from './archiveTreesPreviewResult';
+export * from './bulkArchiveTreesInput';
+export * from './bulkArchiveTreesResult';
 export * from './bulkCareLogInput';
 export * from './bulkCareReminderInput';
 export * from './careLog';
@@ -21,6 +27,7 @@ export * from './finalizeUploadRequest';
 export * from './finalizeUploadResult';
 export * from './healthStatus';
 export * from './labelCount';
+export * from './listTreesArchived';
 export * from './listTreesParams';
 export * from './listTreesTagsMode';
 export * from './listUpcomingRemindersParams';

@@ -9,6 +9,9 @@ import type { LabelCount } from './labelCount';
 import type { Tree } from './tree';
 
 export interface CollectionStats {
+  archivedTotal: number;
+  archivedByYear: LabelCount[];
+  archivedByReason: LabelCount[];
   totalTrees: number;
   byClimate: LabelCount[];
   byFoliage: LabelCount[];

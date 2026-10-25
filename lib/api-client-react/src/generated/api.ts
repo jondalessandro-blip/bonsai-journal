@@ -20,6 +20,12 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ArchiveTreeInput,
+  ArchiveTreeResult,
+  ArchiveTreesPreviewInput,
+  ArchiveTreesPreviewResult,
+  BulkArchiveTreesInput,
+  BulkArchiveTreesResult,
   BulkCareLogInput,
   BulkCareReminderInput,
   CareLog,
@@ -668,6 +674,291 @@ export const useDeleteTree = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteTreeMutationOptions(options));
+    }
+
+export const getArchiveTreeUrl = (id: string,) => {
+
+
+
+
+  return `/api/trees/${id}/archive`
+}
+
+/**
+ * @summary Archive a tree and remove its reminders
+ */
+export const archiveTree = async (id: string,
+    archiveTreeInput?: ArchiveTreeInput, options?: RequestInit): Promise<ArchiveTreeResult> => {
+
+  return customFetch<ArchiveTreeResult>(getArchiveTreeUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(archiveTreeInput)
+  }
+);}
+
+
+
+
+
+export const getArchiveTreeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveTree>>, TError,{id: string;data?: BodyType<ArchiveTreeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveTree>>, TError,{id: string;data?: BodyType<ArchiveTreeInput>}, TContext> => {
+
+const mutationKey = ['archiveTree'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveTree>>, {id: string;data?: BodyType<ArchiveTreeInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  archiveTree(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveTreeMutationResult = NonNullable<Awaited<ReturnType<typeof archiveTree>>>
+    export type ArchiveTreeMutationBody = BodyType<ArchiveTreeInput> | undefined
+    export type ArchiveTreeMutationError = ErrorType<void>
+
+    /**
+ * @summary Archive a tree and remove its reminders
+ */
+export const useArchiveTree = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveTree>>, TError,{id: string;data?: BodyType<ArchiveTreeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveTree>>,
+        TError,
+        {id: string;data?: BodyType<ArchiveTreeInput>},
+        TContext
+      > => {
+      return useMutation(getArchiveTreeMutationOptions(options));
+    }
+
+export const getRestoreTreeUrl = (id: string,) => {
+
+
+
+
+  return `/api/trees/${id}/restore`
+}
+
+/**
+ * @summary Restore an archived tree
+ */
+export const restoreTree = async (id: string, options?: RequestInit): Promise<Tree> => {
+
+  return customFetch<Tree>(getRestoreTreeUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRestoreTreeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreTree>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreTree>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['restoreTree'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreTree>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  restoreTree(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreTreeMutationResult = NonNullable<Awaited<ReturnType<typeof restoreTree>>>
+
+    export type RestoreTreeMutationError = ErrorType<void>
+
+    /**
+ * @summary Restore an archived tree
+ */
+export const useRestoreTree = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreTree>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreTree>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getRestoreTreeMutationOptions(options));
+    }
+
+export const getArchiveTreesBulkUrl = () => {
+
+
+
+
+  return `/api/trees/archive/bulk`
+}
+
+/**
+ * @summary Archive multiple trees and remove their reminders
+ */
+export const archiveTreesBulk = async (bulkArchiveTreesInput: BulkArchiveTreesInput, options?: RequestInit): Promise<BulkArchiveTreesResult> => {
+
+  return customFetch<BulkArchiveTreesResult>(getArchiveTreesBulkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(bulkArchiveTreesInput)
+  }
+);}
+
+
+
+
+
+export const getArchiveTreesBulkMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveTreesBulk>>, TError,{data: BodyType<BulkArchiveTreesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveTreesBulk>>, TError,{data: BodyType<BulkArchiveTreesInput>}, TContext> => {
+
+const mutationKey = ['archiveTreesBulk'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveTreesBulk>>, {data: BodyType<BulkArchiveTreesInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  archiveTreesBulk(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveTreesBulkMutationResult = NonNullable<Awaited<ReturnType<typeof archiveTreesBulk>>>
+    export type ArchiveTreesBulkMutationBody = BodyType<BulkArchiveTreesInput>
+    export type ArchiveTreesBulkMutationError = ErrorType<void>
+
+    /**
+ * @summary Archive multiple trees and remove their reminders
+ */
+export const useArchiveTreesBulk = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveTreesBulk>>, TError,{data: BodyType<BulkArchiveTreesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveTreesBulk>>,
+        TError,
+        {data: BodyType<BulkArchiveTreesInput>},
+        TContext
+      > => {
+      return useMutation(getArchiveTreesBulkMutationOptions(options));
+    }
+
+export const getPreviewArchiveTreesUrl = () => {
+
+
+
+
+  return `/api/trees/archive/preview`
+}
+
+/**
+ * @summary Preview reminders affected by archiving trees
+ */
+export const previewArchiveTrees = async (archiveTreesPreviewInput: ArchiveTreesPreviewInput, options?: RequestInit): Promise<ArchiveTreesPreviewResult> => {
+
+  return customFetch<ArchiveTreesPreviewResult>(getPreviewArchiveTreesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(archiveTreesPreviewInput)
+  }
+);}
+
+
+
+
+
+export const getPreviewArchiveTreesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewArchiveTrees>>, TError,{data: BodyType<ArchiveTreesPreviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof previewArchiveTrees>>, TError,{data: BodyType<ArchiveTreesPreviewInput>}, TContext> => {
+
+const mutationKey = ['previewArchiveTrees'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof previewArchiveTrees>>, {data: BodyType<ArchiveTreesPreviewInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  previewArchiveTrees(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PreviewArchiveTreesMutationResult = NonNullable<Awaited<ReturnType<typeof previewArchiveTrees>>>
+    export type PreviewArchiveTreesMutationBody = BodyType<ArchiveTreesPreviewInput>
+    export type PreviewArchiveTreesMutationError = ErrorType<void>
+
+    /**
+ * @summary Preview reminders affected by archiving trees
+ */
+export const usePreviewArchiveTrees = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewArchiveTrees>>, TError,{data: BodyType<ArchiveTreesPreviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof previewArchiveTrees>>,
+        TError,
+        {data: BodyType<ArchiveTreesPreviewInput>},
+        TContext
+      > => {
+      return useMutation(getPreviewArchiveTreesMutationOptions(options));
     }
 
 export const getCreateBulkTreeLogsUrl = () => {

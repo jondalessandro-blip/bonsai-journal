@@ -58,9 +58,11 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary List all trees with optional filters
  */
+export const listTreesQueryArchivedDefault = `active`;
 export const listTreesQueryTagsModeDefault = `all`;
 
 export const ListTreesQueryParams = zod.object({
+  "archived": zod.enum(['active', 'archived', 'all']).default(listTreesQueryArchivedDefault),
   "search": zod.coerce.string().optional(),
   "climate": zod.array(zod.coerce.string()).optional(),
   "foliage": zod.array(zod.coerce.string()).optional(),
@@ -82,6 +84,9 @@ export const ListTreesResponseItem = zod.object({
   "name": zod.string(),
   "species": zod.string().nullish(),
   "acquiredDate": zod.string().nullish(),
+  "archivedDate": zod.string().nullish().describe('YYYY-MM-DD archive date; null means active, a value means archived.'),
+  "archiveReason": zod.string().nullish(),
+  "archiveNotes": zod.string().nullish(),
   "climate": zod.string().nullish(),
   "foliage": zod.string().nullish(),
   "style": zod.string().nullish(),
@@ -128,6 +133,9 @@ export const CreateTreeResponse = zod.object({
   "name": zod.string(),
   "species": zod.string().nullish(),
   "acquiredDate": zod.string().nullish(),
+  "archivedDate": zod.string().nullish().describe('YYYY-MM-DD archive date; null means active, a value means archived.'),
+  "archiveReason": zod.string().nullish(),
+  "archiveNotes": zod.string().nullish(),
   "climate": zod.string().nullish(),
   "foliage": zod.string().nullish(),
   "style": zod.string().nullish(),
@@ -159,6 +167,9 @@ export const GetTreeResponse = zod.object({
   "name": zod.string(),
   "species": zod.string().nullish(),
   "acquiredDate": zod.string().nullish(),
+  "archivedDate": zod.string().nullish().describe('YYYY-MM-DD archive date; null means active, a value means archived.'),
+  "archiveReason": zod.string().nullish(),
+  "archiveNotes": zod.string().nullish(),
   "climate": zod.string().nullish(),
   "foliage": zod.string().nullish(),
   "style": zod.string().nullish(),
@@ -213,6 +224,9 @@ export const UpdateTreeResponse = zod.object({
   "name": zod.string(),
   "species": zod.string().nullish(),
   "acquiredDate": zod.string().nullish(),
+  "archivedDate": zod.string().nullish().describe('YYYY-MM-DD archive date; null means active, a value means archived.'),
+  "archiveReason": zod.string().nullish(),
+  "archiveNotes": zod.string().nullish(),
   "climate": zod.string().nullish(),
   "foliage": zod.string().nullish(),
   "style": zod.string().nullish(),
@@ -240,6 +254,119 @@ export const DeleteTreeParams = zod.object({
 })
 
 export const DeleteTreeResponse = zod.void()
+
+
+/**
+ * @summary Archive a tree and remove its reminders
+ */
+export const ArchiveTreeParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const archiveTreeBodyArchivedDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
+export const ArchiveTreeBody = zod.object({
+  "archivedDate": zod.string().regex(archiveTreeBodyArchivedDateRegExp).optional().describe('Archive date in YYYY-MM-DD format.'),
+  "archiveReason": zod.string().optional(),
+  "archiveNotes": zod.string().optional()
+})
+
+export const ArchiveTreeResponse = zod.object({
+  "tree": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "species": zod.string().nullish(),
+  "acquiredDate": zod.string().nullish(),
+  "archivedDate": zod.string().nullish().describe('YYYY-MM-DD archive date; null means active, a value means archived.'),
+  "archiveReason": zod.string().nullish(),
+  "archiveNotes": zod.string().nullish(),
+  "climate": zod.string().nullish(),
+  "foliage": zod.string().nullish(),
+  "style": zod.string().nullish(),
+  "stage": zod.string().nullish(),
+  "status": zod.string().nullish(),
+  "tags": zod.array(zod.string()),
+  "notes": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "coverThumb": zod.string().nullish(),
+  "coverPosition": zod.object({
+  "x": zod.number(),
+  "y": zod.number(),
+  "zoom": zod.number()
+}).nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "removedReminderCount": zod.number()
+})
+
+
+/**
+ * @summary Restore an archived tree
+ */
+export const RestoreTreeParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RestoreTreeResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "species": zod.string().nullish(),
+  "acquiredDate": zod.string().nullish(),
+  "archivedDate": zod.string().nullish().describe('YYYY-MM-DD archive date; null means active, a value means archived.'),
+  "archiveReason": zod.string().nullish(),
+  "archiveNotes": zod.string().nullish(),
+  "climate": zod.string().nullish(),
+  "foliage": zod.string().nullish(),
+  "style": zod.string().nullish(),
+  "stage": zod.string().nullish(),
+  "status": zod.string().nullish(),
+  "tags": zod.array(zod.string()),
+  "notes": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "coverThumb": zod.string().nullish(),
+  "coverPosition": zod.object({
+  "x": zod.number(),
+  "y": zod.number(),
+  "zoom": zod.number()
+}).nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Archive multiple trees and remove their reminders
+ */
+export const archiveTreesBulkBodyOneArchivedDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
+export const ArchiveTreesBulkBody = zod.object({
+  "archivedDate": zod.string().regex(archiveTreesBulkBodyOneArchivedDateRegExp).optional().describe('Archive date in YYYY-MM-DD format.'),
+  "archiveReason": zod.string().optional(),
+  "archiveNotes": zod.string().optional()
+}).and(zod.object({
+  "treeIds": zod.array(zod.string())
+}))
+
+export const ArchiveTreesBulkResponse = zod.object({
+  "archivedCount": zod.number(),
+  "removedReminderCount": zod.number()
+})
+
+
+/**
+ * @summary Preview reminders affected by archiving trees
+ */
+export const PreviewArchiveTreesBody = zod.object({
+  "treeIds": zod.array(zod.string())
+})
+
+export const PreviewArchiveTreesResponse = zod.object({
+  "reminderCount": zod.number(),
+  "recurringCount": zod.number()
+})
 
 
 /**
@@ -499,6 +626,15 @@ export const GetTreeTimelineResponse = zod.array(GetTreeTimelineResponseItem)
  * @summary Collection statistics and breakdowns
  */
 export const GetCollectionStatsResponse = zod.object({
+  "archivedTotal": zod.number(),
+  "archivedByYear": zod.array(zod.object({
+  "label": zod.string(),
+  "count": zod.number()
+})),
+  "archivedByReason": zod.array(zod.object({
+  "label": zod.string(),
+  "count": zod.number()
+})),
   "totalTrees": zod.number(),
   "byClimate": zod.array(zod.object({
   "label": zod.string(),
@@ -521,6 +657,9 @@ export const GetCollectionStatsResponse = zod.object({
   "name": zod.string(),
   "species": zod.string().nullish(),
   "acquiredDate": zod.string().nullish(),
+  "archivedDate": zod.string().nullish().describe('YYYY-MM-DD archive date; null means active, a value means archived.'),
+  "archiveReason": zod.string().nullish(),
+  "archiveNotes": zod.string().nullish(),
   "climate": zod.string().nullish(),
   "foliage": zod.string().nullish(),
   "style": zod.string().nullish(),

@@ -55,6 +55,15 @@ export interface Tree {
   species?: string | null;
   /** @nullable */
   acquiredDate?: string | null;
+  /**
+     * YYYY-MM-DD archive date; null means active, a value means archived.
+     * @nullable
+     */
+  archivedDate?: string | null;
+  /** @nullable */
+  archiveReason?: string | null;
+  /** @nullable */
+  archiveNotes?: string | null;
   /** @nullable */
   climate?: string | null;
   /** @nullable */
@@ -76,6 +85,39 @@ export interface Tree {
   coverPosition?: TreeCoverPosition;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ArchiveTreeInput {
+  /**
+     * Archive date in YYYY-MM-DD format.
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  archivedDate?: string;
+  archiveReason?: string;
+  archiveNotes?: string;
+}
+
+export interface ArchiveTreeResult {
+  tree: Tree;
+  removedReminderCount: number;
+}
+
+export type BulkArchiveTreesInput = ArchiveTreeInput & {
+  treeIds: string[];
+};
+
+export interface BulkArchiveTreesResult {
+  archivedCount: number;
+  removedReminderCount: number;
+}
+
+export interface ArchiveTreesPreviewInput {
+  treeIds: string[];
+}
+
+export interface ArchiveTreesPreviewResult {
+  reminderCount: number;
+  recurringCount: number;
 }
 
 export interface TreeInput {
@@ -238,6 +280,9 @@ export interface LabelCount {
 }
 
 export interface CollectionStats {
+  archivedTotal: number;
+  archivedByYear: LabelCount[];
+  archivedByReason: LabelCount[];
   totalTrees: number;
   byClimate: LabelCount[];
   byFoliage: LabelCount[];
@@ -306,6 +351,7 @@ export interface TreePhotoUpdate {
 }
 
 export type ListTreesParams = {
+archived?: ListTreesArchived;
 search?: string;
 climate?: string[];
 foliage?: string[];
@@ -336,6 +382,15 @@ tagsMode?: ListTreesTagsMode;
 limit?: number;
 offset?: number;
 };
+
+export type ListTreesArchived = typeof ListTreesArchived[keyof typeof ListTreesArchived];
+
+
+export const ListTreesArchived = {
+  active: 'active',
+  archived: 'archived',
+  all: 'all',
+} as const;
 
 export type ListTreesTagsMode = typeof ListTreesTagsMode[keyof typeof ListTreesTagsMode];
 

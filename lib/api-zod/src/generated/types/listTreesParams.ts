@@ -5,9 +5,11 @@
  * Bonsai Journal API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListTreesArchived } from './listTreesArchived';
 import type { ListTreesTagsMode } from './listTreesTagsMode';
 
 export type ListTreesParams = {
+archived?: ListTreesArchived;
 search?: string;
 climate?: string[];
 foliage?: string[];

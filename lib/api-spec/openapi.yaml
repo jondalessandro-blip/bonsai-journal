@@ -96,6 +96,12 @@ paths:
       tags: [trees]
       summary: List all trees with optional filters
       parameters:
+        - name: archived
+          in: query
+          schema:
+            type: string
+            enum: [active, archived, all]
+            default: active
         - name: search
           in: query
           schema: { type: string }
@@ -264,6 +270,94 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /trees/{id}/archive:
+    post:
+      operationId: archiveTree
+      tags: [trees]
+      summary: Archive a tree and remove its reminders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArchiveTreeInput"
+      responses:
+        "200":
+          description: Archived tree and number of removed reminders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArchiveTreeResult"
+        "404":
+          description: Not found
+
+  /trees/{id}/restore:
+    post:
+      operationId: restoreTree
+      tags: [trees]
+      summary: Restore an archived tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Restored tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tree"
+        "404":
+          description: Not found
+
+  /trees/archive/bulk:
+    post:
+      operationId: archiveTreesBulk
+      tags: [trees]
+      summary: Archive multiple trees and remove their reminders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkArchiveTreesInput"
+      responses:
+        "200":
+          description: Counts of archived trees and removed reminders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkArchiveTreesResult"
+        "404":
+          description: One or more trees were not found or are not owned by the user
+
+  /trees/archive/preview:
+    post:
+      operationId: previewArchiveTrees
+      tags: [trees]
+      summary: Preview reminders affected by archiving trees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArchiveTreesPreviewInput"
+      responses:
+        "200":
+          description: Counts of affected reminders and recurring reminders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArchiveTreesPreviewResult"
+        "404":
+          description: One or more trees were not found or are not owned by the user
 
   /trees/logs/bulk:
     post:
@@ -719,6 +813,13 @@ components:
           type: ["string", "null"]
         acquiredDate:
           type: ["string", "null"]
+        archivedDate:
+          type: ["string", "null"]
+          description: YYYY-MM-DD archive date; null means active, a value means archived.
+        archiveReason:
+          type: ["string", "null"]
+        archiveNotes:
+          type: ["string", "null"]
         climate:
           type: ["string", "null"]
         foliage:
@@ -752,6 +853,63 @@ components:
           type: string
         updatedAt:
           type: string
+
+    ArchiveTreeInput:
+      type: object
+      properties:
+        archivedDate:
+          type: string
+          description: Archive date in YYYY-MM-DD format.
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        archiveReason:
+          type: string
+        archiveNotes:
+          type: string
+
+    ArchiveTreeResult:
+      type: object
+      required: [tree, removedReminderCount]
+      properties:
+        tree:
+          $ref: "#/components/schemas/Tree"
+        removedReminderCount:
+          type: integer
+
+    BulkArchiveTreesInput:
+      allOf:
+        - $ref: "#/components/schemas/ArchiveTreeInput"
+        - type: object
+          required: [treeIds]
+          properties:
+            treeIds:
+              type: array
+              items: { type: string }
+
+    BulkArchiveTreesResult:
+      type: object
+      required: [archivedCount, removedReminderCount]
+      properties:
+        archivedCount:
+          type: integer
+        removedReminderCount:
+          type: integer
+
+    ArchiveTreesPreviewInput:
+      type: object
+      required: [treeIds]
+      properties:
+        treeIds:
+          type: array
+          items: { type: string }
+
+    ArchiveTreesPreviewResult:
+      type: object
+      required: [reminderCount, recurringCount]
+      properties:
+        reminderCount:
+          type: integer
+        recurringCount:
+          type: integer
 
     TreeInput:
       type: object
@@ -1029,8 +1187,18 @@ components:
 
     CollectionStats:
       type: object
-      required: [totalTrees, byClimate, byFoliage, byStatus, byTag, recentlyAdded]
+      required: [totalTrees, byClimate, byFoliage, byStatus, byTag, recentlyAdded, archivedTotal, archivedByYear, archivedByReason]
       properties:
+        archivedTotal:
+          type: integer
+        archivedByYear:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelCount"
+        archivedByReason:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelCount"
         totalTrees:
           type: integer
         byClimate:

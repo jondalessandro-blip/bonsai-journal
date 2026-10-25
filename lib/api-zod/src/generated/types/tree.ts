@@ -14,6 +14,15 @@ export interface Tree {
   species?: string | null;
   /** @nullable */
   acquiredDate?: string | null;
+  /**
+     * YYYY-MM-DD archive date; null means active, a value means archived.
+     * @nullable
+     */
+  archivedDate?: string | null;
+  /** @nullable */
+  archiveReason?: string | null;
+  /** @nullable */
+  archiveNotes?: string | null;
   /** @nullable */
   climate?: string | null;
   /** @nullable */
