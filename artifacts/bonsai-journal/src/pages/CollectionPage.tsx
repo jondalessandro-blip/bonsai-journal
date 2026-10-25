@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
-import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown, HelpCircle } from "lucide-react";
+import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown, HelpCircle, Archive } from "lucide-react";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 import { format } from "date-fns";
@@ -429,6 +429,12 @@ export default function CollectionPage() {
               className="rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <HelpCircle className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="/archive">
+            <Button variant="ghost" className="gap-2">
+              <Archive className="h-4 w-4" />
+              Archive
             </Button>
           </Link>
           <Link href="/trees/new">

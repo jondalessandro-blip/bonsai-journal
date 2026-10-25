@@ -12,6 +12,7 @@ import CollectionPage from "@/pages/CollectionPage";
 import TreeDetailPage from "@/pages/TreeDetailPage";
 import NewTreePage from "@/pages/NewTreePage";
 import StatsPage from "@/pages/StatsPage";
+import ArchivePage from "@/pages/ArchivePage";
 import CalendarPage from "@/pages/CalendarPage";
 import HelpPage from "@/pages/HelpPage";
 import FeedbackAdminPage from "@/pages/FeedbackAdminPage";
@@ -201,6 +202,13 @@ function Router() {
         <Protected>
           <Layout>
             <StatsPage />
+          </Layout>
+        </Protected>
+      </Route>
+      <Route path="/archive">
+        <Protected>
+          <Layout>
+            <ArchivePage />
           </Layout>
         </Protected>
       </Route>
