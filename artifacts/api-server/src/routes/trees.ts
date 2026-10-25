@@ -8,6 +8,11 @@ import {
   UpdateTreeParams,
   UpdateTreeBody,
   DeleteTreeParams,
+  ArchiveTreeParams,
+  ArchiveTreeBody,
+  RestoreTreeParams,
+  ArchiveTreesBulkBody,
+  PreviewArchiveTreesBody,
   ListTreeLogsParams,
   CreateTreeLogParams,
   CreateTreeLogBody,
@@ -356,6 +361,133 @@ router.delete("/trees/:id", requireAuth, async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
+// Archive operations share one transaction-scoped implementation so bulk and
+// single-tree requests preserve the same history and idempotency guarantees.
+type TreeTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+type ArchiveFields = {
+  archivedDate: string;
+  archiveReason: string | null;
+  archiveNotes: string | null;
+};
+
+function normalizeArchiveDate(body: unknown): unknown {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+  const input = body as Record<string, unknown>;
+  return {
+    ...input,
+    archivedDate:
+      typeof input.archivedDate === "string" && isValidDateOnly(input.archivedDate)
+        ? input.archivedDate
+        : new Date().toISOString().slice(0, 10),
+  };
+}
+
+function archiveFields(input: {
+  archivedDate?: string;
+  archiveReason?: string;
+  archiveNotes?: string;
+}): ArchiveFields {
+  return {
+    archivedDate: input.archivedDate!,
+    archiveReason: input.archiveReason || null,
+    archiveNotes: input.archiveNotes || null,
+  };
+}
+
+async function archiveOwnedTree(
+  tx: TreeTransaction,
+  tree: typeof treesTable.$inferSelect,
+  fields: ArchiveFields,
+) {
+  if (tree.archivedDate) return { tree, removedReminderCount: 0 };
+
+  // DELETE RETURNING records precisely the incomplete plans actually removed,
+  // even if a reminder was completed concurrently.
+  const reminders = await tx.delete(careRemindersTable)
+    .where(and(
+      eq(careRemindersTable.treeId, tree.id),
+      eq(careRemindersTable.completed, false),
+    ))
+    .returning();
+  reminders.sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.id.localeCompare(b.id));
+  const plans = reminders.slice(0, 10).map((reminder) => {
+    const interval = reminder.intervalValue;
+    const unit = reminder.intervalUnit;
+    const schedule = reminder.recurring
+      ? `recurring${interval !== null && unit ? ` every ${interval} ${interval === 1 ? unit.replace(/s$/, "") : unit}` : ""}`
+      : reminder.dueDate;
+    return `${reminder.type} [${schedule}]`;
+  });
+  if (reminders.length > 10) plans.push(`and ${reminders.length - 10} more`);
+  const notes = [
+    fields.archiveReason,
+    fields.archiveNotes,
+    reminders.length ? `Removed plans: ${plans.join(", ")}` : null,
+  ].filter(Boolean).join("\n") || null;
+
+  const [archivedTree] = await tx.update(treesTable)
+    .set(fields).where(eq(treesTable.id, tree.id)).returning();
+  await tx.insert(careLogsTable).values({
+    treeId: tree.id,
+    type: "Archived",
+    date: fields.archivedDate,
+    notes,
+  });
+  return { tree: archivedTree, removedReminderCount: reminders.length };
+}
+
+router.post("/trees/:id/archive", requireAuth, async (req, res): Promise<void> => {
+  const params = ArchiveTreeParams.safeParse(req.params);
+  const parsed = ArchiveTreeBody.safeParse(normalizeArchiveDate(req.body));
+  if (!params.success || !parsed.success) {
+    res.status(400).json({ error: !params.success ? params.error.message : !parsed.success ? parsed.error.message : "" });
+    return;
+  }
+  const userId = (req as AuthedRequest).userId;
+  const result = await db.transaction(async (tx) => {
+    const [tree] = await tx.select().from(treesTable)
+      .where(and(eq(treesTable.id, params.data.id), eq(treesTable.userId, userId)))
+      .for("update");
+    if (!tree) return null;
+    return archiveOwnedTree(tx, tree, archiveFields(parsed.data));
+  });
+  if (!result) {
+    res.status(404).json({ error: "Tree not found" });
+    return;
+  }
+  res.json({ tree: formatTree(result.tree), removedReminderCount: result.removedReminderCount });
+});
+
+router.post("/trees/:id/restore", requireAuth, async (req, res): Promise<void> => {
+  const params = RestoreTreeParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const userId = (req as AuthedRequest).userId;
+  const tree = await db.transaction(async (tx) => {
+    const [ownedTree] = await tx.select().from(treesTable)
+      .where(and(eq(treesTable.id, params.data.id), eq(treesTable.userId, userId)))
+      .for("update");
+    if (!ownedTree || !ownedTree.archivedDate) return ownedTree;
+    const [restoredTree] = await tx.update(treesTable).set({
+      archivedDate: null, archiveReason: null, archiveNotes: null,
+    }).where(eq(treesTable.id, ownedTree.id)).returning();
+    await tx.insert(careLogsTable).values({
+      treeId: ownedTree.id,
+      type: "Restored",
+      date: new Date().toISOString().slice(0, 10),
+      notes: `Previously archived on ${ownedTree.archivedDate}`,
+    });
+    return restoredTree;
+  });
+  if (!tree) {
+    res.status(404).json({ error: "Tree not found" });
+    return;
+  }
+  res.json(formatTree(tree));
+});
+
 // ---- Care Logs ----
 
 router.post("/trees/logs/bulk", requireAuth, async (req, res): Promise<void> => {
@@ -397,6 +529,71 @@ router.post("/trees/logs/bulk", requireAuth, async (req, res): Promise<void> => 
   }
 
   res.status(201).json(logs.map(formatLog));
+});
+
+router.post("/trees/archive/bulk", requireAuth, async (req, res): Promise<void> => {
+  const parsed = ArchiveTreesBulkBody.safeParse(normalizeArchiveDate(req.body));
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  // Match the existing bulk-care workload cap without changing the contract.
+  if (parsed.data.treeIds.length > 200) {
+    res.status(400).json({ error: "At most 200 trees may be archived at once" });
+    return;
+  }
+  const treeIds = [...new Set(parsed.data.treeIds)].sort();
+  const userId = (req as AuthedRequest).userId;
+  const result = await db.transaction(async (tx) => {
+    const ownedTrees = await tx.select().from(treesTable)
+      .where(and(inArray(treesTable.id, treeIds), eq(treesTable.userId, userId)))
+      .orderBy(treesTable.id).for("update");
+    if (ownedTrees.length !== treeIds.length) return null;
+    let archivedCount = 0;
+    let removedReminderCount = 0;
+    const fields = archiveFields(parsed.data);
+    for (const tree of ownedTrees) {
+      if (tree.archivedDate) continue;
+      const archived = await archiveOwnedTree(tx, tree, fields);
+      archivedCount++;
+      removedReminderCount += archived.removedReminderCount;
+    }
+    return { archivedCount, removedReminderCount };
+  });
+  if (!result) {
+    res.status(404).json({ error: "One or more trees were not found or not owned by the user" });
+    return;
+  }
+  res.json(result);
+});
+
+router.post("/trees/archive/preview", requireAuth, async (req, res): Promise<void> => {
+  const parsed = PreviewArchiveTreesBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  if (parsed.data.treeIds.length > 200) {
+    res.status(400).json({ error: "At most 200 trees may be previewed at once" });
+    return;
+  }
+  const treeIds = [...new Set(parsed.data.treeIds)];
+  const userId = (req as AuthedRequest).userId;
+  const ownedTrees = await db.select().from(treesTable)
+    .where(and(inArray(treesTable.id, treeIds), eq(treesTable.userId, userId)));
+  if (ownedTrees.length !== treeIds.length) {
+    res.status(404).json({ error: "One or more trees were not found or not owned by the user" });
+    return;
+  }
+  const activeIds = ownedTrees.filter((tree) => !tree.archivedDate).map((tree) => tree.id);
+  const reminders = activeIds.length
+    ? await db.select({ recurring: careRemindersTable.recurring }).from(careRemindersTable)
+      .where(and(inArray(careRemindersTable.treeId, activeIds), eq(careRemindersTable.completed, false)))
+    : [];
+  res.json({
+    reminderCount: reminders.length,
+    recurringCount: reminders.filter((reminder) => reminder.recurring === true).length,
+  });
 });
 
 router.get("/trees/:id/logs", requireAuth, async (req, res): Promise<void> => {
