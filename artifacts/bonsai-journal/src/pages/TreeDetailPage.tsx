@@ -1,10 +1,13 @@
-import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTree, useUpdateTreeReminder, useCreateTreeLog, useUpdateTreeLog, useDeleteTreeLog, useDeleteTreeReminder, listTrees, type Tree } from "@workspace/api-client-react";
+import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTree, useUpdateTreeReminder, useCreateTreeLog, useUpdateTreeLog, useDeleteTreeLog, useDeleteTreeReminder, useArchiveTree, useRestoreTree, usePreviewArchiveTrees, listTrees, type Tree } from "@workspace/api-client-react";
 import { useParams, useLocation, Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, Check, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Archive, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, Check, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { TreeForm, type TreeFormHandle } from "@/components/TreeForm";
 import { LogForm } from "@/components/LogForm";
@@ -98,6 +101,11 @@ export default function TreeDetailPage() {
 
   // Confirmation dialogs — replacing native confirm() to avoid browser "embedded page" prompt
   const [confirmDeleteTree, setConfirmDeleteTree] = useState(false);
+  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+  const [isRestoreOpen, setIsRestoreOpen] = useState(false);
+  const [archivedDate, setArchivedDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [archiveReason, setArchiveReason] = useState("");
+  const [archiveNotes, setArchiveNotes] = useState("");
   const [pendingDeleteLogId, setPendingDeleteLogId] = useState<string | null>(null);
   const [pendingDeleteReminderId, setPendingDeleteReminderId] = useState<string | null>(null);
 
@@ -144,6 +152,14 @@ export default function TreeDetailPage() {
   const deleteLog = useDeleteTreeLog();
   const deleteReminder = useDeleteTreeReminder();
   const updateNotes = useUpdateTree();
+  const archiveTree = useArchiveTree();
+  const restoreTree = useRestoreTree();
+  const previewArchive = usePreviewArchiveTrees();
+
+  useEffect(() => {
+    setIsArchiveOpen(false);
+    setIsRestoreOpen(false);
+  }, [id]);
 
   // A closed overlay or a different tree must never inherit an old draft.
   useEffect(() => {
@@ -244,6 +260,61 @@ export default function TreeDetailPage() {
   };
 
   const handleDelete = () => setConfirmDeleteTree(true);
+
+  const invalidateArchiveQueries = (treeId: string) => {
+    for (const queryKey of [
+      ["/api/trees"],
+      ["/api/trees", treeId],
+      ["/api/trees", treeId, "timeline"],
+      ["/api/trees", treeId, "reminders"],
+      ["/api/trees", treeId, "logs"],
+      ["/api/reminders/upcoming"],
+      ["/api/collection/stats"],
+    ]) {
+      void queryClient.invalidateQueries({ queryKey });
+    }
+  };
+
+  const openArchive = () => {
+    setArchivedDate(format(new Date(), "yyyy-MM-dd"));
+    setArchiveReason("");
+    setArchiveNotes("");
+    archiveTree.reset();
+    previewArchive.reset();
+    setIsArchiveOpen(true);
+    previewArchive.mutate({ data: { treeIds: [tree.id] } });
+  };
+
+  const confirmArchive = () => {
+    if (!archivedDate || !previewArchive.isSuccess || archiveTree.isPending) return;
+    const treeId = tree.id;
+    archiveTree.mutate({
+      id: treeId,
+      data: {
+        archivedDate,
+        ...(archiveReason ? { archiveReason } : {}),
+        ...(archiveNotes.trim() ? { archiveNotes: archiveNotes.trim() } : {}),
+      },
+    }, {
+      onSuccess: ({ tree: archivedTree }) => {
+        queryClient.setQueryData<Tree>(["/api/trees", treeId], archivedTree);
+        invalidateArchiveQueries(treeId);
+        if (currentTreeIdRef.current === treeId) setIsArchiveOpen(false);
+      },
+    });
+  };
+
+  const confirmRestore = () => {
+    if (restoreTree.isPending) return;
+    const treeId = tree.id;
+    restoreTree.mutate({ id: treeId }, {
+      onSuccess: (restoredTree) => {
+        queryClient.setQueryData<Tree>(["/api/trees", treeId], restoredTree);
+        invalidateArchiveQueries(treeId);
+        if (currentTreeIdRef.current === treeId) setIsRestoreOpen(false);
+      },
+    });
+  };
 
   const handlePlantAnother = () => {
     setLocation("/trees/new");
@@ -550,11 +621,107 @@ export default function TreeDetailPage() {
             <Copy className="w-4 h-4 mr-2" />
             Add Duplicate Tree
           </Button>
+          {!tree.archivedDate && (
+            <Button variant="outline" size="sm" onClick={openArchive}>
+              <Archive className="w-4 h-4 mr-2" />
+              Archive
+            </Button>
+          )}
           <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive border-transparent" onClick={handleDelete}>
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
+
+      {tree.archivedDate && (
+        <section aria-label="Archived tree" className="flex flex-col gap-3 rounded-xl border bg-muted/50 p-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-1">
+            <p className="font-medium">Archived on {format(parseISO(tree.archivedDate), "MMM d, yyyy")}</p>
+            {tree.archiveReason && <p className="text-sm">{tree.archiveReason}</p>}
+            {tree.archiveNotes && <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{tree.archiveNotes}</p>}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => {
+            restoreTree.reset();
+            setIsRestoreOpen(true);
+          }}>Restore</Button>
+        </section>
+      )}
+
+      <Dialog open={isArchiveOpen} onOpenChange={(open) => {
+        if (!archiveTree.isPending) setIsArchiveOpen(open);
+      }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Archive tree</DialogTitle>
+            <DialogDescription>Archive {tree.name} and remove its planned reminders.</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={(event) => {
+            event.preventDefault();
+            confirmArchive();
+          }}>
+            <fieldset disabled={archiveTree.isPending} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="archive-date">Archive date</Label>
+                <Input id="archive-date" type="date" required value={archivedDate} onChange={(event) => setArchivedDate(event.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="archive-reason">Reason (optional)</Label>
+                <select id="archive-reason" value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <option value="">No reason</option>
+                  {["Died", "Failed cutting or seedling", "Failed layer or rooting", "Gave away or sold", "Other"].map((reason) => (
+                    <option key={reason} value={reason}>{reason}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="archive-notes">Notes (optional)</Label>
+                <Textarea id="archive-notes" value={archiveNotes} onChange={(event) => setArchiveNotes(event.target.value)} />
+              </div>
+            </fieldset>
+            {previewArchive.isPending && <p role="status" className="text-sm text-muted-foreground">Checking planned reminders...</p>}
+            {previewArchive.isError && (
+              <div role="alert" className="space-y-2 text-sm text-destructive">
+                <p>{previewArchive.error?.message || "Could not check planned reminders. Please try again."}</p>
+                <Button type="button" variant="outline" size="sm" onClick={() => previewArchive.mutate({ data: { treeIds: [tree.id] } })}>Retry preview</Button>
+              </div>
+            )}
+            {previewArchive.isSuccess && (
+              <p className="text-sm text-muted-foreground">
+                {previewArchive.data.reminderCount > 0
+                  ? `This tree has ${previewArchive.data.reminderCount} planned reminders (${previewArchive.data.recurringCount} recurring). They will be removed. Care history, photos and notes stay.`
+                  : "Care history, photos and notes stay."}
+              </p>
+            )}
+            {archiveTree.isError && <p role="alert" className="text-sm text-destructive">{archiveTree.error?.message || "Could not archive this tree. Please try again."}</p>}
+            <DialogFooter>
+              <Button type="button" variant="outline" disabled={archiveTree.isPending} onClick={() => setIsArchiveOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={!archivedDate || !previewArchive.isSuccess || archiveTree.isPending}>
+                {archiveTree.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Archive tree
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isRestoreOpen} onOpenChange={(open) => {
+        if (!restoreTree.isPending) setIsRestoreOpen(open);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore tree</AlertDialogTitle>
+            <AlertDialogDescription>Restore this tree to your collection? Its old reminders will not come back.</AlertDialogDescription>
+          </AlertDialogHeader>
+          {restoreTree.isError && <p role="alert" className="text-sm text-destructive">{restoreTree.error?.message || "Could not restore this tree. Please try again."}</p>}
+          <AlertDialogFooter>
+            <Button variant="outline" disabled={restoreTree.isPending} onClick={() => setIsRestoreOpen(false)}>Cancel</Button>
+            <Button disabled={restoreTree.isPending} onClick={confirmRestore}>
+              {restoreTree.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Restore tree
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Content grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
