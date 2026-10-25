@@ -668,7 +668,7 @@ export default function TreeDetailPage() {
                 <Label htmlFor="archive-reason">Reason (optional)</Label>
                 <select id="archive-reason" value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <option value="">No reason</option>
-                  {["Died", "Failed cutting or seedling", "Failed layer or rooting", "Gave away or sold", "Other"].map((reason) => (
+                  {["Died", "Failed seedling", "Failed cutting", "Failed layer", "Failed graft", "Gave away or sold", "Other"].map((reason) => (
                     <option key={reason} value={reason}>{reason}</option>
                   ))}
                 </select>
