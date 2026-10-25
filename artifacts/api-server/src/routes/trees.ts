@@ -101,6 +101,7 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
     tag,
     tags: tagsParam,
     tagsMode = "all",
+    archived = "active",
     limit,
     offset,
   } = query.data;
@@ -124,6 +125,8 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
   const pageOffset = offset ?? 0;
 
   const conditions = [eq(treesTable.userId, userId)];
+  if (archived === "active") conditions.push(isNull(treesTable.archivedDate));
+  if (archived === "archived") conditions.push(isNotNull(treesTable.archivedDate));
   if (search) {
     conditions.push(
       or(
@@ -167,6 +170,9 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
       name: treesTable.name,
       species: treesTable.species,
       acquiredDate: treesTable.acquiredDate,
+      archivedDate: treesTable.archivedDate,
+      archiveReason: treesTable.archiveReason,
+      archiveNotes: treesTable.archiveNotes,
       climate: treesTable.climate,
       foliage: treesTable.foliage,
       style: treesTable.style,
@@ -190,6 +196,9 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
     name: t.name,
     species: t.species,
     acquiredDate: t.acquiredDate,
+    archivedDate: t.archivedDate || null,
+    archiveReason: t.archiveReason || null,
+    archiveNotes: t.archiveNotes || null,
     climate: t.climate,
     foliage: t.foliage,
     style: t.style,
@@ -850,14 +859,22 @@ router.delete("/trees/:id/photos/:photoId", requireAuth, async (req, res): Promi
 router.get("/collection/stats", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as AuthedRequest).userId;
 
-  const [trees, recentlyAdded] = await Promise.all([
-    db.select().from(treesTable).where(eq(treesTable.userId, userId)),
+  const activeConditions = and(eq(treesTable.userId, userId), isNull(treesTable.archivedDate));
+  const [trees, recentlyAdded, archivedTrees] = await Promise.all([
+    db.select().from(treesTable).where(activeConditions),
     db
       .select()
       .from(treesTable)
-      .where(eq(treesTable.userId, userId))
+      .where(activeConditions)
       .orderBy(sql`${treesTable.createdAt} DESC`)
       .limit(3),
+    db
+      .select({
+        archivedDate: treesTable.archivedDate,
+        archiveReason: treesTable.archiveReason,
+      })
+      .from(treesTable)
+      .where(and(eq(treesTable.userId, userId), isNotNull(treesTable.archivedDate))),
   ]);
 
   const countBy = (key: "climate" | "foliage" | "status") => {
@@ -876,6 +893,16 @@ router.get("/collection/stats", requireAuth, async (req, res): Promise<void> => 
     }
   }
 
+  const archivedYearCounts = new Map<string, number>();
+  const archivedReasonCounts = new Map<string, number>();
+  for (const t of archivedTrees) {
+    const year = t.archivedDate!.slice(0, 4);
+    archivedYearCounts.set(year, (archivedYearCounts.get(year) ?? 0) + 1);
+    if (t.archiveReason) {
+      archivedReasonCounts.set(t.archiveReason, (archivedReasonCounts.get(t.archiveReason) ?? 0) + 1);
+    }
+  }
+
   res.json({
     totalTrees: trees.length,
     byClimate: countBy("climate"),
@@ -883,6 +910,12 @@ router.get("/collection/stats", requireAuth, async (req, res): Promise<void> => 
     byStatus: countBy("status"),
     byTag: Array.from(tagCounts.entries()).map(([label, count]) => ({ label, count })),
     recentlyAdded: recentlyAdded.map(formatTree),
+    archivedTotal: archivedTrees.length,
+    archivedByYear: Array.from(archivedYearCounts.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([label, count]) => ({ label, count })),
+    archivedByReason: Array.from(archivedReasonCounts.entries())
+      .map(([label, count]) => ({ label, count })),
   });
 });
 
@@ -1071,6 +1104,7 @@ router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> =
     .where(
       and(
         eq(treesTable.userId, userId),
+        isNull(treesTable.archivedDate),
         eq(careRemindersTable.completed, false),
         sql`${careRemindersTable.dueDate} <= ${in30Str}`,
       ),
