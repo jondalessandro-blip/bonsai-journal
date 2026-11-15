@@ -1,6 +1,7 @@
 import { useLocation, Link as WouterLink } from "wouter";
 import { useUser, useClerk, Show } from "@clerk/react";
-import { LogOut, Menu, User } from "lucide-react";
+import { Bell, LogOut, Menu, User } from "lucide-react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import { NotificationSettingsDialog } from "./NotificationSettingsDialog";
 
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -26,11 +28,21 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 function UserMenu() {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const displayName = user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "Account";
 
   return (
     <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground hover:text-foreground gap-1.5"
+        onClick={() => setNotificationsOpen(true)}
+      >
+        <Bell className="h-3.5 w-3.5" />
+        <span>Notifications</span>
+      </Button>
       <div className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground">
         <User className="h-3.5 w-3.5" />
         <span className="max-w-[140px] truncate">{displayName}</span>
@@ -61,6 +73,10 @@ function UserMenu() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <NotificationSettingsDialog
+        open={notificationsOpen}
+        onOpenChange={setNotificationsOpen}
+      />
     </div>
   );
 }

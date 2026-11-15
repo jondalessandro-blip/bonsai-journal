@@ -44,6 +44,10 @@ const helpSections = [
     body: "Reminders let you flag something to do in the future, like checking for pests in two weeks. Set a one-time reminder for something that only needs doing once, or make it recurring, such as watering every day or fertilizing every two weeks, and choose months to skip when the tree goes dormant for part of the year. They'll show up in the journal so you don't forget. You can also plan a one time task for several trees at once by selecting them on the Collection page. Recurring plans are set up one tree at a time, so open the tree and set it there.",
   },
   {
+    title: "Notifications",
+    body: "Daily notifications include the number of care tasks due today and overdue, once each morning, and nothing is sent when there is nothing due. Overdue tasks keep being counted until they are completed or skipped. Turn notifications on for each device from the account menu. On iPhone and iPad, notifications only work when Bonsai Journal is installed from Safari on the Home Screen and opened as an app.",
+  },
+  {
     title: "Completing a scheduled task",
     body: "There are two ways to mark a planned task done. Tap the circle icon next to it in the journal for a one-tap shortcut, it logs the care and, if it's a recurring task, moves it forward to its next due date automatically. Or open the task by tapping its pencil icon, check Task completed, confirm the date it was actually done, and save. That same dialog also lets you Skip a recurring task instead, moving it to its next occurrence without logging any care.",
   },

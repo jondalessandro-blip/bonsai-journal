@@ -30,6 +30,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
@@ -70,5 +71,62 @@ self.addEventListener('fetch', (event) => {
 
       return cachedResponse || networkResponse;
     }),
+  );
+});
+
+self.addEventListener('push', (event) => {
+  let parsedPayload;
+  try {
+    parsedPayload = event.data ? event.data.json() : {};
+  } catch {
+    parsedPayload = {};
+  }
+  const payload =
+    parsedPayload && typeof parsedPayload === 'object' ? parsedPayload : {};
+
+  const title =
+    typeof payload.title === 'string' && payload.title.trim()
+      ? payload.title
+      : 'Bonsai Journal';
+  const body = typeof payload.body === 'string' ? payload.body : '';
+  const url =
+    typeof payload.url === 'string' && payload.url.trim()
+      ? payload.url
+      : '/';
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: '/icons/icon-192.png',
+      tag: 'bonsai-daily',
+      data: { url },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const rawUrl = event.notification.data?.url;
+
+  event.waitUntil(
+    (async () => {
+      const url = rawUrl ? new URL(rawUrl, self.location.origin) : null;
+      const targetUrl =
+        url?.origin === self.location.origin ? url.href : null;
+      const windows = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      });
+      const appWindow = windows.find((client) =>
+        client.url.startsWith(self.registration.scope),
+      );
+
+      if (appWindow) {
+        if (targetUrl) await appWindow.navigate(targetUrl);
+        await appWindow.focus();
+      } else if (targetUrl) {
+        await self.clients.openWindow(targetUrl);
+      }
+    })(),
   );
 });
