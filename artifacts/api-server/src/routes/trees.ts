@@ -23,6 +23,7 @@ import {
   CreateTreeReminderBody,
   CreateBulkTreeRemindersBody,
   CompleteRemindersBulkBody,
+  RescheduleRemindersBulkBody,
   UpdateTreeReminderParams,
   UpdateTreeReminderBody,
   DeleteTreeReminderParams,
@@ -1264,6 +1265,87 @@ router.post("/reminders/complete-bulk", requireAuth, async (req, res): Promise<v
     return;
   }
   res.json(completion);
+});
+
+router.post("/reminders/reschedule-bulk", requireAuth, async (req, res): Promise<void> => {
+  const parsed = RescheduleRemindersBulkBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { reminderIds, newDueDate, today } = parsed.data;
+  const uniqueReminderIds = [...new Set(reminderIds)];
+  if (!isValidDateOnly(today) || !isValidDateOnly(newDueDate)) {
+    res.status(400).json({ error: "Dates must be valid calendar dates in YYYY-MM-DD form" });
+    return;
+  }
+  if (newDueDate < today) {
+    res.status(400).json({ error: "New due date cannot be earlier than today" });
+    return;
+  }
+
+  const userId = (req as AuthedRequest).userId;
+  let failure: { status: 404; error: string } | undefined;
+  let result:
+    | {
+        rescheduledCount: number;
+        rescheduled: Array<{ reminderId: string; newDueDate: string }>;
+      }
+    | undefined;
+
+  await db.transaction(async (tx) => {
+    const rows = await tx
+      .select({ reminder: careRemindersTable })
+      .from(careRemindersTable)
+      .innerJoin(treesTable, eq(careRemindersTable.treeId, treesTable.id))
+      .where(
+        and(
+          inArray(careRemindersTable.id, uniqueReminderIds),
+          eq(treesTable.userId, userId),
+          eq(careRemindersTable.completed, false),
+        ),
+      )
+      .for("update", { of: careRemindersTable });
+
+    if (rows.length !== uniqueReminderIds.length) {
+      failure = {
+        status: 404,
+        error: "One or more reminders were not found, are not owned by you, or are already completed",
+      };
+      return;
+    }
+
+    const remindersById = new Map(
+      rows.map(({ reminder }) => [reminder.id, reminder]),
+    );
+    const reminders = uniqueReminderIds.map((id) => remindersById.get(id)!);
+
+    for (const reminder of reminders) {
+      await tx
+        .update(careRemindersTable)
+        .set({ dueDate: newDueDate })
+        .where(eq(careRemindersTable.id, reminder.id));
+    }
+
+    result = {
+      rescheduledCount: reminders.length,
+      rescheduled: reminders.map((reminder) => ({
+        reminderId: reminder.id,
+        newDueDate,
+      })),
+    };
+  });
+
+  if (failure) {
+    res.status(failure.status).json({ error: failure.error });
+    return;
+  }
+  if (!result) {
+    res.status(500).json({ error: "Could not reschedule reminders" });
+    return;
+  }
+  res.json(result);
 });
 
 router.get("/reminders/upcoming", requireAuth, async (req, res): Promise<void> => {

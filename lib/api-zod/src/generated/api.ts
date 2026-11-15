@@ -755,6 +755,35 @@ export const CompleteRemindersBulkResponse = zod.object({
 
 
 /**
+ * @summary Reschedule multiple care reminders atomically
+ */
+export const rescheduleRemindersBulkBodyReminderIdsItemRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const rescheduleRemindersBulkBodyReminderIdsMax = 200;
+
+export const rescheduleRemindersBulkBodyNewDueDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const rescheduleRemindersBulkBodyTodayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
+export const RescheduleRemindersBulkBody = zod.object({
+  "reminderIds": zod.array(zod.string().regex(rescheduleRemindersBulkBodyReminderIdsItemRegExp)).min(1).max(rescheduleRemindersBulkBodyReminderIdsMax),
+  "newDueDate": zod.string().regex(rescheduleRemindersBulkBodyNewDueDateRegExp),
+  "today": zod.string().regex(rescheduleRemindersBulkBodyTodayRegExp)
+})
+
+export const rescheduleRemindersBulkResponseRescheduledItemReminderIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const rescheduleRemindersBulkResponseRescheduledItemNewDueDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
+export const RescheduleRemindersBulkResponse = zod.object({
+  "rescheduledCount": zod.number(),
+  "rescheduled": zod.array(zod.object({
+  "reminderId": zod.string().regex(rescheduleRemindersBulkResponseRescheduledItemReminderIdRegExp),
+  "newDueDate": zod.string().regex(rescheduleRemindersBulkResponseRescheduledItemNewDueDateRegExp)
+}))
+})
+
+
+/**
  * @summary Get the VAPID public key for web push
  */
 export const GetNotificationPublicKeyResponse = zod.object({

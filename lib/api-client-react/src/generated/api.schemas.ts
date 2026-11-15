@@ -296,6 +296,29 @@ export interface CompleteCareRemindersResponse {
   deletedReminderIds: string[];
 }
 
+export interface RescheduleCareRemindersInput {
+  /**
+     * @minItems 1
+     * @maxItems 200
+     */
+  reminderIds: string[];
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  newDueDate: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  today: string;
+}
+
+export type RescheduleCareRemindersResponseRescheduledItem = {
+  reminderId: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  newDueDate: string;
+};
+
+export interface RescheduleCareRemindersResponse {
+  rescheduledCount: number;
+  rescheduled: RescheduleCareRemindersResponseRescheduledItem[];
+}
+
 export interface CareReminderUpdate {
   type?: string;
   dueDate?: string;

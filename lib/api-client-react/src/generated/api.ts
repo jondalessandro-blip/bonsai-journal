@@ -46,6 +46,8 @@ import type {
   NotificationSubscriptionDeleteInput,
   NotificationSubscriptionInput,
   NotificationSubscriptionResult,
+  RescheduleCareRemindersInput,
+  RescheduleCareRemindersResponse,
   TimelineEvent,
   Tree,
   TreeInput,
@@ -2007,6 +2009,77 @@ export const useCompleteRemindersBulk = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getCompleteRemindersBulkMutationOptions(options));
+    }
+
+export const getRescheduleRemindersBulkUrl = () => {
+
+
+
+
+  return `/api/reminders/reschedule-bulk`
+}
+
+/**
+ * @summary Reschedule multiple care reminders atomically
+ */
+export const rescheduleRemindersBulk = async (rescheduleCareRemindersInput: RescheduleCareRemindersInput, options?: RequestInit): Promise<RescheduleCareRemindersResponse> => {
+
+  return customFetch<RescheduleCareRemindersResponse>(getRescheduleRemindersBulkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(rescheduleCareRemindersInput)
+  }
+);}
+
+
+
+
+
+export const getRescheduleRemindersBulkMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rescheduleRemindersBulk>>, TError,{data: BodyType<RescheduleCareRemindersInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rescheduleRemindersBulk>>, TError,{data: BodyType<RescheduleCareRemindersInput>}, TContext> => {
+
+const mutationKey = ['rescheduleRemindersBulk'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rescheduleRemindersBulk>>, {data: BodyType<RescheduleCareRemindersInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  rescheduleRemindersBulk(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RescheduleRemindersBulkMutationResult = NonNullable<Awaited<ReturnType<typeof rescheduleRemindersBulk>>>
+    export type RescheduleRemindersBulkMutationBody = BodyType<RescheduleCareRemindersInput>
+    export type RescheduleRemindersBulkMutationError = ErrorType<void>
+
+    /**
+ * @summary Reschedule multiple care reminders atomically
+ */
+export const useRescheduleRemindersBulk = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rescheduleRemindersBulk>>, TError,{data: BodyType<RescheduleCareRemindersInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rescheduleRemindersBulk>>,
+        TError,
+        {data: BodyType<RescheduleCareRemindersInput>},
+        TContext
+      > => {
+      return useMutation(getRescheduleRemindersBulkMutationOptions(options));
     }
 
 export const getGetNotificationPublicKeyUrl = () => {
