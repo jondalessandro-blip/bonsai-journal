@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { AlertCircle, Maximize2, X, CalendarClock, ArrowRight } from "lucide-react";
-import { format, parseISO } from "date-fns";
-import { useCompleteRemindersBulk, type UpcomingReminder } from "@workspace/api-client-react";
+import { format, parseISO, isValid } from "date-fns";
+import { useCompleteRemindersBulk, useRescheduleRemindersBulk, type UpcomingReminder } from "@workspace/api-client-react";
+import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
@@ -40,11 +42,16 @@ export function UpcomingCarePanel({ reminders }: Props) {
   const today = format(new Date(), "yyyy-MM-dd");
   const [date, setDate] = useState(today);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const rescheduleForm = useForm({ defaultValues: { newDueDate: "" } });
+  const newDueDate = rescheduleForm.watch("newDueDate");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [successFading, setSuccessFading] = useState(false);
   const queryClient = useQueryClient();
   const complete = useCompleteRemindersBulk();
+  const reschedule = useRescheduleRemindersBulk();
+  const isPending = complete.isPending || reschedule.isPending;
   const hasReminders = reminders.length > 0;
   const selected = reminders.filter(r => selectedIds.has(r.id));
   const autoUntickedCount = reminders.filter(r => autoUntickedIds.has(r.id)).length;
@@ -56,6 +63,10 @@ export function UpcomingCarePanel({ reminders }: Props) {
   const validDate = date !== "" && date <= today;
   const canSubmit = selected.length > 0 && (dateMode === "scheduled" || validDate);
   const recurringCount = selected.filter(r => r.recurring).length;
+  const validNewDate = /^\d{4}-\d{2}-\d{2}$/.test(newDueDate)
+    && isValid(parseISO(newDueDate))
+    && format(parseISO(newDueDate), "yyyy-MM-dd") === newDueDate
+    && newDueDate >= today;
   const breakdown = types.map(type => ({ type, count: selected.filter(r => r.type === type).length }))
     .filter(item => item.count > 0);
 
@@ -66,16 +77,17 @@ export function UpcomingCarePanel({ reminders }: Props) {
     setSearch("");
     setError("");
     setConfirmOpen(false);
+    setRescheduleOpen(false);
   }
 
   function close() {
-    if (complete.isPending) return;
+    if (isPending) return;
     leaveSelectMode();
     setExpanded(false);
   }
 
   function toggleTasks(tasks: UpcomingReminder[]) {
-    if (complete.isPending) return;
+    if (isPending) return;
     const eligible = tasks.filter(selectable);
     setSelectedIds(previous => {
       const next = new Set(previous);
@@ -102,7 +114,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
   }
 
   function submit() {
-    if (!canSubmit || complete.isPending) return;
+    if (!canSubmit || isPending) return;
     setError("");
     const count = selected.length;
     complete.mutate({
@@ -119,6 +131,26 @@ export function UpcomingCarePanel({ reminders }: Props) {
       },
       onError: (failure) => {
         setError(failure.message || "Could not mark tasks done. Please try again.");
+      },
+    });
+  }
+
+  function submitReschedule() {
+    if (!selected.length || !validNewDate || isPending) return;
+    setError("");
+    const count = selected.length;
+    reschedule.mutate({
+      data: { reminderIds: selected.map(r => r.id), newDueDate, today },
+    }, {
+      onSuccess: () => {
+        for (const key of ["/api/reminders/upcoming", "/api/trees", "/api/collection/stats"]) {
+          void queryClient.invalidateQueries({ queryKey: [key] });
+        }
+        leaveSelectMode();
+        setSuccess(`Moved ${count} task${count === 1 ? "" : "s"} to ${format(parseISO(newDueDate), "MMM d")}.`);
+      },
+      onError: (failure) => {
+        setError(failure.message || "Could not reschedule tasks. Please try again.");
       },
     });
   }
@@ -156,13 +188,13 @@ export function UpcomingCarePanel({ reminders }: Props) {
   useEffect(() => {
     if (!expanded) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || confirmOpen || complete.isPending) return;
+      if (e.key !== "Escape" || confirmOpen || rescheduleOpen || isPending) return;
       if (selectMode) leaveSelectMode();
       else setExpanded(false);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [expanded, selectMode, confirmOpen, complete.isPending]);
+  }, [expanded, selectMode, confirmOpen, rescheduleOpen, isPending]);
 
   return (
     <>
@@ -234,7 +266,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
             </div>
             <div className="flex items-center gap-1">
               <Button
-                variant="ghost" size="sm" disabled={complete.isPending}
+                variant="ghost" size="sm" disabled={isPending}
                 data-testid="button-select-care"
                 onClick={() => {
                   if (selectMode) leaveSelectMode();
@@ -245,7 +277,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
               </Button>
               <button
                 onClick={close}
-                disabled={complete.isPending}
+                disabled={isPending}
                 className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                 aria-label="Close full-screen view"
                 data-testid="button-close-care"
@@ -260,7 +292,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
               <Input
                 type="search" aria-label="Search care tasks" placeholder="Search trees, task types or notes"
                 value={search} onChange={e => setSearch(e.target.value)}
-                disabled={complete.isPending} data-testid="input-search-care"
+                disabled={isPending} data-testid="input-search-care"
               />
               <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto">
                 {types.map(type => {
@@ -269,19 +301,19 @@ export function UpcomingCarePanel({ reminders }: Props) {
                   return (
                     <Button key={type} variant="outline" size="sm"
                       data-testid={`button-care-type-${type}`}
-                      disabled={!eligible.length || complete.isPending}
+                      disabled={!eligible.length || isPending}
                       aria-pressed={eligible.length > 0 && eligible.every(r => selectedIds.has(r.id))}
                       onClick={() => toggleTasks(tasks)}>
                       {type} ({tasks.length})
                     </Button>
                   );
                 })}
-                <Button variant="ghost" size="sm" disabled={complete.isPending}
+                <Button variant="ghost" size="sm" disabled={isPending}
                   data-testid="button-select-shown-care"
                   onClick={() => setSelectedIds(previous => new Set([...previous, ...shown.filter(selectable).map(r => r.id)]))}>
                   Select all shown
                 </Button>
-                <Button variant="ghost" size="sm" disabled={complete.isPending}
+                <Button variant="ghost" size="sm" disabled={isPending}
                   data-testid="button-clear-care" onClick={() => {
                     setSelectedIds(new Set());
                     setAutoUntickedIds(new Set());
@@ -294,7 +326,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
           <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-2">
             {success && <p role="status" data-testid="status-care-success"
               className={`text-sm text-primary transition-opacity duration-500 ${successFading ? "opacity-0" : "opacity-100"}`}>{success}</p>}
-            {error && !confirmOpen && <p role="alert" data-testid="text-care-error" className="text-sm text-destructive">{error}</p>}
+            {error && !confirmOpen && !rescheduleOpen && <p role="alert" data-testid="text-care-error" className="text-sm text-destructive">{error}</p>}
             {shown.length === 0 && <p className="text-sm text-muted-foreground">No matching tasks.</p>}
             {shown.map(r => {
               const disabled = !selectable(r);
@@ -323,7 +355,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
                 </div>
 
                 {selectMode ? (
-                  <Checkbox checked={selectedIds.has(r.id)} disabled={disabled || complete.isPending}
+                  <Checkbox checked={selectedIds.has(r.id)} disabled={disabled || isPending}
                     aria-label={`Select ${r.treeName}: ${r.type}${r.notes ? ` — ${r.notes}` : ""}`}
                     data-testid={`checkbox-care-${r.id}`}
                     className="self-center"
@@ -348,7 +380,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
           {selectMode && (
             <div className="border-t bg-card px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shrink-0 space-y-3">
               <p className="text-sm font-medium" role="status" data-testid="status-care-selected">{selected.length} selected</p>
-              <fieldset disabled={complete.isPending} className="space-y-2">
+              <fieldset disabled={isPending} className="space-y-2">
                 <legend className="sr-only">Completion date</legend>
                 <div className="flex flex-wrap items-center gap-2">
                   <label className="flex items-center gap-2 text-sm">
@@ -357,7 +389,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
                     Done on
                   </label>
                   <Input type="date" aria-label="Done on date" required max={today}
-                    value={date} disabled={dateMode !== "single" || complete.isPending}
+                    value={date} disabled={dateMode !== "single" || isPending}
                     onChange={e => setDate(e.target.value)} data-testid="input-care-date" className="w-auto min-w-0" />
                 </div>
                 <label className="flex items-center gap-2 text-sm">
@@ -375,11 +407,22 @@ export function UpcomingCarePanel({ reminders }: Props) {
                   {" "}Choosing Done on again will bring {autoUntickedCount === 1 ? "it" : "them"} back.
                 </p>
               )}
-              <Button className="w-full sm:w-auto" disabled={!canSubmit || complete.isPending}
+              <div className="flex flex-wrap gap-2">
+              <Button className="flex-1 sm:flex-none" disabled={!canSubmit || isPending}
                 data-testid="button-complete-care"
                 onClick={() => selected.length === 1 ? submit() : setConfirmOpen(true)}>
                 {complete.isPending ? "Marking done..." : `Mark ${selected.length} done`}
               </Button>
+              <Button variant="outline" className="flex-1 sm:flex-none"
+                disabled={!selected.length || isPending} data-testid="button-reschedule-care"
+                onClick={() => {
+                  rescheduleForm.reset({ newDueDate: "" });
+                  setError("");
+                  setRescheduleOpen(true);
+                }}>
+                Reschedule {selected.length}
+              </Button>
+              </div>
             </div>
           )}
         </div>
@@ -405,6 +448,46 @@ export function UpcomingCarePanel({ reminders }: Props) {
               {complete.isPending ? "Marking done..." : "Mark done"}
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={rescheduleOpen} onOpenChange={open => { if (!isPending) setRescheduleOpen(open); }}>
+        <AlertDialogContent className="max-h-[90dvh] overflow-y-auto"
+          onEscapeKeyDown={e => { if (isPending) e.preventDefault(); }}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reschedule {selected.length} task{selected.length === 1 ? "" : "s"}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 break-words">
+                <p>{selected.length} task{selected.length === 1 ? "" : "s"} across {new Set(selected.map(r => r.treeId)).size} trees.</p>
+                <p>{[...new Set(selected.map(r => r.treeName))].join(", ")}</p>
+                <p>{breakdown.map(({ type, count }) => `${type} x ${count}`).join(", ")}</p>
+                {recurringCount > 0 && <p data-testid="text-care-reschedule-recurring">
+                  {recurringCount} of these tasks repeat ({selected.filter(r => r.recurring).map(r => `${r.treeName}, ${r.type}`).join("; ")}).
+                  {" "}Their future dates will count from the new date. To keep a repeating task on its usual rhythm, untick it here and change it from its own tree page instead.
+                </p>}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Form {...rescheduleForm}>
+            <form onSubmit={rescheduleForm.handleSubmit(submitReschedule)} className="min-w-0 space-y-4">
+              <FormField control={rescheduleForm.control} name="newDueDate" render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>New date</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="date" min={today} required disabled={isPending}
+                      className="min-w-0 max-w-full" data-testid="input-care-reschedule-date" />
+                  </FormControl>
+                </FormItem>
+              )} />
+              {error && <p role="alert" data-testid="text-care-reschedule-error" className="text-sm text-destructive">{error}</p>}
+              <AlertDialogFooter>
+                <AlertDialogCancel type="button" disabled={isPending} data-testid="button-cancel-reschedule-care">Cancel</AlertDialogCancel>
+                <Button type="submit" disabled={isPending || !selected.length || !validNewDate}
+                  data-testid="button-confirm-reschedule-care">
+                  {reschedule.isPending ? "Rescheduling..." : "Reschedule"}
+                </Button>
+              </AlertDialogFooter>
+            </form>
+          </Form>
         </AlertDialogContent>
       </AlertDialog>
     </>

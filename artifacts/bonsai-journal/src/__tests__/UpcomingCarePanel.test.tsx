@@ -7,7 +7,7 @@ import { memoryLocation } from "wouter/memory-location";
 import { format } from "date-fns";
 import type { UpcomingReminder } from "@workspace/api-client-react";
 
-const { request } = vi.hoisted(() => ({ request: vi.fn() }));
+const { request, rescheduleRequest } = vi.hoisted(() => ({ request: vi.fn(), rescheduleRequest: vi.fn() }));
 
 vi.mock("@workspace/api-client-react", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@workspace/api-client-react")>();
@@ -15,6 +15,7 @@ vi.mock("@workspace/api-client-react", async (importOriginal) => {
   return {
     ...actual,
     useCompleteRemindersBulk: () => useMutation({ mutationFn: request }),
+    useRescheduleRemindersBulk: () => useMutation({ mutationFn: rescheduleRequest }),
   };
 });
 
@@ -32,6 +33,115 @@ const clients: QueryClient[] = [];
 beforeEach(() => {
   request.mockReset();
   request.mockResolvedValue({ completedCount: 1, rescheduled: [] });
+  rescheduleRequest.mockReset();
+  rescheduleRequest.mockResolvedValue({ rescheduledCount: 1, rescheduled: [] });
+});
+
+describe("Upcoming Care bulk rescheduling", () => {
+  it("disables rescheduling with nothing ticked and starts the single-task dialog empty", async () => {
+    const { user } = await setup();
+    expect(screen.getByRole("button", { name: "Reschedule 0" })).toBeDisabled();
+    await user.click(checkbox("c"));
+    await user.click(screen.getByRole("button", { name: "Reschedule 1" }));
+    const dialog = screen.getByRole("alertdialog");
+    expect(within(dialog).getByRole("heading")).toHaveTextContent("Reschedule 1 task");
+    expect(dialog).toHaveTextContent("Elm");
+    expect(screen.getByLabelText("New date")).toHaveValue("");
+    expect(screen.getByLabelText("New date")).toHaveAttribute("min", today);
+    expect(within(dialog).getByRole("button", { name: "Reschedule" })).toBeDisabled();
+    expect(rescheduleRequest).not.toHaveBeenCalled();
+  });
+
+  it("blocks dates earlier than today and accepts today", async () => {
+    const { user } = await setup();
+    await user.click(checkbox("c"));
+    await user.click(screen.getByRole("button", { name: "Reschedule 1" }));
+    fireEvent.change(screen.getByLabelText("New date"), { target: { value: "2020-01-01" } });
+    expect(screen.getByTestId("button-confirm-reschedule-care")).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("New date"), { target: { value: today } });
+    expect(screen.getByTestId("button-confirm-reschedule-care")).toBeEnabled();
+  });
+
+  it("shows the repeating note only for ticked repeating tasks and resets the date when reopened", async () => {
+    const { user } = await setup();
+    await user.click(checkbox("c"));
+    await user.click(screen.getByRole("button", { name: "Reschedule 1" }));
+    expect(screen.queryByTestId("text-care-reschedule-recurring")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("New date"), { target: { value: today } });
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await user.click(checkbox("a"));
+    await user.click(screen.getByRole("button", { name: "Reschedule 2" }));
+    expect(screen.getByLabelText("New date")).toHaveValue("");
+    expect(screen.getByTestId("text-care-reschedule-recurring")).toHaveTextContent(
+      "1 of these tasks repeat (Maple, Fertilizing). Their future dates will count from the new date.",
+    );
+    expect(screen.getByTestId("text-care-reschedule-recurring")).not.toHaveTextContent("Pine");
+    expect(screen.getByTestId("text-care-reschedule-recurring")).toHaveTextContent("untick it here");
+  });
+
+  it("sends ticked IDs including hidden selections with local dates, refreshes data, and leaves Select mode", async () => {
+    const { user, invalidate } = await setup();
+    await user.click(checkbox("a"));
+    await user.click(checkbox("c"));
+    await user.type(screen.getByRole("searchbox"), "Maple");
+    await user.click(screen.getByRole("button", { name: "Reschedule 2" }));
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog).toHaveTextContent("2 tasks across 2 trees.");
+    expect(dialog).toHaveTextContent("Maple, Elm");
+    fireEvent.change(screen.getByLabelText("New date"), { target: { value: today } });
+    await user.click(within(dialog).getByRole("button", { name: "Reschedule" }));
+    await waitFor(() => expect(rescheduleRequest).toHaveBeenCalledTimes(1));
+    expect(rescheduleRequest.mock.calls[0][0]).toEqual({
+      data: { reminderIds: ["a", "c"], newDueDate: today, today },
+    });
+    expect(request).not.toHaveBeenCalled();
+    expect(await screen.findByText(`Moved 2 tasks to ${format(new Date(), "MMM d")}.`)).toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Select" })).toBeInTheDocument();
+    expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+    for (const key of ["/api/reminders/upcoming", "/api/trees", "/api/collection/stats"]) {
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: [key] });
+    }
+    await user.click(screen.getByRole("button", { name: "Select" }));
+    selectedCount(0);
+    expect(screen.getByRole("searchbox")).toHaveValue("");
+  });
+
+  it("locks the dialog while saving and keeps selection and chosen date on error", async () => {
+    let reject!: (error: Error) => void;
+    rescheduleRequest.mockImplementationOnce(() => new Promise((_, rejectRequest) => { reject = rejectRequest; }));
+    const { user, invalidate } = await setup();
+    await user.click(checkbox("a"));
+    await user.click(checkbox("b"));
+    await user.click(screen.getByRole("button", { name: "Reschedule 2" }));
+    fireEvent.change(screen.getByLabelText("New date"), { target: { value: today } });
+    await user.click(screen.getByTestId("button-confirm-reschedule-care"));
+    expect(screen.getByRole("button", { name: "Rescheduling..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+    expect(screen.getByLabelText("New date")).toBeDisabled();
+    expect(screen.getByTestId("button-complete-care")).toBeDisabled();
+    expect(screen.getByTestId("button-reschedule-care")).toBeDisabled();
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    await act(async () => reject(new Error("Please refresh the tasks.")));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Please refresh the tasks.");
+    expect(screen.getByTestId("text-care-reschedule-error")).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    expect(screen.getByLabelText("New date")).toHaveValue(today);
+    expect(checkbox("a")).toBeChecked();
+    expect(checkbox("b")).toBeChecked();
+    expect(invalidate).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    selectedCount(2);
+  });
+
+  it("disables rescheduling while Mark done is saving", async () => {
+    request.mockImplementationOnce(() => new Promise(() => {}));
+    const { user } = await setup();
+    await user.click(checkbox("c"));
+    await user.click(screen.getByRole("button", { name: "Mark 1 done" }));
+    expect(screen.getByTestId("button-reschedule-care")).toBeDisabled();
+  });
 });
 
 afterEach(() => {
