@@ -28,6 +28,9 @@ const zod3CompatibleTransformer: InputTransformerFn = (config) => {
       delete schema.format;
       schema.pattern =
         "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
+    } else if (schema.format === "uri") {
+      delete schema.format;
+      schema.pattern = "^https://[^\\s]+$";
     }
     Object.values(schema).forEach(replaceUuidFormats);
   };

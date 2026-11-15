@@ -20,6 +20,8 @@ tags:
     description: Care reminders
   - name: stats
     description: Collection statistics
+  - name: notifications
+    description: Opt-in web push notifications
 paths:
   /storage/uploads/request-url:
     post:
@@ -655,6 +657,88 @@ paths:
         "404":
           description: One or more reminders were not found, are not owned by the user, or are already completed
 
+  /notifications/public-key:
+    get:
+      operationId: getNotificationPublicKey
+      tags: [notifications]
+      summary: Get the VAPID public key for web push
+      responses:
+        "200":
+          description: Public key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPublicKey"
+        "503":
+          description: Push notifications are not configured
+
+  /notifications/subscriptions:
+    post:
+      operationId: saveNotificationSubscription
+      tags: [notifications]
+      summary: Save or update a web push subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSubscriptionInput"
+      responses:
+        "200":
+          description: Subscription saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSubscriptionResult"
+        "400":
+          description: Invalid subscription
+        "401":
+          description: Unauthorized
+        "503":
+          description: Push notifications are not configured
+    delete:
+      operationId: deleteNotificationSubscription
+      tags: [notifications]
+      summary: Remove the current user’s web push subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSubscriptionDeleteInput"
+      responses:
+        "200":
+          description: Subscription removed if owned by the current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSubscriptionResult"
+        "400":
+          description: Invalid endpoint
+        "401":
+          description: Unauthorized
+        "503":
+          description: Push notifications are not configured
+
+  /notifications/test:
+    post:
+      operationId: sendTestNotification
+      tags: [notifications]
+      summary: Send a test notification to the current user’s devices
+      responses:
+        "200":
+          description: Test notifications sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSendResult"
+        "401":
+          description: Unauthorized
+        "429":
+          description: Too many test notifications
+        "503":
+          description: Push notifications are not configured
+
   /trees/{id}/photos:
     get:
       operationId: listTreePhotos
@@ -747,6 +831,54 @@ paths:
 
 components:
   schemas:
+    NotificationPublicKey:
+      type: object
+      required: [publicKey]
+      properties:
+        publicKey:
+          type: string
+    NotificationSubscriptionInput:
+      type: object
+      required: [endpoint, keys]
+      properties:
+        endpoint:
+          type: string
+          format: uri
+          minLength: 1
+        keys:
+          type: object
+          required: [p256dh, auth]
+          properties:
+            p256dh:
+              type: string
+              minLength: 1
+            auth:
+              type: string
+              minLength: 1
+    NotificationSubscriptionDeleteInput:
+      type: object
+      required: [endpoint]
+      properties:
+        endpoint:
+          type: string
+          format: uri
+          minLength: 1
+    NotificationSubscriptionResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+    NotificationSendResult:
+      type: object
+      required: [sent, removed]
+      properties:
+        sent:
+          type: integer
+          minimum: 0
+        removed:
+          type: integer
+          minimum: 0
     UploadUrlRequest:
       type: object
       required: [name, size, contentType]

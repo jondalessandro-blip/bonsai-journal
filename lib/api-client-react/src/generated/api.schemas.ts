@@ -5,6 +5,39 @@
  * Bonsai Journal API
  * OpenAPI spec version: 0.1.0
  */
+export interface NotificationPublicKey {
+  publicKey: string;
+}
+
+export type NotificationSubscriptionInputKeys = {
+  /** @minLength 1 */
+  p256dh: string;
+  /** @minLength 1 */
+  auth: string;
+};
+
+export interface NotificationSubscriptionInput {
+  /** @minLength 1 */
+  endpoint: string;
+  keys: NotificationSubscriptionInputKeys;
+}
+
+export interface NotificationSubscriptionDeleteInput {
+  /** @minLength 1 */
+  endpoint: string;
+}
+
+export interface NotificationSubscriptionResult {
+  success: boolean;
+}
+
+export interface NotificationSendResult {
+  /** @minimum 0 */
+  sent: number;
+  /** @minimum 0 */
+  removed: number;
+}
+
 export interface UploadUrlRequest {
   /** @minLength 1 */
   name: string;

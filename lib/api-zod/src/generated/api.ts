@@ -755,6 +755,69 @@ export const CompleteRemindersBulkResponse = zod.object({
 
 
 /**
+ * @summary Get the VAPID public key for web push
+ */
+export const GetNotificationPublicKeyResponse = zod.object({
+  "publicKey": zod.string()
+})
+
+
+/**
+ * @summary Save or update a web push subscription
+ */
+
+
+export const saveNotificationSubscriptionBodyEndpointRegExp = new RegExp('^https://[^\\s]+$');
+
+
+
+
+export const SaveNotificationSubscriptionBody = zod.object({
+  "endpoint": zod.string().min(1).regex(saveNotificationSubscriptionBodyEndpointRegExp),
+  "keys": zod.object({
+  "p256dh": zod.string().min(1),
+  "auth": zod.string().min(1)
+})
+})
+
+export const SaveNotificationSubscriptionResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Remove the current user’s web push subscription
+ */
+
+
+export const deleteNotificationSubscriptionBodyEndpointRegExp = new RegExp('^https://[^\\s]+$');
+
+
+export const DeleteNotificationSubscriptionBody = zod.object({
+  "endpoint": zod.string().min(1).regex(deleteNotificationSubscriptionBodyEndpointRegExp)
+})
+
+export const DeleteNotificationSubscriptionResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Send a test notification to the current user’s devices
+ */
+export const sendTestNotificationResponseSentMin = 0;
+
+export const sendTestNotificationResponseRemovedMin = 0;
+
+
+
+export const SendTestNotificationResponse = zod.object({
+  "sent": zod.number().min(sendTestNotificationResponseSentMin),
+  "removed": zod.number().min(sendTestNotificationResponseRemovedMin)
+})
+
+
+/**
  * @summary Get progression photos for a tree
  */
 export const ListTreePhotosParams = zod.object({
