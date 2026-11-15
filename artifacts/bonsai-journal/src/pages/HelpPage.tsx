@@ -2,7 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
-const helpSections = [
+const helpSections: Array<{ title: string; body: string; extraParagraphs?: string[] }> = [
   {
     title: "What this app is for",
     body: "Bonsai Journal helps you keep track of your bonsai and pre-bonsai collection, what each tree is, how it's doing, when you last watered or fed it, and what it looked like over time. Most of us don't reliably remember what we did to get a good result, or why something didn't work out. Keeping a record of what you did and when means you can look back later and actually understand what worked, what didn't, or how you got a particular result. It's also a place to plan ahead, both the near term care and the longer term development of each tree, so nothing slips through the cracks.",
@@ -53,7 +53,10 @@ const helpSections = [
   },
   {
     title: "Completing many scheduled tasks at once",
-    extraParagraph: "In Select mode, Reschedule moves all ticked tasks to one new date of today or later. Repeating tasks then count their future dates from the new date. To move a repeating task just once and keep its usual rhythm, untick it, and after doing the late task, open it from its tree page and set its due date back to its usual day.",
+    extraParagraphs: [
+      "In Select mode, Reschedule moves all ticked tasks to one new date, today or later. They stop showing as overdue and will come due on the new date.",
+      "Repeating tasks: their future dates count from the new date. Often this changes nothing, for example, a weekly task moved by one week stays on the same day of the week. If it does throw off the rhythm, fix it after you do the task: open the tree page, choose Edit on the task, and change its next due date back to its usual day. For example, if you fertilize on the 15th of each month and move November's to the 22nd, the next one will be set for December 22. Change it to December 15 and it is back on schedule.",
+    ],
     body: "When several trees have the same task due, you don't have to visit each one. On the Collection page, open the Upcoming Care box at the top and tap View all to see every overdue and upcoming task, then tap Select and tick the tasks you want to finish. To save time, tap a task type such as Fertilizing to tick every task of that type, or use the search box to narrow the list by tree name, task type, or notes, then tap Select all shown. At the bottom, choose which date to record. Done on lets you pick the day you actually did the work, today or any earlier day, and it applies to every task you ticked. On each task's scheduled date records each task on its own planned date instead, which is handy when you did everything on schedule but never marked it. Tasks that aren't due yet can't be recorded on their scheduled date, so the app unticks them and lets you know, and choosing Done on again brings them back. Tap Mark done, and if you picked more than one task you'll see a short summary to confirm first. Each task is handled the same way as the circle icon: the care is logged with its notes, a one time task is removed from your list, and a recurring task moves forward to its next due date. This only completes tasks exactly as planned. For care you didn't plan, go to the Collection page, select the trees, and choose Log Care.",
   },
   {
@@ -111,7 +114,9 @@ export default function HelpPage() {
               <p className="text-muted-foreground leading-7">
                 {section.body}
               </p>
-              {section.extraParagraph && <p className="text-muted-foreground leading-7">{section.extraParagraph}</p>}
+              {section.extraParagraphs?.map((paragraph) => (
+                <p key={paragraph} className="text-muted-foreground leading-7">{paragraph}</p>
+              ))}
             </section>
           ))}
         </div>

@@ -462,7 +462,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
                 <p>{breakdown.map(({ type, count }) => `${type} x ${count}`).join(", ")}</p>
                 {recurringCount > 0 && <p data-testid="text-care-reschedule-recurring">
                   {recurringCount} of these tasks repeat ({selected.filter(r => r.recurring).map(r => `${r.treeName}, ${r.type}`).join("; ")}).
-                  {" "}Their future dates will count from the new date. To keep a repeating task on its usual rhythm, untick it here and change it from its own tree page instead.
+                  {" "}Their future dates will count from the new date. If you want a repeating task to stay on its usual days, open it from its tree page after you do the task and set its next due date back.
                 </p>}
               </div>
             </AlertDialogDescription>

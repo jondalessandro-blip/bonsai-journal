@@ -73,10 +73,9 @@ describe("Upcoming Care bulk rescheduling", () => {
     await user.click(screen.getByRole("button", { name: "Reschedule 2" }));
     expect(screen.getByLabelText("New date")).toHaveValue("");
     expect(screen.getByTestId("text-care-reschedule-recurring")).toHaveTextContent(
-      "1 of these tasks repeat (Maple, Fertilizing). Their future dates will count from the new date.",
+      "1 of these tasks repeat (Maple, Fertilizing). Their future dates will count from the new date. If you want a repeating task to stay on its usual days, open it from its tree page after you do the task and set its next due date back.",
     );
     expect(screen.getByTestId("text-care-reschedule-recurring")).not.toHaveTextContent("Pine");
-    expect(screen.getByTestId("text-care-reschedule-recurring")).toHaveTextContent("untick it here");
   });
 
   it("sends ticked IDs including hidden selections with local dates, refreshes data, and leaves Select mode", async () => {
