@@ -78,6 +78,44 @@ describe("Upcoming Care bulk rescheduling", () => {
     expect(screen.getByTestId("text-care-reschedule-recurring")).not.toHaveTextContent("Pine");
   });
 
+  it("uses the all-repeating wording without listing tasks", async () => {
+    const allRepeating = reminders.filter(reminder => reminder.recurring);
+    const { user } = await setup(true, allRepeating);
+    await user.click(screen.getByRole("button", { name: "Select all shown" }));
+    await user.click(screen.getByRole("button", { name: `Reschedule ${allRepeating.length}` }));
+    expect(screen.getByTestId("text-care-reschedule-recurring")).toHaveTextContent(
+      "All of these tasks repeat. Their future dates will count from the new date. If you want a repeating task to stay on its usual days, open it from its tree page after you do the task and set its next due date back.",
+    );
+    expect(screen.getByTestId("text-care-reschedule-recurring")).not.toHaveTextContent("Maple, Fertilizing");
+  });
+
+  it("caps repeating task and tree name lists at five in both dialogs", async () => {
+    const manyReminders = Array.from({ length: 7 }, (_, index) => ({
+      ...reminders[0],
+      id: `many-${index + 1}`,
+      treeId: `tree-${index + 1}`,
+      treeName: `Tree ${index + 1}`,
+      type: "Watering",
+      recurring: index < 6,
+    }));
+    const { user } = await setup(true, manyReminders);
+    await user.click(screen.getByRole("button", { name: "Select all shown" }));
+    await user.click(screen.getByRole("button", { name: "Reschedule 7" }));
+
+    const expectedTreeNames = "Tree 1, Tree 2, Tree 3, Tree 4, Tree 5 and 2 more";
+    const rescheduleDialog = screen.getByRole("alertdialog");
+    expect(within(rescheduleDialog).getByText(expectedTreeNames)).toBeInTheDocument();
+    expect(screen.getByTestId("text-care-reschedule-recurring")).toHaveTextContent(
+      "6 of these tasks repeat (Tree 1, Watering; Tree 2, Watering; Tree 3, Watering; Tree 4, Watering; Tree 5, Watering; and 1 more).",
+    );
+    expect(screen.getByTestId("text-care-reschedule-recurring")).not.toHaveTextContent("Tree 6, Watering");
+    await user.click(within(rescheduleDialog).getByRole("button", { name: "Cancel" }));
+
+    await user.click(screen.getByRole("button", { name: "Mark 7 done" }));
+    const completionDialog = screen.getByRole("alertdialog");
+    expect(within(completionDialog).getByText(expectedTreeNames)).toBeInTheDocument();
+  });
+
   it("sends ticked IDs including hidden selections with local dates, refreshes data, and leaves Select mode", async () => {
     const { user, invalidate } = await setup();
     await user.click(checkbox("a"));
@@ -149,7 +187,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-async function setup(select = true) {
+async function setup(select = true, items: UpcomingReminder[] = reminders) {
   const user = userEvent.setup();
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   clients.push(client);
@@ -160,7 +198,7 @@ async function setup(select = true) {
       <Router hook={routing.hook}><UpcomingCarePanel reminders={items} /></Router>
     </QueryClientProvider>
   );
-  const view = render(wrap(reminders));
+  const view = render(wrap(items));
   await user.click(screen.getByRole("button", { name: "View all upcoming and overdue care tasks" }));
   if (select) await user.click(screen.getByRole("button", { name: "Select" }));
   return { user, routing, invalidate, ...view, rerenderItems: (items: UpcomingReminder[]) => view.rerender(wrap(items)) };

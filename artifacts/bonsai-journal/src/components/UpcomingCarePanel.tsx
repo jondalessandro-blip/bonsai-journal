@@ -63,6 +63,16 @@ export function UpcomingCarePanel({ reminders }: Props) {
   const validDate = date !== "" && date <= today;
   const canSubmit = selected.length > 0 && (dateMode === "scheduled" || validDate);
   const recurringCount = selected.filter(r => r.recurring).length;
+  const selectedTreeNames = [...new Set(selected.map(r => r.treeName))];
+  const treeNamesLabel = [
+    selectedTreeNames.slice(0, 5).join(", "),
+    ...(selectedTreeNames.length > 5 ? [`and ${selectedTreeNames.length - 5} more`] : []),
+  ].filter(Boolean).join(" ");
+  const repeatingTaskNames = selected.filter(r => r.recurring);
+  const repeatingTaskLabel = [
+    repeatingTaskNames.slice(0, 5).map(r => `${r.treeName}, ${r.type}`).join("; "),
+    ...(repeatingTaskNames.length > 5 ? [`and ${repeatingTaskNames.length - 5} more`] : []),
+  ].filter(Boolean).join("; ");
   const validNewDate = /^\d{4}-\d{2}-\d{2}$/.test(newDueDate)
     && isValid(parseISO(newDueDate))
     && format(parseISO(newDueDate), "yyyy-MM-dd") === newDueDate
@@ -434,6 +444,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>{selected.length} tasks across {new Set(selected.map(r => r.treeId)).size} trees.</p>
+                <p>{treeNamesLabel}</p>
                 <p>{breakdown.map(({ type, count }) => `${type} x ${count}`).join(", ")}</p>
                 <p>Completion date: {dateMode === "scheduled" ? "each task's scheduled date" : validDate ? format(parseISO(date), "MMM d") : "Choose a date"}.</p>
                 {recurringCount > 0 && <p>{recurringCount} of these repeat and will be rescheduled.</p>}
@@ -458,10 +469,12 @@ export function UpcomingCarePanel({ reminders }: Props) {
             <AlertDialogDescription asChild>
               <div className="space-y-2 break-words">
                 <p>{selected.length} task{selected.length === 1 ? "" : "s"} across {new Set(selected.map(r => r.treeId)).size} trees.</p>
-                <p>{[...new Set(selected.map(r => r.treeName))].join(", ")}</p>
+                <p>{treeNamesLabel}</p>
                 <p>{breakdown.map(({ type, count }) => `${type} x ${count}`).join(", ")}</p>
                 {recurringCount > 0 && <p data-testid="text-care-reschedule-recurring">
-                  {recurringCount} of these tasks repeat ({selected.filter(r => r.recurring).map(r => `${r.treeName}, ${r.type}`).join("; ")}).
+                  {recurringCount === selected.length
+                    ? "All of these tasks repeat."
+                    : `${recurringCount} of these tasks repeat (${repeatingTaskLabel}).`}
                   {" "}Their future dates will count from the new date. If you want a repeating task to stay on its usual days, open it from its tree page after you do the task and set its next due date back.
                 </p>}
               </div>
