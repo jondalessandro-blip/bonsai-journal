@@ -98,6 +98,28 @@ describe("Upcoming Care bulk rescheduling", () => {
     expect(screen.getByRole("alertdialog")).toHaveTextContent("2 tasks across 1 tree.");
   });
 
+  it("pairs each tree and activity for up to five selected tasks in both dialogs", async () => {
+    const pairedReminders: UpcomingReminder[] = [
+      { ...reminders[0], id: "pair-1", treeName: "Peter the elf", type: "Wiring" },
+      { ...reminders[1], id: "pair-2", treeName: "343", type: "Watering" },
+      { ...reminders[2], id: "pair-3", treeName: "333", type: "Repotting" },
+    ];
+    const { user } = await setup(true, pairedReminders);
+    await user.click(screen.getByRole("button", { name: "Select all shown" }));
+    const expectedPairs = "Peter the elf: Wiring; 343: Watering; 333: Repotting";
+
+    await user.click(screen.getByRole("button", { name: "Reschedule 3" }));
+    const rescheduleDialog = screen.getByRole("alertdialog");
+    expect(within(rescheduleDialog).getByText(expectedPairs)).toBeInTheDocument();
+    expect(within(rescheduleDialog).queryByText("Wiring x 1, Watering x 1, Repotting x 1")).not.toBeInTheDocument();
+    await user.click(within(rescheduleDialog).getByRole("button", { name: "Cancel" }));
+
+    await user.click(screen.getByRole("button", { name: "Mark 3 done" }));
+    const completionDialog = screen.getByRole("alertdialog");
+    expect(within(completionDialog).getByText(expectedPairs)).toBeInTheDocument();
+    expect(within(completionDialog).queryByText("Wiring x 1, Watering x 1, Repotting x 1")).not.toBeInTheDocument();
+  });
+
   it("uses the all-repeating wording without listing tasks", async () => {
     const allRepeating = reminders.filter(reminder => reminder.recurring);
     const { user } = await setup(true, allRepeating);
@@ -125,6 +147,7 @@ describe("Upcoming Care bulk rescheduling", () => {
     const expectedTreeNames = "Tree 1, Tree 2, Tree 3, Tree 4, Tree 5 and 2 more";
     const rescheduleDialog = screen.getByRole("alertdialog");
     expect(within(rescheduleDialog).getByText(expectedTreeNames)).toBeInTheDocument();
+    expect(within(rescheduleDialog).getByText("Watering x 7")).toBeInTheDocument();
     expect(screen.getByTestId("text-care-reschedule-recurring")).toHaveTextContent(
       "6 of these tasks repeat (Tree 1, Watering; Tree 2, Watering; Tree 3, Watering; Tree 4, Watering; Tree 5, Watering; and 1 more).",
     );
@@ -134,6 +157,7 @@ describe("Upcoming Care bulk rescheduling", () => {
     await user.click(screen.getByRole("button", { name: "Mark 7 done" }));
     const completionDialog = screen.getByRole("alertdialog");
     expect(within(completionDialog).getByText(expectedTreeNames)).toBeInTheDocument();
+    expect(within(completionDialog).getByText("Watering x 7")).toBeInTheDocument();
   });
 
   it("sends ticked IDs including hidden selections with local dates, refreshes data, and leaves Select mode", async () => {
@@ -144,7 +168,7 @@ describe("Upcoming Care bulk rescheduling", () => {
     await user.click(screen.getByRole("button", { name: "Reschedule 2" }));
     const dialog = screen.getByRole("alertdialog");
     expect(dialog).toHaveTextContent("2 tasks across 2 trees.");
-    expect(dialog).toHaveTextContent("Maple, Elm");
+    expect(dialog).toHaveTextContent("Maple: Fertilizing; Elm: Other");
     fireEvent.change(screen.getByLabelText("New date"), { target: { value: today } });
     await user.click(within(dialog).getByRole("button", { name: "Reschedule" }));
     await waitFor(() => expect(rescheduleRequest).toHaveBeenCalledTimes(1));
@@ -481,7 +505,7 @@ describe("Upcoming Care full-screen bulk completion", () => {
     const dialog = screen.getByRole("alertdialog");
     expect(within(dialog).getByRole("heading")).toHaveTextContent("Mark 4 tasks done?");
     expect(dialog).toHaveTextContent("4 tasks across 3 trees.");
-    expect(dialog).toHaveTextContent("Fertilizing x 2, Other x 2");
+    expect(dialog).toHaveTextContent("Maple: Fertilizing; Maple: Fertilizing; Elm: Other; Pine: Other");
     expect(dialog).toHaveTextContent("Completion date: Jan 1.");
     expect(dialog).toHaveTextContent("2 of these repeat and will be rescheduled.");
     expect(request).not.toHaveBeenCalled();
@@ -511,7 +535,7 @@ describe("Upcoming Care full-screen bulk completion", () => {
     await user.click(screen.getByRole("button", { name: "Mark 2 done" }));
     const dialog = screen.getByRole("alertdialog");
     expect(dialog).toHaveTextContent("2 tasks across 2 trees.");
-    expect(dialog).toHaveTextContent("Fertilizing x 1, Other x 1");
+    expect(dialog).toHaveTextContent("Maple: Fertilizing; Elm: Other");
     expect(dialog).toHaveTextContent("each task's scheduled date");
     expect(dialog).not.toHaveTextContent("repeat");
     await user.click(within(dialog).getByRole("button", { name: "Mark done" }));
