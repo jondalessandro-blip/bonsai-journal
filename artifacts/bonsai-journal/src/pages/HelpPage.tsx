@@ -45,7 +45,7 @@ const helpSections = [
   },
   {
     title: "Notifications",
-    body: "Daily notifications include the number of care tasks due today and overdue, once each morning, and nothing is sent when there is nothing due. Overdue tasks keep being counted until they are completed or skipped. Turn notifications on for each device from the account menu. On iPhone and iPad, notifications only work when Bonsai Journal is installed from Safari on the Home Screen and opened as an app.",
+    body: "Bonsai Journal can send you one notification each morning, around 8am Eastern time, telling you how many care tasks are due today and how many are overdue. If nothing is due, nothing is sent. An overdue task keeps being counted every day until you complete it or skip it, so the way to clear it is to deal with it. To turn notifications on, tap Notifications at the top of the screen, switch on Daily care notification on this device, and choose Allow when your browser asks. The setting is per device, so turn it on for each phone or computer where you want them, and turn it off the same way. Once it's on, tap Send test notification to check it's working, the test goes to every device you've turned on. On an iPhone or iPad, notifications only work from the installed app, so add Bonsai Journal to your Home Screen from Safari first, as described in Installing the app on your phone or computer, then open it from there and turn notifications on. On a Mac, if the test doesn't appear, open System Settings, go to Notifications, make sure every Google Chrome entry in the list is allowed, then quit Chrome completely and reopen it. Also check that Do Not Disturb or a Focus mode isn't on. If you chose Block by mistake, allow notifications for Bonsai Journal in your browser or device settings, then come back and switch it on.",
   },
   {
     title: "Completing a scheduled task",
@@ -62,6 +62,10 @@ const helpSections = [
   {
     title: "Plant Another Tree and Add Duplicate Tree",
     body: "From a tree's detail page, these buttons let you start a new tree entry pre-filled with that tree's info, handy for trees from the same batch or with similar care needs.",
+  },
+  {
+    title: "Archiving a tree",
+    body: "Not every tree makes it, and some move on to a new home. Archiving lets you keep the full record of a tree while moving it out of your everyday collection. Open the tree, tap Archive, set the date, and if you like, pick a reason, such as Died, Failed seedling, Failed cutting, Failed layer, Failed graft, Gave away or sold, or Other, and add a note about what happened. Before you confirm, the app tells you how many planned reminders the tree has, because archiving removes them. Everything else stays: care history, photos, and notes, and the journal gets an Archived entry listing the plans that were removed. An archived tree no longer appears on the Collection page, in Upcoming Care, in your daily notification, or in your collection stats. To see archived trees, open Archive from the menu, and tap Open on any tree to view its full record. The Stats page also shows an Archive summary by year and by reason. If a tree comes back to life, or a sale falls through, open it and tap Restore. It returns to your collection with all its history, but its old reminders do not come back, so set new ones if you need them.",
   },
   {
     title: "Tags",
