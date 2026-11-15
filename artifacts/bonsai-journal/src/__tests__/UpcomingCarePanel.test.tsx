@@ -78,6 +78,26 @@ describe("Upcoming Care bulk rescheduling", () => {
     expect(screen.getByTestId("text-care-reschedule-recurring")).not.toHaveTextContent("Pine");
   });
 
+  it("uses singular repeating-task wording for one selected task", async () => {
+    const { user } = await setup();
+    await user.click(checkbox("a"));
+    await user.click(screen.getByRole("button", { name: "Reschedule 1" }));
+
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog).toHaveTextContent("1 task across 1 tree.");
+    expect(screen.getByTestId("text-care-reschedule-recurring")).toHaveTextContent(
+      "This task repeats. Its future dates will count from the new date. If you want it to stay on its usual days, open it from its tree page after you do it and set its next due date back.",
+    );
+  });
+
+  it("uses singular tree wording for multiple tasks from one tree", async () => {
+    const { user } = await setup();
+    await user.click(checkbox("a"));
+    await user.click(checkbox("b"));
+    await user.click(screen.getByRole("button", { name: "Reschedule 2" }));
+    expect(screen.getByRole("alertdialog")).toHaveTextContent("2 tasks across 1 tree.");
+  });
+
   it("uses the all-repeating wording without listing tasks", async () => {
     const allRepeating = reminders.filter(reminder => reminder.recurring);
     const { user } = await setup(true, allRepeating);
@@ -473,6 +493,14 @@ describe("Upcoming Care full-screen bulk completion", () => {
     expect(request.mock.calls[0][0]).toEqual({
       data: { reminderIds: ["a", "b", "c", "d"], dateMode: "single", date: "2026-01-01", today },
     });
+  });
+
+  it("uses singular tree wording in the Mark done confirmation", async () => {
+    const { user } = await setup();
+    await user.click(checkbox("a"));
+    await user.click(checkbox("b"));
+    await user.click(screen.getByRole("button", { name: "Mark 2 done" }));
+    expect(screen.getByRole("alertdialog")).toHaveTextContent("2 tasks across 1 tree.");
   });
 
   it("omits the recurring line for non-repeating tasks and sends no date in scheduled mode", async () => {

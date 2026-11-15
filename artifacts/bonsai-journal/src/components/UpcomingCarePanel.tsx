@@ -63,6 +63,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
   const validDate = date !== "" && date <= today;
   const canSubmit = selected.length > 0 && (dateMode === "scheduled" || validDate);
   const recurringCount = selected.filter(r => r.recurring).length;
+  const selectedTreeCount = new Set(selected.map(r => r.treeId)).size;
   const selectedTreeNames = [...new Set(selected.map(r => r.treeName))];
   const treeNamesLabel = [
     selectedTreeNames.slice(0, 5).join(", "),
@@ -443,7 +444,7 @@ export function UpcomingCarePanel({ reminders }: Props) {
             <AlertDialogTitle>Mark {selected.length} tasks done?</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <p>{selected.length} tasks across {new Set(selected.map(r => r.treeId)).size} trees.</p>
+                <p>{selected.length} task{selected.length === 1 ? "" : "s"} across {selectedTreeCount} {selectedTreeCount === 1 ? "tree" : "trees"}.</p>
                 <p>{treeNamesLabel}</p>
                 <p>{breakdown.map(({ type, count }) => `${type} x ${count}`).join(", ")}</p>
                 <p>Completion date: {dateMode === "scheduled" ? "each task's scheduled date" : validDate ? format(parseISO(date), "MMM d") : "Choose a date"}.</p>
@@ -468,14 +469,13 @@ export function UpcomingCarePanel({ reminders }: Props) {
             <AlertDialogTitle>Reschedule {selected.length} task{selected.length === 1 ? "" : "s"}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 break-words">
-                <p>{selected.length} task{selected.length === 1 ? "" : "s"} across {new Set(selected.map(r => r.treeId)).size} trees.</p>
+                <p>{selected.length} task{selected.length === 1 ? "" : "s"} across {selectedTreeCount} {selectedTreeCount === 1 ? "tree" : "trees"}.</p>
                 <p>{treeNamesLabel}</p>
                 <p>{breakdown.map(({ type, count }) => `${type} x ${count}`).join(", ")}</p>
                 {recurringCount > 0 && <p data-testid="text-care-reschedule-recurring">
-                  {recurringCount === selected.length
-                    ? "All of these tasks repeat."
-                    : `${recurringCount} of these tasks repeat (${repeatingTaskLabel}).`}
-                  {" "}Their future dates will count from the new date. If you want a repeating task to stay on its usual days, open it from its tree page after you do the task and set its next due date back.
+                  {selected.length === 1
+                    ? "This task repeats. Its future dates will count from the new date. If you want it to stay on its usual days, open it from its tree page after you do it and set its next due date back."
+                    : `${recurringCount === selected.length ? "All of these tasks repeat." : `${recurringCount} of these tasks repeat (${repeatingTaskLabel}).`} Their future dates will count from the new date. If you want a repeating task to stay on its usual days, open it from its tree page after you do the task and set its next due date back.`}
                 </p>}
               </div>
             </AlertDialogDescription>
