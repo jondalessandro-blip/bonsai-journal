@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { migrateSchema, migrateExistingPhotos } from "./lib/migrate-photos";
+import { migrateDormantHealthStatus } from "./lib/migrate-dormant-status";
 
 const rawPort = process.env["PORT"];
 
@@ -32,6 +33,10 @@ try {
 } catch (err) {
   logger.warn({ err }, "Photo migration failed (non-fatal) — continuing startup");
 }
+
+// This data migration must finish before requests are served. If it fails,
+// fail startup rather than exposing partially migrated tree state.
+await migrateDormantHealthStatus();
 
 app.listen(port, "0.0.0.0", (err) => {
   if (err) {
