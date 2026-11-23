@@ -750,7 +750,7 @@ export default function TreeDetailPage() {
             <div>
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">Details</h3>
               <dl className="space-y-2 text-sm">
-                {tree.status && (
+                {tree.status && tree.status !== "Dormant" && (
                   <div className="flex justify-between items-center py-1 border-b border-border/50">
                     <dt className="text-muted-foreground">Status</dt>
                     <dd>
@@ -758,11 +758,10 @@ export default function TreeDetailPage() {
                         "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
                         tree.status === "Thriving"              && "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
                         tree.status === "Healthy"               && "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300",
-                        tree.status === "Dormant"               && "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
                         tree.status === "Stressed/In Distress"  && "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
                         tree.status === "Sick"                  && "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
                         tree.status === "Dead/Beyond Recovery"  && "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-                        !["Thriving","Healthy","Dormant","Stressed/In Distress","Sick","Dead/Beyond Recovery"].includes(tree.status) && "bg-muted text-muted-foreground",
+                        !["Thriving","Healthy","Stressed/In Distress","Sick","Dead/Beyond Recovery"].includes(tree.status) && "bg-muted text-muted-foreground",
                       ].filter(Boolean).join(" ")}>
                         {tree.status}
                       </span>

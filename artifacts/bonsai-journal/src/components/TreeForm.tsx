@@ -41,7 +41,6 @@ const BONSAI_STAGES = [
 const TREE_STATUSES = [
   "Thriving",
   "Healthy",
-  "Dormant",
   "Stressed/In Distress",
   "Sick",
   "Dead/Beyond Recovery",
@@ -539,7 +538,7 @@ export const TreeForm = forwardRef<TreeFormHandle, TreeFormProps>(function TreeF
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {field.value && !TREE_STATUSES.some((status) => status === field.value) && (
+                      {field.value && field.value !== "Dormant" && !TREE_STATUSES.some((status) => status === field.value) && (
                         <SelectItem value={field.value}>{field.value}</SelectItem>
                       )}
                       {TREE_STATUSES.map((s) => (

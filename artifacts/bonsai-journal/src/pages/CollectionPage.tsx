@@ -47,7 +47,6 @@ const STAGE_LABELS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   "Thriving": "Thriving",
   "Healthy": "Healthy",
-  "Dormant": "Dormant",
   "Stressed/In Distress": "Stressed/In Distress",
   "Sick": "Sick",
   "Dead/Beyond Recovery": "Dead/Beyond Recovery",
@@ -62,16 +61,22 @@ const STAGE_ITEM_LABELS: Record<string, string> = {
   "Primary Branch Development": "3. Primary Branch Development",
   "Ramification & Refinement": "4. Ramification & Refinement",
 };
-const STATUS_OPTIONS = ["Thriving", "Healthy", "Dormant", "Stressed/In Distress", "Sick", "Dead/Beyond Recovery"];
+const STATUS_OPTIONS = ["Thriving", "Healthy", "Stressed/In Distress", "Sick", "Dead/Beyond Recovery"];
 
 type FilterState = { values: string[]; mode: "include" | "exclude" };
 type DormancyFilter = "dormant" | "active" | "all";
 
 function deriveFilterState(params: URLSearchParams, field: string): FilterState {
   const excludeRaw = params.get(field + "Exclude");
-  if (excludeRaw) return { values: excludeRaw.split(","), mode: "exclude" };
+  if (excludeRaw) {
+    const values = excludeRaw.split(",").filter((value) => field !== "status" || value !== "Dormant");
+    if (values.length > 0) return { values, mode: "exclude" };
+  }
   const includeRaw = params.get(field);
-  if (includeRaw) return { values: includeRaw.split(","), mode: "include" };
+  if (includeRaw) {
+    const values = includeRaw.split(",").filter((value) => field !== "status" || value !== "Dormant");
+    if (values.length > 0) return { values, mode: "include" };
+  }
   return { values: [], mode: "include" };
 }
 
