@@ -34,6 +34,7 @@ import {
   UpdateTreePhotoParams,
   UpdateTreePhotoBody,
   DeleteTreePhotoParams,
+  SetTreesDormancyBulkBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import type { Request } from "express";
@@ -104,6 +105,7 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
     foliageExclude,
     stageExclude,
     statusExclude,
+    dormancy = "all",
     tag,
     tags: tagsParam,
     tagsMode = "all",
@@ -133,6 +135,8 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
   const conditions = [eq(treesTable.userId, userId)];
   if (archived === "active") conditions.push(isNull(treesTable.archivedDate));
   if (archived === "archived") conditions.push(isNotNull(treesTable.archivedDate));
+  if (dormancy === "dormant") conditions.push(eq(treesTable.isDormant, true));
+  if (dormancy === "active") conditions.push(eq(treesTable.isDormant, false));
   if (search) {
     conditions.push(
       or(
@@ -184,6 +188,8 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
       style: treesTable.style,
       stage: treesTable.stage,
       status: treesTable.status,
+      isDormant: treesTable.isDormant,
+      dormantSince: treesTable.dormantSince,
       tags: treesTable.tags,
       photoUrl: treesTable.photoUrl,
       coverThumb: treesTable.coverThumb,
@@ -210,6 +216,8 @@ router.get("/trees", requireAuth, async (req, res): Promise<void> => {
     style: t.style,
     stage: t.stage,
     status: t.status,
+    isDormant: t.isDormant,
+    dormantSince: t.dormantSince?.toISOString() ?? null,
     tags: t.tags,
     photoUrl: t.photoUrl,
     coverThumb: t.coverThumb,
@@ -530,6 +538,58 @@ router.post("/trees/logs/bulk", requireAuth, async (req, res): Promise<void> => 
   }
 
   res.status(201).json(logs.map(formatLog));
+});
+
+router.post("/trees/dormancy/bulk", requireAuth, async (req, res): Promise<void> => {
+  const parsed = SetTreesDormancyBulkBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const treeIds = [...new Set(parsed.data.treeIds)].sort();
+  if (treeIds.length > 200) {
+    res.status(400).json({ error: "At most 200 trees may be updated at once" });
+    return;
+  }
+
+  const userId = (req as AuthedRequest).userId;
+  const now = new Date();
+  const eventDate = now.toISOString().slice(0, 10);
+  const result = await db.transaction(async (tx) => {
+    const ownedTrees = await tx.select().from(treesTable)
+      .where(and(inArray(treesTable.id, treeIds), eq(treesTable.userId, userId)))
+      .orderBy(treesTable.id).for("update");
+
+    if (ownedTrees.length !== treeIds.length) return null;
+
+    const changedTrees = ownedTrees.filter((tree) => tree.isDormant !== parsed.data.dormant);
+    if (changedTrees.length === 0) return { updatedCount: 0 };
+
+    for (const tree of changedTrees) {
+      await tx.update(treesTable)
+        .set({
+          isDormant: parsed.data.dormant,
+          dormantSince: parsed.data.dormant ? now : null,
+          updatedAt: now,
+        })
+        .where(eq(treesTable.id, tree.id));
+    }
+
+    await tx.insert(careLogsTable).values(changedTrees.map((tree) => ({
+      treeId: tree.id,
+      type: parsed.data.dormant ? "Entered dormancy" : "Broke dormancy",
+      date: eventDate,
+    })));
+
+    return { updatedCount: changedTrees.length };
+  });
+
+  if (!result) {
+    res.status(404).json({ error: "One or more trees were not found or not owned by the user" });
+    return;
+  }
+  res.json(result);
 });
 
 router.post("/trees/archive/bulk", requireAuth, async (req, res): Promise<void> => {
@@ -1440,6 +1500,8 @@ function formatTree(t: typeof treesTable.$inferSelect) {
     coverThumb: t.coverThumb ?? null,
     stage: t.stage,
     status: t.status,
+    isDormant: t.isDormant,
+    dormantSince: t.dormantSince?.toISOString() ?? null,
     coverPosition: t.coverPosition ?? null,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),

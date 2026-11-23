@@ -28,6 +28,8 @@ import type {
   BulkArchiveTreesResult,
   BulkCareLogInput,
   BulkCareReminderInput,
+  BulkTreeDormancyInput,
+  BulkTreeDormancyResult,
   CareLog,
   CareLogInput,
   CareReminder,
@@ -1037,6 +1039,77 @@ export const useCreateBulkTreeLogs = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getCreateBulkTreeLogsMutationOptions(options));
+    }
+
+export const getSetTreesDormancyBulkUrl = () => {
+
+
+
+
+  return `/api/trees/dormancy/bulk`
+}
+
+/**
+ * @summary Set dormancy for multiple trees and add timeline entries
+ */
+export const setTreesDormancyBulk = async (bulkTreeDormancyInput: BulkTreeDormancyInput, options?: RequestInit): Promise<BulkTreeDormancyResult> => {
+
+  return customFetch<BulkTreeDormancyResult>(getSetTreesDormancyBulkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(bulkTreeDormancyInput)
+  }
+);}
+
+
+
+
+
+export const getSetTreesDormancyBulkMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setTreesDormancyBulk>>, TError,{data: BodyType<BulkTreeDormancyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setTreesDormancyBulk>>, TError,{data: BodyType<BulkTreeDormancyInput>}, TContext> => {
+
+const mutationKey = ['setTreesDormancyBulk'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setTreesDormancyBulk>>, {data: BodyType<BulkTreeDormancyInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setTreesDormancyBulk(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetTreesDormancyBulkMutationResult = NonNullable<Awaited<ReturnType<typeof setTreesDormancyBulk>>>
+    export type SetTreesDormancyBulkMutationBody = BodyType<BulkTreeDormancyInput>
+    export type SetTreesDormancyBulkMutationError = ErrorType<void>
+
+    /**
+ * @summary Set dormancy for multiple trees and add timeline entries
+ */
+export const useSetTreesDormancyBulk = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setTreesDormancyBulk>>, TError,{data: BodyType<BulkTreeDormancyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setTreesDormancyBulk>>,
+        TError,
+        {data: BodyType<BulkTreeDormancyInput>},
+        TContext
+      > => {
+      return useMutation(getSetTreesDormancyBulkMutationOptions(options));
     }
 
 export const getListTreeLogsUrl = (id: string,) => {

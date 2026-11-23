@@ -4,7 +4,7 @@ import type { Tree } from "@workspace/api-client-react";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Checkbox } from "./ui/checkbox";
-import { Calendar } from "lucide-react";
+import { Calendar, Snowflake } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface TreeCardProps {
@@ -78,6 +78,17 @@ export const TreeCard = memo(function TreeCard({
           <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/50">
             <span className="text-xs tracking-widest uppercase">No Photo</span>
           </div>
+        )}
+        {tree.isDormant && (
+          <span
+            data-testid={`badge-dormant-${tree.id}`}
+            aria-label="Dormant"
+            title="Dormant"
+            className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-sky-200/80 bg-sky-50/95 px-2 py-1 text-[10px] font-medium text-sky-800 shadow-sm backdrop-blur-sm dark:border-sky-800 dark:bg-sky-950/90 dark:text-sky-200"
+          >
+            <Snowflake className="h-3 w-3" />
+            Dormant
+          </span>
         )}
         {selectMode && (
           <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-background/90 p-1 shadow-md backdrop-blur-sm">

@@ -3,7 +3,7 @@ import { useParams, useLocation, Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Archive, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, Check, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Archive, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, Check, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight, Loader2, Snowflake } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,11 @@ export default function TreeDetailPage() {
     const value = params.get(key);
     return value ? value.split(",") : undefined;
   };
+  const requestedDormancy = params.get("dormancy");
+  const dormancyFilter: "dormant" | "active" | "all" =
+    requestedDormancy === "dormant" || requestedDormancy === "active"
+      ? requestedDormancy
+      : "all";
   const navFilters = {
     search: params.get("search") ?? undefined,
     climate: getArrayParam("climate"),
@@ -41,6 +46,7 @@ export default function TreeDetailPage() {
     stageExclude: getArrayParam("stageExclude"),
     status: getArrayParam("status"),
     statusExclude: getArrayParam("statusExclude"),
+    dormancy: dormancyFilter,
     tags: getArrayParam("tags"),
     tagsMode: params.get("tagsMode") === "any" ? ("any" as const) : undefined,
   };
@@ -568,7 +574,19 @@ export default function TreeDetailPage() {
       {/* Name / species + actions — full-width row below the cover photo */}
       <div className="flex flex-col gap-3">
         <div>
-          <h1 className="text-3xl md:text-4xl font-serif text-foreground mb-1">{tree.name}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-3xl md:text-4xl font-serif text-foreground mb-1">{tree.name}</h1>
+            {tree.isDormant && (
+              <Badge
+                data-testid={`badge-dormant-${tree.id}`}
+                variant="outline"
+                className="mb-1 gap-1 border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-200"
+              >
+                <Snowflake className="h-3 w-3" />
+                Dormant
+              </Badge>
+            )}
+          </div>
           {tree.species && <p className="text-lg md:text-xl italic text-muted-foreground">{tree.species}</p>}
         </div>
         <div className="flex flex-wrap justify-start gap-2">

@@ -33,6 +33,9 @@ export interface Tree {
   stage?: string | null;
   /** @nullable */
   status?: string | null;
+  isDormant?: boolean;
+  /** @nullable */
+  dormantSince?: Date | null;
   tags: string[];
   /** @nullable */
   notes?: string | null;

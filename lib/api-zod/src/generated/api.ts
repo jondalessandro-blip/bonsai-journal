@@ -59,10 +59,12 @@ export const HealthCheckResponse = zod.object({
  * @summary List all trees with optional filters
  */
 export const listTreesQueryArchivedDefault = `active`;
+export const listTreesQueryDormancyDefault = `all`;
 export const listTreesQueryTagsModeDefault = `all`;
 
 export const ListTreesQueryParams = zod.object({
   "archived": zod.enum(['active', 'archived', 'all']).default(listTreesQueryArchivedDefault),
+  "dormancy": zod.enum(['dormant', 'active', 'all']).default(listTreesQueryDormancyDefault).describe('Filter trees by dormancy; all includes either state.'),
   "search": zod.coerce.string().optional(),
   "climate": zod.array(zod.coerce.string()).optional(),
   "foliage": zod.array(zod.coerce.string()).optional(),
@@ -92,6 +94,8 @@ export const ListTreesResponseItem = zod.object({
   "style": zod.string().nullish(),
   "stage": zod.string().nullish(),
   "status": zod.string().nullish(),
+  "isDormant": zod.boolean().optional(),
+  "dormantSince": zod.coerce.date().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
@@ -141,6 +145,8 @@ export const CreateTreeResponse = zod.object({
   "style": zod.string().nullish(),
   "stage": zod.string().nullish(),
   "status": zod.string().nullish(),
+  "isDormant": zod.boolean().optional(),
+  "dormantSince": zod.coerce.date().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
@@ -175,6 +181,8 @@ export const GetTreeResponse = zod.object({
   "style": zod.string().nullish(),
   "stage": zod.string().nullish(),
   "status": zod.string().nullish(),
+  "isDormant": zod.boolean().optional(),
+  "dormantSince": zod.coerce.date().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
@@ -232,6 +240,8 @@ export const UpdateTreeResponse = zod.object({
   "style": zod.string().nullish(),
   "stage": zod.string().nullish(),
   "status": zod.string().nullish(),
+  "isDormant": zod.boolean().optional(),
+  "dormantSince": zod.coerce.date().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
@@ -286,6 +296,8 @@ export const ArchiveTreeResponse = zod.object({
   "style": zod.string().nullish(),
   "stage": zod.string().nullish(),
   "status": zod.string().nullish(),
+  "isDormant": zod.boolean().optional(),
+  "dormantSince": zod.coerce.date().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
@@ -322,6 +334,8 @@ export const RestoreTreeResponse = zod.object({
   "style": zod.string().nullish(),
   "stage": zod.string().nullish(),
   "status": zod.string().nullish(),
+  "isDormant": zod.boolean().optional(),
+  "dormantSince": zod.coerce.date().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
@@ -392,6 +406,24 @@ export const CreateBulkTreeLogsResponseItem = zod.object({
   "createdAt": zod.string()
 })
 export const CreateBulkTreeLogsResponse = zod.array(CreateBulkTreeLogsResponseItem)
+
+
+/**
+ * @summary Set dormancy for multiple trees and add timeline entries
+ */
+export const setTreesDormancyBulkBodyTreeIdsItemRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const setTreesDormancyBulkBodyTreeIdsMax = 200;
+
+
+
+export const SetTreesDormancyBulkBody = zod.object({
+  "treeIds": zod.array(zod.string().regex(setTreesDormancyBulkBodyTreeIdsItemRegExp)).min(1).max(setTreesDormancyBulkBodyTreeIdsMax),
+  "dormant": zod.boolean()
+})
+
+export const SetTreesDormancyBulkResponse = zod.object({
+  "updatedCount": zod.number()
+})
 
 
 /**
@@ -665,6 +697,8 @@ export const GetCollectionStatsResponse = zod.object({
   "style": zod.string().nullish(),
   "stage": zod.string().nullish(),
   "status": zod.string().nullish(),
+  "isDormant": zod.boolean().optional(),
+  "dormantSince": zod.coerce.date().nullish(),
   "tags": zod.array(zod.string()),
   "notes": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),

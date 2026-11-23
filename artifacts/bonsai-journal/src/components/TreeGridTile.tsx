@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { useLocation } from "wouter";
 import type { Tree } from "@workspace/api-client-react";
-import { Leaf } from "lucide-react";
+import { Leaf, Snowflake } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface TreeGridTileProps {
@@ -69,6 +69,16 @@ export const TreeGridTile = memo(function TreeGridTile({
           <div className="w-full h-full flex items-center justify-center">
             <Leaf className="w-6 h-6 text-muted-foreground/30" />
           </div>
+        )}
+        {tree.isDormant && (
+          <span
+            data-testid={`badge-dormant-${tree.id}`}
+            aria-label="Dormant"
+            title="Dormant"
+            className="absolute left-1.5 top-1.5 inline-flex items-center justify-center rounded-full border border-sky-200/80 bg-sky-50/95 p-1 text-sky-800 shadow-sm dark:border-sky-800 dark:bg-sky-950/90 dark:text-sky-200"
+          >
+            <Snowflake className="h-3.5 w-3.5" />
+          </span>
         )}
         {selectMode && (
           <span className="pointer-events-none absolute right-1.5 top-1.5 rounded-full bg-background/90 p-0.5 shadow-md backdrop-blur-sm">

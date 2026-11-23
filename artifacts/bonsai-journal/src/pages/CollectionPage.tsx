@@ -1,5 +1,5 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { listTrees, useListUpcomingReminders } from "@workspace/api-client-react";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { listTrees, useListUpcomingReminders, useSetTreesDormancyBulk } from "@workspace/api-client-react";
 import { TreeCard } from "@/components/TreeCard";
 import { TreeGridTile } from "@/components/TreeGridTile";
 import { BulkLogForm } from "@/components/BulkLogForm";
@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
-import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown, HelpCircle } from "lucide-react";
+import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown, HelpCircle, Snowflake } from "lucide-react";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 import { format } from "date-fns";
@@ -65,6 +65,7 @@ const STAGE_ITEM_LABELS: Record<string, string> = {
 const STATUS_OPTIONS = ["Thriving", "Healthy", "Dormant", "Stressed/In Distress", "Sick", "Dead/Beyond Recovery"];
 
 type FilterState = { values: string[]; mode: "include" | "exclude" };
+type DormancyFilter = "dormant" | "active" | "all";
 
 function deriveFilterState(params: URLSearchParams, field: string): FilterState {
   const excludeRaw = params.get(field + "Exclude");
@@ -77,6 +78,8 @@ function deriveFilterState(params: URLSearchParams, field: string): FilterState 
 export default function CollectionPage() {
   const searchString = useSearch();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const setDormancyBulk = useSetTreesDormancyBulk();
 
   const [search, setSearch] = useState(() => new URLSearchParams(searchString).get("search") ?? "");
   const [debouncedSearch, setDebouncedSearch] = useState(() => new URLSearchParams(searchString).get("search") ?? "");
@@ -84,6 +87,10 @@ export default function CollectionPage() {
   const [foliageFilter, setFoliageFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "foliage"));
   const [stageFilter, setStageFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "stage"));
   const [statusFilter, setStatusFilter] = useState<FilterState>(() => deriveFilterState(new URLSearchParams(searchString), "status"));
+  const [dormancyFilter, setDormancyFilter] = useState<DormancyFilter>(() => {
+    const value = new URLSearchParams(searchString).get("dormancy");
+    return value === "dormant" || value === "active" ? value : "all";
+  });
   const [climateOpen, setClimateOpen] = useState(false);
   const [foliageOpen, setFoliageOpen] = useState(false);
   const [stageOpen, setStageOpen] = useState(false);
@@ -118,11 +125,12 @@ export default function CollectionPage() {
     applyFilter("foliage", foliageFilter);
     applyFilter("stage", stageFilter);
     applyFilter("status", statusFilter);
+    if (dormancyFilter !== "all") params.set("dormancy", dormancyFilter);
     if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
     if (tagsMode === "any") params.set("tagsMode", "any");
     const qs = params.toString();
     setLocation(qs ? "/?" + qs : "/", { replace: false });
-  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags, tagsMode]);
+  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, dormancyFilter, selectedTags, tagsMode]);
 
   // Master tag list — seeded with DEFAULT_TAGS so they appear in the filter even before
   // any tree uses them; only ever grows so the popover stays complete while a filter is active
@@ -211,6 +219,7 @@ export default function CollectionPage() {
     foliageFilter.values.length > 0 ||
     stageFilter.values.length > 0 ||
     statusFilter.values.length > 0 ||
+    dormancyFilter !== "all" ||
     selectedTags.length > 0;
 
   // Count of active panel filters only (excludes search — always visible)
@@ -219,6 +228,7 @@ export default function CollectionPage() {
     (foliageFilter.values.length > 0 ? 1 : 0) +
     (stageFilter.values.length > 0 ? 1 : 0) +
     (statusFilter.values.length > 0 ? 1 : 0) +
+    (dormancyFilter !== "all" ? 1 : 0) +
     selectedTags.length;
 
   // Reset every filter
@@ -228,6 +238,7 @@ export default function CollectionPage() {
     setFoliageFilter({ values: [], mode: "include" });
     setStageFilter({ values: [], mode: "include" });
     setStatusFilter({ values: [], mode: "include" });
+    setDormancyFilter("all");
     setSelectedTags([]);
     setTagsMode("all");
   }, []);
@@ -249,10 +260,11 @@ export default function CollectionPage() {
     stageExclude: stageFilter.mode === "exclude" && stageFilter.values.length > 0 ? stageFilter.values : undefined,
     status: statusFilter.mode === "include" && statusFilter.values.length > 0 ? statusFilter.values : undefined,
     statusExclude: statusFilter.mode === "exclude" && statusFilter.values.length > 0 ? statusFilter.values : undefined,
+    dormancy: dormancyFilter,
     tags: selectedTags.length > 0 ? selectedTags : undefined,
     tagsMode: tagsMode === "any" ? "any" as const : undefined,
     limit: PAGE_SIZE,
-  }), [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags, tagsMode]);
+  }), [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, dormancyFilter, selectedTags, tagsMode]);
 
   const navFilterQuery = useMemo(() => {
     const params = new URLSearchParams();
@@ -265,10 +277,11 @@ export default function CollectionPage() {
     applyFilter("foliage", foliageFilter);
     applyFilter("stage", stageFilter);
     applyFilter("status", statusFilter);
+    if (dormancyFilter !== "all") params.set("dormancy", dormancyFilter);
     if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
     if (tagsMode === "any") params.set("tagsMode", "any");
     return params.toString();
-  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, selectedTags, tagsMode]);
+  }, [debouncedSearch, climateFilter, foliageFilter, stageFilter, statusFilter, dormancyFilter, selectedTags, tagsMode]);
 
   const {
     data,
@@ -385,6 +398,26 @@ export default function CollectionPage() {
     setSelectedTreeIds(new Set());
     setSelectMode(false);
   }, []);
+
+  const applyBulkDormancy = useCallback((dormant: boolean) => {
+    const treeIds = Array.from(selectedTreeIds);
+    if (treeIds.length === 0 || setDormancyBulk.isPending) return;
+    setDormancyBulk.mutate(
+      { data: { treeIds, dormant } },
+      {
+        onSuccess: async () => {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["/api/trees"] }),
+            ...treeIds.map((treeId) =>
+              queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId, "timeline"] }),
+            ),
+          ]);
+          setSelectedTreeIds(new Set());
+          setSelectMode(false);
+        },
+      },
+    );
+  }, [queryClient, selectedTreeIds, setDormancyBulk]);
 
   const openBulkDialog = useCallback(
     (dialog: "log" | "schedule") => {
@@ -607,6 +640,30 @@ export default function CollectionPage() {
               </Popover>
             ))}
 
+            <div className="flex items-center gap-1 rounded-md border bg-background p-1" role="group" aria-label="Dormancy filter">
+              <span className="px-2 text-xs text-muted-foreground">Dormancy</span>
+              {([
+                ["dormant", "Dormant"],
+                ["active", "Active"],
+                ["all", "All"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  data-testid={`filter-dormancy-${value}`}
+                  aria-pressed={dormancyFilter === value}
+                  onClick={() => setDormancyFilter(value)}
+                  className={`rounded px-2 py-1 text-xs transition-colors ${
+                    dormancyFilter === value
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             {/* Tags multi-select */}
             <Popover open={tagsOpen} onOpenChange={setTagsOpen}>
               <PopoverTrigger asChild>
@@ -695,6 +752,19 @@ export default function CollectionPage() {
         {/* Active-filter chips — shown when panel is collapsed and filters are active */}
         {showChips && (
           <div className="flex flex-wrap gap-1.5 animate-in fade-in duration-200">
+            {dormancyFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium rounded-full px-2.5 py-0.5">
+                {dormancyFilter === "dormant" ? "Dormant" : "Active"}
+                <button
+                  type="button"
+                  aria-label="Remove dormancy filter"
+                  onClick={() => setDormancyFilter("all")}
+                  className="hover:text-primary/70 transition-colors ml-0.5"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
             {([
               [climateFilter, setClimateFilter, CLIMATE_LABELS],
               [foliageFilter, setFoliageFilter, FOLIAGE_LABELS],
@@ -810,7 +880,7 @@ export default function CollectionPage() {
 
       {selectedCount > 0 && (
         <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5rem)] sm:bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-40 flex justify-center px-4 pointer-events-none">
-          <div className="pointer-events-auto flex w-full max-w-xl items-center gap-3 rounded-2xl border border-border/70 bg-background/95 p-3 shadow-xl backdrop-blur-md">
+          <div className="pointer-events-auto flex w-full max-w-3xl flex-wrap items-center gap-2 rounded-2xl border border-border/70 bg-background/95 p-3 shadow-xl backdrop-blur-md">
             <p className="min-w-0 flex-1 text-sm font-medium">
               {selectedCount} {selectedCount === 1 ? "tree" : "trees"} selected
             </p>
@@ -849,6 +919,32 @@ export default function CollectionPage() {
             >
               Schedule Care
             </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={setDormancyBulk.isPending}
+              onClick={() => applyBulkDormancy(true)}
+            >
+              {setDormancyBulk.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              <Snowflake className="mr-1.5 h-4 w-4" />
+              Begin dormancy
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={setDormancyBulk.isPending}
+              onClick={() => applyBulkDormancy(false)}
+            >
+              {setDormancyBulk.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              End dormancy
+            </Button>
+            {setDormancyBulk.isError && (
+              <p role="alert" className="basis-full text-xs text-destructive">
+                Could not update dormancy. Please try again.
+              </p>
+            )}
           </div>
         </div>
       )}

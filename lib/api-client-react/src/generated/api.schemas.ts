@@ -107,6 +107,9 @@ export interface Tree {
   stage?: string | null;
   /** @nullable */
   status?: string | null;
+  isDormant?: boolean;
+  /** @nullable */
+  dormantSince?: string | null;
   tags: string[];
   /** @nullable */
   notes?: string | null;
@@ -142,6 +145,19 @@ export type BulkArchiveTreesInput = ArchiveTreeInput & {
 export interface BulkArchiveTreesResult {
   archivedCount: number;
   removedReminderCount: number;
+}
+
+export interface BulkTreeDormancyInput {
+  /**
+     * @minItems 1
+     * @maxItems 200
+     */
+  treeIds: string[];
+  dormant: boolean;
+}
+
+export interface BulkTreeDormancyResult {
+  updatedCount: number;
 }
 
 export interface ArchiveTreesPreviewInput {
@@ -408,6 +424,10 @@ export interface TreePhotoUpdate {
 
 export type ListTreesParams = {
 archived?: ListTreesArchived;
+/**
+ * Filter trees by dormancy; all includes either state.
+ */
+dormancy?: ListTreesDormancy;
 search?: string;
 climate?: string[];
 foliage?: string[];
@@ -445,6 +465,15 @@ export type ListTreesArchived = typeof ListTreesArchived[keyof typeof ListTreesA
 export const ListTreesArchived = {
   active: 'active',
   archived: 'archived',
+  all: 'all',
+} as const;
+
+export type ListTreesDormancy = typeof ListTreesDormancy[keyof typeof ListTreesDormancy];
+
+
+export const ListTreesDormancy = {
+  dormant: 'dormant',
+  active: 'active',
   all: 'all',
 } as const;
 

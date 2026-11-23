@@ -6,10 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ListTreesArchived } from './listTreesArchived';
+import type { ListTreesDormancy } from './listTreesDormancy';
 import type { ListTreesTagsMode } from './listTreesTagsMode';
 
 export type ListTreesParams = {
 archived?: ListTreesArchived;
+/**
+ * Filter trees by dormancy; all includes either state.
+ */
+dormancy?: ListTreesDormancy;
 search?: string;
 climate?: string[];
 foliage?: string[];
