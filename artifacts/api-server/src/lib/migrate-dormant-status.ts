@@ -24,7 +24,10 @@ export async function migrateDormantHealthStatus(
     WITH legacy_dormant AS (
       SELECT
         t.id,
-        COALESCE(status_history.previous_status, 'Healthy') AS restored_status,
+        COALESCE(
+          NULLIF(status_history.previous_status, 'Unknown'),
+          'Healthy'
+        ) AS restored_status,
         COALESCE(
           status_history.date::date::timestamptz,
           t.updated_at::date::timestamptz
