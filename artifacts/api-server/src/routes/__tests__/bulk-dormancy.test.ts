@@ -13,12 +13,14 @@ const {
   insertedLogs,
   treesTable,
   careLogsTable,
+  logSequence,
 } = vi.hoisted(() => {
   const treesTable = { id: "trees.id", userId: "trees.userId", isDormant: "trees.isDormant" };
-  const careLogsTable = { id: "care_logs.id" };
+  const careLogsTable = { id: "care_logs.id", treeId: "care_logs.treeId", type: "care_logs.type" };
   const state: { trees: Array<Record<string, any>> } = { trees: [] };
   const updates: Array<{ id: string; values: Record<string, unknown> }> = [];
   const insertedLogs: Array<Record<string, unknown>> = [];
+  const logSequence = { value: 1 };
 
   const mockTransaction = vi.fn(async (callback: (tx: Record<string, any>) => Promise<unknown>) => {
     const tx = {
@@ -55,16 +57,24 @@ const {
         }),
       }),
       insert: (table: unknown) => ({
-        values: async (rows: Array<Record<string, unknown>>) => {
+        values: (rows: Array<Record<string, unknown>>) => {
           if (table !== careLogsTable) throw new Error("Unexpected insert table");
-          insertedLogs.push(...rows);
+          const created: Array<Record<string, unknown> & { id: string; treeId: string }> = rows.map((row) => ({
+            ...row,
+            treeId: row.treeId as string,
+            id: `bbbbbbbb-0000-0000-0000-${String(logSequence.value++).padStart(12, "0")}`,
+          }));
+          insertedLogs.push(...created);
+          return {
+            returning: async () => created.map(({ id, treeId }) => ({ id, treeId })),
+          };
         },
       }),
     };
     return callback(tx);
   });
 
-  return { state, mockTransaction, updates, insertedLogs, treesTable, careLogsTable };
+  return { state, mockTransaction, updates, insertedLogs, treesTable, careLogsTable, logSequence };
 });
 
 vi.mock("@workspace/db", () => ({
@@ -111,6 +121,7 @@ describe("POST /trees/dormancy/bulk", () => {
     state.trees = [];
     updates.length = 0;
     insertedLogs.length = 0;
+    logSequence.value = 1;
   });
 
   it("updates all owned trees and adds one dormancy timeline log per changed tree", async () => {
@@ -125,7 +136,16 @@ describe("POST /trees/dormancy/bulk", () => {
       .send({ treeIds: [TREE_ONE, TREE_TWO, TREE_THREE], dormant: true });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ updatedCount: 3 });
+    expect(response.body.updatedCount).toBe(3);
+    expect(response.body.undoItems).toHaveLength(3);
+    expect(response.body.undoItems[0]).toMatchObject({
+      treeId: TREE_ONE,
+      previousIsDormant: false,
+      previousDormantSince: null,
+      resultingIsDormant: true,
+      resultingDormantSince: expect.any(String),
+      expectedUpdatedAt: expect.any(String),
+    });
     expect(state.trees.every((tree) => tree.isDormant && tree.dormantSince instanceof Date)).toBe(true);
     expect(state.trees.map((tree) => tree.status)).toEqual(["Healthy", "Thriving", "Sick"]);
     expect(insertedLogs).toHaveLength(3);
@@ -156,7 +176,7 @@ describe("POST /trees/dormancy/bulk", () => {
       .send({ treeIds: [TREE_ONE], dormant: true });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ updatedCount: 0 });
+    expect(response.body).toEqual({ updatedCount: 0, undoItems: [] });
     expect(updates).toHaveLength(0);
     expect(insertedLogs).toHaveLength(0);
   });
@@ -170,6 +190,11 @@ describe("POST /trees/dormancy/bulk", () => {
 
     expect(response.status).toBe(200);
     expect(state.trees[0]).toMatchObject({ isDormant: false, dormantSince: null, status: "Sick" });
-    expect(insertedLogs).toEqual([{ treeId: TREE_ONE, type: "Ended dormancy", date: expect.any(String) }]);
+    expect(insertedLogs).toHaveLength(1);
+    expect(insertedLogs[0]).toMatchObject({
+      treeId: TREE_ONE,
+      type: "Ended dormancy",
+      date: expect.any(String),
+    });
   });
 });

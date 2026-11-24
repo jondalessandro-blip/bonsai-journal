@@ -57,6 +57,8 @@ import type {
   TreePhotoInput,
   TreePhotoUpdate,
   TreeUpdate,
+  UndoTreesDormancyInput,
+  UndoTreesDormancyResult,
   UpcomingReminder,
   UploadUrlRequest,
   UploadUrlResponse
@@ -1110,6 +1112,77 @@ export const useSetTreesDormancyBulk = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getSetTreesDormancyBulkMutationOptions(options));
+    }
+
+export const getUndoTreesDormancyUrl = () => {
+
+
+
+
+  return `/api/trees/dormancy/undo`
+}
+
+/**
+ * @summary Undo a recent dormancy change and remove its timeline entries
+ */
+export const undoTreesDormancy = async (undoTreesDormancyInput: UndoTreesDormancyInput, options?: RequestInit): Promise<UndoTreesDormancyResult> => {
+
+  return customFetch<UndoTreesDormancyResult>(getUndoTreesDormancyUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(undoTreesDormancyInput)
+  }
+);}
+
+
+
+
+
+export const getUndoTreesDormancyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoTreesDormancy>>, TError,{data: BodyType<UndoTreesDormancyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof undoTreesDormancy>>, TError,{data: BodyType<UndoTreesDormancyInput>}, TContext> => {
+
+const mutationKey = ['undoTreesDormancy'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof undoTreesDormancy>>, {data: BodyType<UndoTreesDormancyInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  undoTreesDormancy(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UndoTreesDormancyMutationResult = NonNullable<Awaited<ReturnType<typeof undoTreesDormancy>>>
+    export type UndoTreesDormancyMutationBody = BodyType<UndoTreesDormancyInput>
+    export type UndoTreesDormancyMutationError = ErrorType<void>
+
+    /**
+ * @summary Undo a recent dormancy change and remove its timeline entries
+ */
+export const useUndoTreesDormancy = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoTreesDormancy>>, TError,{data: BodyType<UndoTreesDormancyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof undoTreesDormancy>>,
+        TError,
+        {data: BodyType<UndoTreesDormancyInput>},
+        TContext
+      > => {
+      return useMutation(getUndoTreesDormancyMutationOptions(options));
     }
 
 export const getListTreeLogsUrl = (id: string,) => {

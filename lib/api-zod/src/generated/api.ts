@@ -421,8 +421,47 @@ export const SetTreesDormancyBulkBody = zod.object({
   "dormant": zod.boolean()
 })
 
+export const setTreesDormancyBulkResponseUndoItemsItemTreeIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const setTreesDormancyBulkResponseUndoItemsItemLogIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
 export const SetTreesDormancyBulkResponse = zod.object({
-  "updatedCount": zod.number()
+  "updatedCount": zod.number(),
+  "undoItems": zod.array(zod.object({
+  "treeId": zod.string().regex(setTreesDormancyBulkResponseUndoItemsItemTreeIdRegExp),
+  "logId": zod.string().regex(setTreesDormancyBulkResponseUndoItemsItemLogIdRegExp),
+  "previousIsDormant": zod.boolean(),
+  "previousDormantSince": zod.coerce.date().nullable(),
+  "resultingIsDormant": zod.boolean(),
+  "resultingDormantSince": zod.coerce.date().nullable(),
+  "expectedUpdatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Undo a recent dormancy change and remove its timeline entries
+ */
+export const undoTreesDormancyBodyItemsItemTreeIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const undoTreesDormancyBodyItemsItemLogIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const undoTreesDormancyBodyItemsMax = 200;
+
+
+
+export const UndoTreesDormancyBody = zod.object({
+  "items": zod.array(zod.object({
+  "treeId": zod.string().regex(undoTreesDormancyBodyItemsItemTreeIdRegExp),
+  "logId": zod.string().regex(undoTreesDormancyBodyItemsItemLogIdRegExp),
+  "previousIsDormant": zod.boolean(),
+  "previousDormantSince": zod.coerce.date().nullable(),
+  "resultingIsDormant": zod.boolean(),
+  "resultingDormantSince": zod.coerce.date().nullable(),
+  "expectedUpdatedAt": zod.coerce.date()
+})).min(1).max(undoTreesDormancyBodyItemsMax)
+})
+
+export const UndoTreesDormancyResponse = zod.object({
+  "restoredCount": zod.number()
 })
 
 

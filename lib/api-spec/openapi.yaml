@@ -414,6 +414,31 @@ paths:
         "404":
           description: One or more trees were not found or are not owned by the user
 
+  /trees/dormancy/undo:
+    post:
+      operationId: undoTreesDormancy
+      tags: [trees]
+      summary: Undo a recent dormancy change and remove its timeline entries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UndoTreesDormancyInput"
+      responses:
+        "200":
+          description: Number of dormancy changes undone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UndoTreesDormancyResult"
+        "400":
+          description: Invalid undo request
+        "404":
+          description: One or more trees are not owned by the user
+        "409":
+          description: The dormancy change is no longer current and cannot be undone
+
   /trees/{id}/logs:
     get:
       operationId: listTreeLogs
@@ -1103,9 +1128,62 @@ components:
 
     BulkTreeDormancyResult:
       type: object
-      required: [updatedCount]
+      required: [updatedCount, undoItems]
       properties:
         updatedCount:
+          type: integer
+        undoItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/TreeDormancyUndoItem"
+
+    TreeDormancyUndoItem:
+      type: object
+      required:
+        - treeId
+        - logId
+        - previousIsDormant
+        - previousDormantSince
+        - resultingIsDormant
+        - resultingDormantSince
+        - expectedUpdatedAt
+      properties:
+        treeId:
+          type: string
+          format: uuid
+        logId:
+          type: string
+          format: uuid
+        previousIsDormant:
+          type: boolean
+        previousDormantSince:
+          type: ["string", "null"]
+          format: date-time
+        resultingIsDormant:
+          type: boolean
+        resultingDormantSince:
+          type: ["string", "null"]
+          format: date-time
+        expectedUpdatedAt:
+          type: string
+          format: date-time
+
+    UndoTreesDormancyInput:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            $ref: "#/components/schemas/TreeDormancyUndoItem"
+
+    UndoTreesDormancyResult:
+      type: object
+      required: [restoredCount]
+      properties:
+        restoredCount:
           type: integer
 
     ArchiveTreesPreviewInput:

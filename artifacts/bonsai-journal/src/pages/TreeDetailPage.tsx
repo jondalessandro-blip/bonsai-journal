@@ -1,4 +1,4 @@
-import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTree, useUpdateTreeReminder, useCreateTreeLog, useUpdateTreeLog, useDeleteTreeLog, useDeleteTreeReminder, useArchiveTree, useRestoreTree, usePreviewArchiveTrees, listTrees, type Tree } from "@workspace/api-client-react";
+import { useGetTree, useGetTreeTimeline, useDeleteTree, useUpdateTree, useUpdateTreeReminder, useCreateTreeLog, useUpdateTreeLog, useDeleteTreeLog, useDeleteTreeReminder, useArchiveTree, useRestoreTree, usePreviewArchiveTrees, useSetTreesDormancyBulk, useUndoTreesDormancy, listTrees, type Tree } from "@workspace/api-client-react";
 import { useParams, useLocation, Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import { ReminderForm } from "@/components/ReminderForm";
 import { ProgressionGallery } from "@/components/ProgressionGallery";
 import { CoverPhotoHero } from "@/components/CoverPhotoHero";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
@@ -68,6 +70,7 @@ export default function TreeDetailPage() {
 
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const goToTree = (treeId: string) => {
     setLocation(`/trees/${treeId}${searchString ? `?${searchString}` : ""}`);
@@ -158,6 +161,8 @@ export default function TreeDetailPage() {
   const deleteLog = useDeleteTreeLog();
   const deleteReminder = useDeleteTreeReminder();
   const updateNotes = useUpdateTree();
+  const setTreeDormancy = useSetTreesDormancyBulk();
+  const undoTreeDormancy = useUndoTreesDormancy();
   const archiveTree = useArchiveTree();
   const restoreTree = useRestoreTree();
   const previewArchive = usePreviewArchiveTrees();
@@ -266,6 +271,59 @@ export default function TreeDetailPage() {
   };
 
   const handleDelete = () => setConfirmDeleteTree(true);
+
+  const invalidateDormancyQueries = (treeId: string) => Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["/api/trees"] }),
+    queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId] }),
+    queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId, "timeline"] }),
+  ]);
+
+  const changeTreeDormancy = () => {
+    const treeId = tree.id;
+    const dormant = !tree.isDormant;
+    setTreeDormancy.mutate(
+      { data: { treeIds: [treeId], dormant } },
+      {
+        onSuccess: async (result) => {
+          await invalidateDormancyQueries(treeId);
+          if (result.undoItems.length === 0) return;
+          toast({
+            title: dormant ? "Dormancy started." : "Dormancy ended.",
+            duration: 6000,
+            action: (
+              <ToastAction
+                altText="Undo dormancy change"
+                onClick={() => {
+                  undoTreeDormancy.mutate(
+                    { data: { items: result.undoItems } },
+                    {
+                      onSuccess: () => invalidateDormancyQueries(treeId),
+                      onError: () => {
+                        toast({
+                          title: "Could not undo dormancy change.",
+                          description: "The tree may have changed since this action.",
+                          variant: "destructive",
+                        });
+                      },
+                    },
+                  );
+                }}
+              >
+                Undo
+              </ToastAction>
+            ),
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Could not update dormancy.",
+            description: "Please try again.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
 
   const invalidateArchiveQueries = (treeId: string) => {
     for (const queryKey of [
@@ -586,6 +644,15 @@ export default function TreeDetailPage() {
                 Dormant
               </Badge>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={setTreeDormancy.isPending}
+              onClick={changeTreeDormancy}
+            >
+              {setTreeDormancy.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              {tree.isDormant ? "End dormancy" : "Begin dormancy"}
+            </Button>
           </div>
           {tree.species && <p className="text-lg md:text-xl italic text-muted-foreground">{tree.species}</p>}
         </div>

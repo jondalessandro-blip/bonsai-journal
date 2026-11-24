@@ -156,8 +156,33 @@ export interface BulkTreeDormancyInput {
   dormant: boolean;
 }
 
+export interface TreeDormancyUndoItem {
+  treeId: string;
+  logId: string;
+  previousIsDormant: boolean;
+  /** @nullable */
+  previousDormantSince: string | null;
+  resultingIsDormant: boolean;
+  /** @nullable */
+  resultingDormantSince: string | null;
+  expectedUpdatedAt: string;
+}
+
 export interface BulkTreeDormancyResult {
   updatedCount: number;
+  undoItems: TreeDormancyUndoItem[];
+}
+
+export interface UndoTreesDormancyInput {
+  /**
+     * @minItems 1
+     * @maxItems 200
+     */
+  items: TreeDormancyUndoItem[];
+}
+
+export interface UndoTreesDormancyResult {
+  restoredCount: number;
 }
 
 export interface ArchiveTreesPreviewInput {

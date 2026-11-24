@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { listTrees, useListUpcomingReminders, useSetTreesDormancyBulk } from "@workspace/api-client-react";
+import { listTrees, useListUpcomingReminders, useSetTreesDormancyBulk, useUndoTreesDormancy } from "@workspace/api-client-react";
 import { TreeCard } from "@/components/TreeCard";
 import { TreeGridTile } from "@/components/TreeGridTile";
 import { BulkLogForm } from "@/components/BulkLogForm";
@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { UpcomingCarePanel } from "@/components/UpcomingCarePanel";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Leaf, Tag, Check, Loader2, X, FilterX, Filter, ChevronDown, HelpCircle, Snowflake } from "lucide-react";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useSearch, useLocation } from "wouter";
@@ -85,6 +87,8 @@ export default function CollectionPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const setDormancyBulk = useSetTreesDormancyBulk();
+  const undoTreesDormancy = useUndoTreesDormancy();
+  const { toast } = useToast();
 
   const [search, setSearch] = useState(() => new URLSearchParams(searchString).get("search") ?? "");
   const [debouncedSearch, setDebouncedSearch] = useState(() => new URLSearchParams(searchString).get("search") ?? "");
@@ -410,7 +414,7 @@ export default function CollectionPage() {
     setDormancyBulk.mutate(
       { data: { treeIds, dormant } },
       {
-        onSuccess: async () => {
+        onSuccess: async (result) => {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ["/api/trees"] }),
             ...treeIds.map((treeId) =>
@@ -419,10 +423,44 @@ export default function CollectionPage() {
           ]);
           setSelectedTreeIds(new Set());
           setSelectMode(false);
+          if (result.undoItems.length === 0) return;
+          toast({
+            title: dormant ? "Dormancy started." : "Dormancy ended.",
+            duration: 6000,
+            action: (
+              <ToastAction
+                altText="Undo dormancy change"
+                onClick={() => {
+                  undoTreesDormancy.mutate(
+                    { data: { items: result.undoItems } },
+                    {
+                      onSuccess: async () => {
+                        await Promise.all([
+                          queryClient.invalidateQueries({ queryKey: ["/api/trees"] }),
+                          ...treeIds.map((treeId) =>
+                            queryClient.invalidateQueries({ queryKey: ["/api/trees", treeId, "timeline"] }),
+                          ),
+                        ]);
+                      },
+                      onError: () => {
+                        toast({
+                          title: "Could not undo dormancy change.",
+                          description: "The tree may have changed since this action.",
+                          variant: "destructive",
+                        });
+                      },
+                    },
+                  );
+                }}
+              >
+                Undo
+              </ToastAction>
+            ),
+          });
         },
       },
     );
-  }, [queryClient, selectedTreeIds, setDormancyBulk]);
+  }, [queryClient, selectedTreeIds, setDormancyBulk, toast, undoTreesDormancy]);
 
   const openBulkDialog = useCallback(
     (dialog: "log" | "schedule") => {

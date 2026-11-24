@@ -6,9 +6,11 @@ import { Route, Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import type { Tree } from "@workspace/api-client-react";
 
-const { trees, updateTreeRequest } = vi.hoisted(() => ({
+const { trees, updateTreeRequest, dormancyRequest, undoDormancyRequest } = vi.hoisted(() => ({
   trees: {} as Record<string, Tree>,
   updateTreeRequest: vi.fn(),
+  dormancyRequest: vi.fn(),
+  undoDormancyRequest: vi.fn(),
 }));
 
 vi.mock("@workspace/api-client-react", async (importOriginal) => {
@@ -25,6 +27,12 @@ vi.mock("@workspace/api-client-react", async (importOriginal) => {
     useGetTreeTimeline: () => ({ data: [] }),
     useUpdateTree: () => useMutation({
       mutationFn: (input: { id: string; data: { notes: string } }) => updateTreeRequest(input),
+    }),
+    useSetTreesDormancyBulk: () => useMutation({
+      mutationFn: (input: { data: { treeIds: string[]; dormant: boolean } }) => dormancyRequest(input),
+    }),
+    useUndoTreesDormancy: () => useMutation({
+      mutationFn: (input: { data: { items: Array<Record<string, unknown>> } }) => undoDormancyRequest(input),
     }),
     useDeleteTree: unusedMutation,
     useUpdateTreeReminder: unusedMutation,
@@ -43,6 +51,7 @@ vi.mock("@/components/ReminderForm", () => ({ ReminderForm: () => null }));
 vi.mock("@/pages/NewTreePage", () => ({ buildTreePrefill: () => ({}) }));
 
 import TreeDetailPage from "@/pages/TreeDetailPage";
+import { Toaster } from "@/components/ui/toaster";
 
 const overlayName = "Notes (Markdown supported) — full view";
 const clients: QueryClient[] = [];
@@ -90,6 +99,8 @@ beforeEach(() => {
     name: "Maple",
     notes: "Original maple notes",
     tags: [],
+    isDormant: false,
+    dormantSince: null,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
   };
@@ -98,6 +109,36 @@ beforeEach(() => {
   updateTreeRequest.mockImplementation(async ({ id, data }: { id: string; data: { notes: string } }) => {
     trees[id] = { ...trees[id], ...data };
     return trees[id];
+  });
+  dormancyRequest.mockReset();
+  dormancyRequest.mockImplementation(async ({ data }: { data: { treeIds: string[]; dormant: boolean } }) => {
+    const [treeId] = data.treeIds;
+    const current = trees[treeId];
+    const resultDate = data.dormant ? "2026-11-23T12:00:00.000Z" : null;
+    trees[treeId] = { ...current, isDormant: data.dormant, dormantSince: resultDate };
+    return {
+      updatedCount: 1,
+      undoItems: [{
+        treeId,
+        logId: "aaaaaaaa-0000-0000-0000-000000000001",
+        previousIsDormant: current.isDormant ?? false,
+        previousDormantSince: current.dormantSince ?? null,
+        resultingIsDormant: data.dormant,
+        resultingDormantSince: resultDate,
+        expectedUpdatedAt: "2026-11-23T12:00:00.000Z",
+      }],
+    };
+  });
+  undoDormancyRequest.mockReset();
+  undoDormancyRequest.mockImplementation(async ({ data }: { data: { items: Array<Record<string, any>> } }) => {
+    for (const item of data.items) {
+      trees[item.treeId] = {
+        ...trees[item.treeId],
+        isDormant: item.previousIsDormant,
+        dormantSince: item.previousDormantSince,
+      };
+    }
+    return { restoredCount: data.items.length };
   });
 });
 
@@ -120,6 +161,7 @@ async function renderTree() {
       <Router hook={routing.hook}>
         <Route path="/trees/:id" component={TreeDetailPage} />
       </Router>
+      <Toaster />
     </QueryClientProvider>,
   );
   await screen.findByRole("button", { name: "Expand notes to full screen" });
@@ -133,6 +175,63 @@ async function editNotes(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("Tree detail expanded Notes editing", () => {
+  it("starts dormancy and offers Undo to restore the active tree", async () => {
+    const user = userEvent.setup();
+    const { invalidateQueries } = await renderTree();
+
+    await user.click(screen.getByRole("button", { name: "Begin dormancy" }));
+    await screen.findByRole("button", { name: "End dormancy" });
+    expect(screen.getByTestId("badge-dormant-tree-1")).toBeInTheDocument();
+    expect(screen.getByText("Dormancy started.")).toBeInTheDocument();
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["/api/trees", "tree-1", "timeline"] });
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Begin dormancy" })).toBeInTheDocument());
+    expect(screen.queryByTestId("badge-dormant-tree-1")).toBeNull();
+    expect(undoDormancyRequest.mock.calls[0][0]).toEqual({
+      data: {
+        items: [expect.objectContaining({
+          treeId: "tree-1",
+          previousIsDormant: false,
+          previousDormantSince: null,
+        })],
+      },
+    });
+  });
+
+  it("ends dormancy from the detail page and offers a matching Undo toast", async () => {
+    const user = userEvent.setup();
+    trees["tree-1"] = {
+      ...trees["tree-1"],
+      isDormant: true,
+      dormantSince: "2026-11-01T00:00:00.000Z",
+    };
+    await renderTree();
+
+    expect(screen.getByRole("button", { name: "End dormancy" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "End dormancy" }));
+    await screen.findByRole("button", { name: "Begin dormancy" });
+    expect(screen.queryByTestId("badge-dormant-tree-1")).toBeNull();
+    expect(screen.getByText("Dormancy ended.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await screen.findByRole("button", { name: "End dormancy" });
+  });
+
+  it("does nothing when the dormancy toast closes without Undo", async () => {
+    const user = userEvent.setup();
+    await renderTree();
+
+    await user.click(screen.getByRole("button", { name: "Begin dormancy" }));
+    await screen.findByText("Dormancy started.");
+    const closeButton = document.querySelector("[toast-close]");
+    expect(closeButton).not.toBeNull();
+    fireEvent.click(closeButton!);
+
+    await waitFor(() => expect(screen.queryByText("Dormancy started.")).toBeNull());
+    expect(screen.getByRole("button", { name: "End dormancy" })).toBeInTheDocument();
+    expect(undoDormancyRequest).not.toHaveBeenCalled();
+  });
+
   it("keeps sticky Previous and Next disabled states in sync with the original controls", async () => {
     await renderTree();
     await waitFor(() => expect(screen.getByRole("button", { name: "Next" })).toBeEnabled());

@@ -35,6 +35,7 @@ import {
   UpdateTreePhotoBody,
   DeleteTreePhotoParams,
   SetTreesDormancyBulkBody,
+  UndoTreesDormancyBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import type { Request } from "express";
@@ -268,6 +269,14 @@ router.patch("/trees/:id", requireAuth, async (req, res): Promise<void> => {
   const params = UpdateTreeParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (
+    req.body &&
+    typeof req.body === "object" &&
+    ("isDormant" in req.body || "dormantSince" in req.body)
+  ) {
+    res.status(400).json({ error: "Dormancy can only be changed using the dormancy controls" });
     return;
   }
 
@@ -573,8 +582,10 @@ router.post("/trees/dormancy/bulk", requireAuth, async (req, res): Promise<void>
 
     if (ownedTrees.length !== treeIds.length) return null;
 
-    const changedTrees = ownedTrees.filter((tree) => tree.isDormant !== parsed.data.dormant);
-    if (changedTrees.length === 0) return { updatedCount: 0 };
+    const changedTrees = ownedTrees
+      .filter((tree) => tree.isDormant !== parsed.data.dormant)
+      .map((tree) => ({ ...tree }));
+    if (changedTrees.length === 0) return { updatedCount: 0, undoItems: [] };
 
     for (const tree of changedTrees) {
       await tx.update(treesTable)
@@ -586,13 +597,30 @@ router.post("/trees/dormancy/bulk", requireAuth, async (req, res): Promise<void>
         .where(eq(treesTable.id, tree.id));
     }
 
-    await tx.insert(careLogsTable).values(changedTrees.map((tree) => ({
-      treeId: tree.id,
-      type: parsed.data.dormant ? "Began dormancy" : "Ended dormancy",
-      date: eventDate,
-    })));
+    const insertedLogs = await tx.insert(careLogsTable)
+      .values(changedTrees.map((tree) => ({
+        treeId: tree.id,
+        type: parsed.data.dormant ? "Began dormancy" : "Ended dormancy",
+        date: eventDate,
+      })))
+      .returning({ id: careLogsTable.id, treeId: careLogsTable.treeId });
 
-    return { updatedCount: changedTrees.length };
+    return {
+      updatedCount: changedTrees.length,
+      undoItems: changedTrees.map((tree) => {
+        const log = insertedLogs.find((item) => item.treeId === tree.id);
+        if (!log) throw new Error(`Missing dormancy timeline entry for tree ${tree.id}`);
+        return {
+          treeId: tree.id,
+          logId: log.id,
+          previousIsDormant: tree.isDormant,
+          previousDormantSince: tree.dormantSince?.toISOString() ?? null,
+          resultingIsDormant: parsed.data.dormant,
+          resultingDormantSince: parsed.data.dormant ? now.toISOString() : null,
+          expectedUpdatedAt: now.toISOString(),
+        };
+      }),
+    };
   });
 
   if (!result) {
@@ -600,6 +628,91 @@ router.post("/trees/dormancy/bulk", requireAuth, async (req, res): Promise<void>
     return;
   }
   res.json(result);
+});
+
+router.post("/trees/dormancy/undo", requireAuth, async (req, res): Promise<void> => {
+  const parsed = UndoTreesDormancyBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { items } = parsed.data;
+  const treeIds = items.map((item) => item.treeId);
+  const logIds = items.map((item) => item.logId);
+  if (new Set(treeIds).size !== treeIds.length || new Set(logIds).size !== logIds.length) {
+    res.status(400).json({ error: "Undo items must reference unique trees and timeline entries" });
+    return;
+  }
+
+  const userId = (req as AuthedRequest).userId;
+  const result = await db.transaction(async (tx) => {
+    const ownedTrees = await tx.select().from(treesTable)
+      .where(and(inArray(treesTable.id, treeIds), eq(treesTable.userId, userId)))
+      .orderBy(asc(treesTable.id)).for("update");
+    if (ownedTrees.length !== treeIds.length) return { kind: "not-found" as const };
+
+    const logs = await tx.select().from(careLogsTable)
+      .where(inArray(careLogsTable.id, logIds))
+      .for("update");
+    if (logs.length !== items.length) return { kind: "conflict" as const };
+
+    const treesById = new Map(ownedTrees.map((tree) => [tree.id, tree]));
+    const logsById = new Map(logs.map((log) => [log.id, log]));
+
+    for (const item of items) {
+      const tree = treesById.get(item.treeId);
+      const log = logsById.get(item.logId);
+      const expectedUpdatedAt = item.expectedUpdatedAt.getTime();
+      const resultingDormantSince = item.resultingDormantSince?.getTime() ?? null;
+      if (
+        !tree ||
+        !log ||
+        log.treeId !== item.treeId ||
+        log.type !== (item.resultingIsDormant ? "Began dormancy" : "Ended dormancy") ||
+        item.previousIsDormant === item.resultingIsDormant ||
+        tree.isDormant !== item.resultingIsDormant ||
+        (tree.dormantSince?.getTime() ?? null) !== resultingDormantSince ||
+        tree.updatedAt.getTime() !== expectedUpdatedAt
+      ) {
+        return { kind: "conflict" as const };
+      }
+    }
+
+    const deletedLogs = await tx.delete(careLogsTable)
+      .where(and(
+        inArray(careLogsTable.id, logIds),
+        inArray(careLogsTable.treeId, treeIds),
+        inArray(careLogsTable.type, ["Began dormancy", "Ended dormancy"]),
+      ))
+      .returning({ id: careLogsTable.id });
+    if (deletedLogs.length !== items.length) return { kind: "conflict" as const };
+
+    const now = new Date();
+    for (const item of items) {
+      await tx.update(treesTable)
+        .set({
+          isDormant: item.previousIsDormant,
+          dormantSince: item.previousDormantSince,
+          updatedAt: now,
+        })
+        .where(and(
+          eq(treesTable.id, item.treeId),
+          eq(treesTable.userId, userId),
+        ));
+    }
+    return { kind: "success" as const, restoredCount: items.length };
+  });
+
+  if (result.kind === "not-found") {
+    res.status(404).json({ error: "One or more trees were not found or not owned by the user" });
+    return;
+  }
+  if (result.kind === "conflict") {
+    res.status(409).json({ error: "The dormancy change is no longer current and cannot be undone" });
+    return;
+  }
+  res.json({ restoredCount: result.restoredCount });
 });
 
 router.post("/trees/archive/bulk", requireAuth, async (req, res): Promise<void> => {

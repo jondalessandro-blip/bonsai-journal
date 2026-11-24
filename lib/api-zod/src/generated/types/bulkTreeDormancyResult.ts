@@ -5,7 +5,9 @@
  * Bonsai Journal API
  * OpenAPI spec version: 0.1.0
  */
+import type { TreeDormancyUndoItem } from './treeDormancyUndoItem';
 
 export interface BulkTreeDormancyResult {
   updatedCount: number;
+  undoItems: TreeDormancyUndoItem[];
 }
