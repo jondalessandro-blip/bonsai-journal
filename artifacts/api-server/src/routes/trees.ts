@@ -44,6 +44,8 @@ import {
 } from "../lib/care-recurrence";
 
 const router: IRouter = Router();
+const DORMANT_STATUS_ERROR =
+  "Tree status cannot be 'Dormant'; use the dormancy controls instead.";
 
 // Helper: verify a tree belongs to the authenticated user.
 // Returns the tree row or sends 404 and returns null.
@@ -234,6 +236,10 @@ router.post("/trees", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  if (parsed.data.status === "Dormant") {
+    res.status(400).json({ error: DORMANT_STATUS_ERROR });
+    return;
+  }
 
   const { tags, ...rest } = parsed.data;
   const [tree] = await db
@@ -268,6 +274,10 @@ router.patch("/trees/:id", requireAuth, async (req, res): Promise<void> => {
   const parsed = UpdateTreeBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  if (parsed.data.status === "Dormant") {
+    res.status(400).json({ error: DORMANT_STATUS_ERROR });
     return;
   }
 
@@ -578,7 +588,7 @@ router.post("/trees/dormancy/bulk", requireAuth, async (req, res): Promise<void>
 
     await tx.insert(careLogsTable).values(changedTrees.map((tree) => ({
       treeId: tree.id,
-      type: parsed.data.dormant ? "Entered dormancy" : "Broke dormancy",
+      type: parsed.data.dormant ? "Began dormancy" : "Ended dormancy",
       date: eventDate,
     })));
 

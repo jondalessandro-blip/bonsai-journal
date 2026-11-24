@@ -130,9 +130,9 @@ describe("POST /trees/dormancy/bulk", () => {
     expect(state.trees.map((tree) => tree.status)).toEqual(["Healthy", "Thriving", "Sick"]);
     expect(insertedLogs).toHaveLength(3);
     expect(insertedLogs.map(({ type, treeId }) => ({ type, treeId }))).toEqual([
-      { type: "Entered dormancy", treeId: TREE_ONE },
-      { type: "Entered dormancy", treeId: TREE_TWO },
-      { type: "Entered dormancy", treeId: TREE_THREE },
+      { type: "Began dormancy", treeId: TREE_ONE },
+      { type: "Began dormancy", treeId: TREE_TWO },
+      { type: "Began dormancy", treeId: TREE_THREE },
     ]);
   });
 
@@ -170,6 +170,6 @@ describe("POST /trees/dormancy/bulk", () => {
 
     expect(response.status).toBe(200);
     expect(state.trees[0]).toMatchObject({ isDormant: false, dormantSince: null, status: "Sick" });
-    expect(insertedLogs).toEqual([{ treeId: TREE_ONE, type: "Broke dormancy", date: expect.any(String) }]);
+    expect(insertedLogs).toEqual([{ treeId: TREE_ONE, type: "Ended dormancy", date: expect.any(String) }]);
   });
 });
