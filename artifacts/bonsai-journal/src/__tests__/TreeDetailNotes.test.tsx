@@ -56,6 +56,7 @@ import { Toaster } from "@/components/ui/toaster";
 const overlayName = "Notes (Markdown supported) — full view";
 const clients: QueryClient[] = [];
 const intersectionObservers: MockIntersectionObserver[] = [];
+const originalInnerWidth = window.innerWidth;
 
 class MockIntersectionObserver implements IntersectionObserver {
   readonly root = null;
@@ -98,6 +99,7 @@ beforeEach(() => {
     id: "tree-1",
     name: "Maple",
     notes: "Original maple notes",
+    status: "Healthy",
     tags: [],
     isDormant: false,
     dormantSince: null,
@@ -145,11 +147,13 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   clients.splice(0).forEach((client) => client.clear());
+  Object.defineProperty(window, "innerWidth", { configurable: true, value: originalInnerWidth });
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
-async function renderTree() {
+async function renderTree(viewportWidth = originalInnerWidth) {
+  Object.defineProperty(window, "innerWidth", { configurable: true, value: viewportWidth });
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -175,19 +179,35 @@ async function editNotes(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("Tree detail expanded Notes editing", () => {
-  it("starts dormancy and offers Undo to restore the active tree", async () => {
+  it("places the dormancy action after Edit and shows its read-only status on mobile", async () => {
     const user = userEvent.setup();
-    const { invalidateQueries } = await renderTree();
+    const { invalidateQueries } = await renderTree(390);
+    const actionRow = screen.getByTestId("tree-action-row");
+    const actionButtons = within(actionRow).getAllByRole("button");
+    const statusRow = screen.getByText("Status", { selector: "dt" }).closest("div");
+    const dormancyRow = screen.getByText("Dormancy", { selector: "dt" }).closest("div");
+    expect(actionRow).toHaveClass("flex-wrap");
+    expect(actionButtons[0]).toHaveTextContent("Edit");
+    expect(actionButtons[1]).toHaveTextContent("Begin dormancy");
+    expect(statusRow?.nextElementSibling).toBe(dormancyRow);
+    expect(screen.getByRole("heading", { name: "Maple" }).parentElement)
+      .not.toContainElement(screen.getByRole("button", { name: "Begin dormancy" }));
+    expect(within(screen.getByTestId("row-dormancy-tree-1")).getByText("Active"))
+      .toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Begin dormancy" }));
     await screen.findByRole("button", { name: "End dormancy" });
     expect(screen.getByTestId("badge-dormant-tree-1")).toBeInTheDocument();
+    expect(within(screen.getByTestId("row-dormancy-tree-1")).getByText(/Dormant since/))
+      .toBeInTheDocument();
     expect(screen.getByText("Dormancy started.")).toBeInTheDocument();
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["/api/trees", "tree-1", "timeline"] });
 
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Begin dormancy" })).toBeInTheDocument());
     expect(screen.queryByTestId("badge-dormant-tree-1")).toBeNull();
+    expect(within(screen.getByTestId("row-dormancy-tree-1")).getByText("Active"))
+      .toBeInTheDocument();
     expect(undoDormancyRequest.mock.calls[0][0]).toEqual({
       data: {
         items: [expect.objectContaining({
@@ -212,9 +232,13 @@ describe("Tree detail expanded Notes editing", () => {
     await user.click(screen.getByRole("button", { name: "End dormancy" }));
     await screen.findByRole("button", { name: "Begin dormancy" });
     expect(screen.queryByTestId("badge-dormant-tree-1")).toBeNull();
+    expect(within(screen.getByTestId("row-dormancy-tree-1")).getByText("Active"))
+      .toBeInTheDocument();
     expect(screen.getByText("Dormancy ended.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     await screen.findByRole("button", { name: "End dormancy" });
+    expect(within(screen.getByTestId("row-dormancy-tree-1")).getByText(/Dormant since/))
+      .toBeInTheDocument();
   });
 
   it("does nothing when the dormancy toast closes without Undo", async () => {

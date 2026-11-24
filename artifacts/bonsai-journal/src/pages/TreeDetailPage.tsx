@@ -3,7 +3,7 @@ import { useParams, useLocation, Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Archive, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, Check, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight, Loader2, Snowflake } from "lucide-react";
+import { ArrowLeft, Calendar, Leaf, Scissors, Edit2, Trash2, Archive, Clock, CheckCircle2, Circle, Pencil, Maximize2, X, Check, ScrollText, Activity, Copy, Sprout, ChevronLeft, ChevronRight, Loader2, Snowflake, Sun } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -644,19 +644,10 @@ export default function TreeDetailPage() {
                 Dormant
               </Badge>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={setTreeDormancy.isPending}
-              onClick={changeTreeDormancy}
-            >
-              {setTreeDormancy.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-              {tree.isDormant ? "End dormancy" : "Begin dormancy"}
-            </Button>
           </div>
           {tree.species && <p className="text-lg md:text-xl italic text-muted-foreground">{tree.species}</p>}
         </div>
-        <div className="flex flex-wrap justify-start gap-2">
+        <div data-testid="tree-action-row" className="flex flex-wrap items-center justify-start gap-2">
           <UnsavedChangesDialog
             open={showEditGuard}
             onSaveAndLeave={() => {
@@ -698,6 +689,20 @@ export default function TreeDetailPage() {
               />
             </DialogContent>
           </Dialog>
+          <Button
+            data-testid="button-toggle-dormancy"
+            variant="outline"
+            size="sm"
+            disabled={setTreeDormancy.isPending}
+            onClick={changeTreeDormancy}
+          >
+            {setTreeDormancy.isPending
+              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              : tree.isDormant
+                ? <Sun className="mr-2 h-4 w-4" />
+                : <Snowflake className="mr-2 h-4 w-4" />}
+            {tree.isDormant ? "End dormancy" : "Begin dormancy"}
+          </Button>
           <Button variant="outline" size="sm" onClick={handlePlantAnother}>
             <Sprout className="w-4 h-4 mr-2" />
             Plant Another Tree
@@ -835,6 +840,19 @@ export default function TreeDetailPage() {
                     </dd>
                   </div>
                 )}
+                <div
+                  data-testid={`row-dormancy-${tree.id}`}
+                  className="flex justify-between items-center py-1 border-b border-border/50"
+                >
+                  <dt className="text-muted-foreground">Dormancy</dt>
+                  <dd className="text-right">
+                    {tree.isDormant
+                      ? tree.dormantSince
+                        ? `Dormant since ${format(parseISO(tree.dormantSince), "MMM d, yyyy")}`
+                        : "Dormant"
+                      : "Active"}
+                  </dd>
+                </div>
                 {tree.stage && (
                   <div className="flex justify-between py-1 border-b border-border/50">
                     <dt className="text-muted-foreground">Stage</dt>
