@@ -13,11 +13,11 @@ const helpSections: Array<{ title: string; body: string; extraParagraphs?: strin
   },
   {
     title: "Filtering your collection",
-    body: "Use the filter options above the grid to narrow things down by climate, foliage type, growth stage, health status, or your own tags. Tap a filter to open its list of options, and choose whether you want to include only trees that match, or exclude trees that match, so you can show only trees in Development stage, or hide everything tagged sold. You can combine filters, and they'll narrow the list together. Your filters stay active as you move between trees and when you come back to the Collection page.",
+    body: "Use the filter options above the grid to narrow things down by climate, foliage type, growth stage, health status, dormancy, or your own tags. Tap a filter to open its list of options, and choose whether you want to include only trees that match, or exclude trees that match, so you can show only trees in Development stage, or hide everything tagged sold. You can combine filters, and they'll narrow the list together. Your filters stay active as you move between trees and when you come back to the Collection page. The Dormancy filter works a little differently, just choose Dormant, Active, or All.",
   },
   {
     title: "Selecting multiple trees at once",
-    body: "You can select more than one tree on the Collection page and apply care or a plan to all of them together, handy when a group of trees got the same treatment, like a round of feeding or moving a batch indoors for winter. Switch into selection mode, tap each tree you want to include, then choose Log Care or Plan from the selection toolbar. Fill it in once, and it applies to every tree you selected. Plans made this way are one time tasks. When they come due, you can finish many of them together from the Upcoming Care box, as described in Completing many scheduled tasks at once.",
+    body: "You can select more than one tree on the Collection page and apply care or a plan to all of them together, handy when a group of trees got the same treatment, like a round of feeding or moving a batch indoors for winter. Switch into selection mode, tap each tree you want to include, then choose Log Care or Plan from the selection toolbar. Fill it in once, and it applies to every tree you selected. You can also begin or end dormancy for all the selected trees at once, as described in Dormancy. Plans made this way are one time tasks. When they come due, you can finish many of them together from the Upcoming Care box, as described in Completing many scheduled tasks at once.",
   },
   {
     title: "Adding a tree",
@@ -66,6 +66,14 @@ const helpSections: Array<{ title: string; body: string; extraParagraphs?: strin
   {
     title: "Plant Another Tree and Add Duplicate Tree",
     body: "From a tree's detail page, these buttons let you start a new tree entry pre-filled with that tree's info, handy for trees from the same batch or with similar care needs.",
+  },
+  {
+    title: "Dormancy",
+    body: "Many trees rest for part of the year. Dormancy lets you mark that without changing a tree's health status, because a tree can be dormant and healthy at the same time. Open a tree and tap Begin dormancy. The tree gets a small Dormant badge with a snowflake on its card and next to its name, its details show Dormant since and the date, and the journal gets a Began dormancy entry dated today. When it wakes up in spring, tap End dormancy, and the journal gets an Ended dormancy entry.",
+    extraParagraphs: [
+      "To do a group at once, such as the day your trees go into winter storage, select them on the Collection page and tap Begin dormancy or End dormancy in the selection toolbar. Trees already in that state are left as they are. Right after either button, a message appears for a few seconds with an Undo button, in case you tapped it by mistake. To see only resting trees, or only trees that are awake, use the Dormancy filter on the Collection page.",
+      "Dormancy doesn't pause reminders. For tasks you don't want during the dormant months, choose months to skip when you set up the reminder. Dormant used to be one of the health status choices. Trees that had it were switched over automatically: they're now marked dormant, and their health status went back to what it was before, or to Healthy if the app couldn't tell.",
+    ],
   },
   {
     title: "Archiving a tree",
